@@ -1,0 +1,24 @@
+rule: rules/windows/stealth/win_rundll32_relative_path_dll.yml
+positive:
+  # Real: rundll32 windowscoredeviceinfo.dll,CreateBackdoor started by the Update Session
+  # Orchestrator service (DLL planted in System32 under a name Windows doesn't ship)
+  - file: "tests/data/external/evtx-attack-samples/Sysmon 7  Update Session Orchestrator Dll Hijack.evtx"
+    min_hits: 18
+  # Real: conf3234.dll and DATAUS~1.DLL run by bare name, entry point after a space (malware)
+  - file: tests/data/external/evtx-attack-samples/rundll32_cmd_schtask.evtx
+    min_hits: 2
+  # Real: rundll32 AllTheThings.dll,EntryPoint (EDR testing script)
+  - file: tests/data/external/evtx-attack-samples/panache_sysmon_vs_EDRTestingScript.evtx
+    min_hits: 2
+  # Synthetic: ordinal export from a .dat file, quoted name, no extension, and a lookalike
+  # of an allow-listed name (shell32x.dll)
+  - file: tests/data/samples/win_rundll32_relative_path_dll_synthetic_positive.json
+    min_hits: 4
+negative:
+  # Synthetic: allow-listed DLLs (with and without .dll, quoted), a full path, a UNC path,
+  # a url.dll proxy call and bare rundll32 with no arguments (both rule 10's job), and a
+  # javascript: command line with a second "rundll32.exe" later in it (taskkill /im)
+  - file: tests/data/samples/win_rundll32_relative_path_dll_benign.json
+  # Real and synthetic normal rundll32 use, shared with the suspicious-usage rule: svchost
+  # SHCreateLocalServerRunDll, AppX ShellRefresh, printui, desk.cpl, keymgr, url.dll https link
+  - file: tests/data/samples/win_rundll32_suspicious_usage_benign.json

@@ -181,3 +181,8 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/ppl_bypass_ppldump_knowdll_hijack_sysmon_security.evtx
     path: evtx-attack-samples/ppl_bypass_ppldump_knowdll_hijack_sysmon_security.evtx
     sha256: 9ac47a1ab7ac5e899dede49a4ea3512f0d3628edb9605981fe78bc0aec6f296f
+
+  # win_rundll32_relative_path_dll
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/Sysmon%207%20%20Update%20Session%20Orchestrator%20Dll%20Hijack.evtx
+    path: "evtx-attack-samples/Sysmon 7  Update Session Orchestrator Dll Hijack.evtx"
+    sha256: 7a0c541506770e6ef05e327f600c7fc1d328676058214a0e3a6a82c7d7e8fcdf

@@ -59,6 +59,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 | [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
+| [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
 
 ## Adding a rule
 
