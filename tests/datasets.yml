@@ -27,3 +27,17 @@ datasets:
   - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_mimikatz_logonpasswords.zip
     path: otrf/empire_mimikatz_logonpasswords.zip
     sha256: bb4c057b62d781be5426e011872ba1a15070c07afbb24848a14458f4b22b06fb
+
+  # win_powershell_encoded_command
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/execution/host/empire_launcher_vbs.zip
+    path: otrf/empire_launcher_vbs.zip
+    sha256: 812da270cf8cda6f1948fb6275410f15dc1794d0bd6b623c9c25b2518285019c
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_wmi_dcerpc_wmi_IWbemServices_ExecMethod.zip
+    path: otrf/empire_wmi_dcerpc_wmi_IWbemServices_ExecMethod.zip
+    sha256: 96f1dbd9c5b077c8951b6e1f43b7fe01a2620c649889262481f15139a1746d88
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/discovery_sysmon_1_iis_pwd_and_config_discovery_appcmd.evtx
+    path: evtx-attack-samples/discovery_sysmon_1_iis_pwd_and_config_discovery_appcmd.evtx
+    sha256: 5388d3281a902a1f3cc087697589145b7de6abdbbc0dc716abd6a702c44bb106
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/LM_sysmon_psexec_smb_meterpreter.evtx
+    path: evtx-attack-samples/LM_sysmon_psexec_smb_meterpreter.evtx
+    sha256: 18ffdda9c24e593d6b1414b6e05c7f7a5dbffb8588a387c165431b61ab52d76f

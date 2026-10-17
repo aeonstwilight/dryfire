@@ -1,0 +1,18 @@
+rule: rules/windows/execution/win_powershell_encoded_command.yml
+positive:
+  # Empire VBS launcher: wscript.exe -> powershell -noP -sta -w 1 -enc
+  - file: tests/data/external/otrf/empire_launcher_vbs.zip
+    min_hits: 1
+  # Empire WMI lateral movement: WmiPrvSE.exe -> powershell -noP -sta -w 1 -enc
+  - file: tests/data/external/otrf/empire_wmi_dcerpc_wmi_IWbemServices_ExecMethod.zip
+    min_hits: 1
+  # IIS webshell: w3wp.exe -> powershell -nop -noni -enc
+  - file: tests/data/external/evtx-attack-samples/discovery_sysmon_1_iis_pwd_and_config_discovery_appcmd.evtx
+    min_hits: 1
+  # Meterpreter psexec: GzipStream + FromBase64String inside -c, no -enc flag
+  - file: tests/data/external/evtx-attack-samples/LM_sysmon_psexec_smb_meterpreter.evtx
+    min_hits: 2
+negative:
+  # Plain PowerShell from the public sets, plus synthetic -ExecutionPolicy,
+  # -ep, -Exclude and -Encoding command lines that must not match the flag list
+  - file: tests/data/samples/win_powershell_encoded_command_benign.json

@@ -4,8 +4,13 @@ Writes build/coverage/layer.json. Open it at
 https://mitre-attack.github.io/attack-navigator/ ("Open Existing Layer").
 
 Each technique a rule is tagged with gets a score equal to the number of rules
-covering it, and a comment listing those rules. If a rule also has tactic tags
-(e.g. attack.credential-access), the technique is marked under those tactics only.
+covering it, and a comment listing those rules.
+
+Which tactic column a technique shows under: the rule's tactic tags, but only
+the ones that technique actually belongs to in ATT&CK. (A rule tagged
+execution + stealth with T1059.001 and T1027.010 puts T1059.001 under
+Execution and T1027.010 under Stealth, not both under both.) The ATT&CK data
+is the same pinned version lint.py uses.
 """
 
 import argparse
@@ -15,6 +20,10 @@ import sys
 from pathlib import Path
 
 import yaml
+from sigma.data import mitre_attack
+
+# lint.py sits in the same folder and owns the pinned ATT&CK download.
+from lint import ATTACK_FILE, get_attack_data
 
 OUTPUT = Path("build/coverage/layer.json")
 
@@ -53,8 +62,13 @@ def main():
     parser.add_argument("--rules-dir", default="rules", type=Path)
     args = parser.parse_args()
 
-    # (technique, tactic) -> list of rule titles. tactic is None when the
-    # rule has no tactic tag, which shows the technique under every tactic.
+    # Technique -> its tactics in the pinned ATT&CK version, e.g. "T1059.001" -> ["execution"]
+    get_attack_data()
+    mitre_attack.set_url(str(ATTACK_FILE.resolve()))
+    attack_tactics = mitre_attack.mitre_attack_techniques_tactics_mapping
+
+    # (technique, tactic) -> list of rule titles. tactic is None when no tag
+    # pins it down, which shows the technique under every tactic it has.
     coverage = {}
     rule_count = 0
     for path in sorted(args.rules_dir.rglob("*.yml")):
@@ -66,7 +80,14 @@ def main():
             continue
         rule_count += 1
         for technique in techniques:
-            for tactic in tactics or [None]:
+            if technique not in attack_tactics:
+                print(f"WARN  {path}: {technique} is not in ATT&CK v{mitre_attack.mitre_attack_version}")
+            # Keep only the rule's tactics that this technique really belongs to.
+            matching = [t for t in tactics if t in attack_tactics.get(technique, [])]
+            if tactics and not matching:
+                print(f"WARN  {path}: none of the rule's tactic tags apply to {technique}; "
+                      "showing it under all its tactics")
+            for tactic in matching or [None]:
                 coverage.setdefault((technique, tactic), []).append(title)
 
     techniques = []
