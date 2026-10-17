@@ -54,8 +54,9 @@ The Makefile should expose these targets:
 - `make test`: run `tests/run_tests.py`; non-zero exit on any failure
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
+- `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
 
-CI (`.github/workflows/ci.yml`) runs `make all` on push and pull request and uploads `build/` as an artifact.
+CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact.
 
 ## Milestone 1 (done, merged in PR #1)
 

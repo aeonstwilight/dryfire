@@ -25,7 +25,7 @@ endif
 ZIRCOLITE_ZIP := Zircolite-$(ZIRCOLITE_VERSION)-$(ZIRCOLITE_PLATFORM).zip
 ZIRCOLITE_URL := https://github.com/wagga40/Zircolite/releases/download/v$(ZIRCOLITE_VERSION)/$(ZIRCOLITE_ZIP)
 
-.PHONY: all lint convert test coverage datasets zircolite clean
+.PHONY: all lint convert test coverage datasets sweep sweep-datasets zircolite clean
 
 all: lint convert test coverage
 
@@ -52,6 +52,15 @@ coverage:
 # Download the public datasets listed in tests/datasets.yml.
 datasets:
 	$(PYTHON) scripts/fetch_datasets.py
+
+# Noise sweep: every rule against a large corpus (tests/sweep_corpus.yml).
+# Report in build/sweep/; fails only if tests/sweep_baseline.yml exists and differs.
+sweep: sweep-datasets $(ZIRCOLITE)
+	$(PYTHON) tests/run_sweep.py --rules-dir $(RULES) --zircolite $(ZIRCOLITE)
+
+# Download the sweep corpus (~110 MB) into tests/data/external/sweep/.
+sweep-datasets:
+	$(PYTHON) scripts/fetch_datasets.py --manifest tests/sweep_corpus.yml
 
 zircolite: $(ZIRCOLITE)
 
