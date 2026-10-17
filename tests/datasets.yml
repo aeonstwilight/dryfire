@@ -86,3 +86,8 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_104_system_log_cleared.evtx
     path: evtx-attack-samples/DE_104_system_log_cleared.evtx
     sha256: 5579cdca073ee4864ea82d656aa2d25400b5c1e85b8e688db5d85f6dc558c2af
+
+  # win_certutil_download
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/panache_sysmon_vs_EDRTestingScript.evtx
+    path: evtx-attack-samples/panache_sysmon_vs_EDRTestingScript.evtx
+    sha256: 9c1371a0632de15095b6ffe2e38991b764d4beaddb1722178e93aa476f83f52f
