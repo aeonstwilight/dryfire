@@ -56,6 +56,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-17 | win_psexec_service_installed | 4 (APT29 day 1) | **Attack** (owner confirmed): 4 × `PSEXESVC` installed on NASHUA, 03:11–03:15, the APT29 day 1 PsExec lateral movement. |
 | 2026-10-17 | win_psexec_named_pipes | 32 (APT29 day 1) | **Attack** (owner confirmed): the same 4 PsExec runs on NASHUA, each `\PSEXESVC` plus `\PSEXESVC-SCRANTON-<pid>-stdin/stdout/stderr` (created and connected). The pipe names show SCRANTON as the source host. |
 | 2026-10-17 | win_renamed_shell_or_lolbin | 0 | Only its two own EVTX samples match. None of the ~35 normal OriginalFileName mismatches in APT29 (Google, Azure agent, Teams, Sysinternals 64-bit builds, Windows binaries) match the targeted list. |
+| 2026-10-17 | win_certutil_encode_decode | 1 (APT29 day 2) | **Attack** (owner confirmation pending): on UTICA, `powershell.exe` runs `certutil -decode blob …\AppData\Roaming\Microsoft\kxwn.lock`, the DLL later loaded by `rundll32 kxwn.lock,VoidFunc` (already a rundll32-rule hit). |
 
 ## Limits of this review
 

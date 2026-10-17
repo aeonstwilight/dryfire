@@ -1,0 +1,60 @@
+title: Certutil Encoding or Decoding a Non-Certificate File
+id: ff49547b-7901-4386-9392-0220bcbe341b
+status: experimental
+description: |
+    Detects certutil.exe run with -encode/-decode (and the -encodehex /
+    -decodehex variants, any dash style) on something other than certificate
+    files. Attackers use certutil to Base64-decode a payload they brought in as
+    text, or to encode a file for exfiltration or later decoding. Certificate
+    work (.cer, .crt, .pem and similar) is excluded unless the command line also
+    involves a DLL or script, so "-decode a.crt payload.dll" still fires.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1140/
+    - https://attack.mitre.org/techniques/T1027/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil
+tags:
+    - attack.stealth
+    - attack.t1140
+    - attack.t1027
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith: '\certutil.exe'
+    selection_verb:
+        # " -decode" also matches -decodehex, " -encode" also matches -encodehex.
+        CommandLine|windash|contains:
+            - ' -decode'
+            - ' -encode'
+    filter_cert_files:
+        CommandLine|contains:
+            - '.cer'
+            - '.crt'
+            - '.pem'
+            - '.der'
+            - '.p7b'
+            - '.pfx'
+            - '.p12'
+            - '.req'
+            - '.csr'
+            - '.crl'
+    selection_payload_ext:
+        # No '.exe' here: every certutil command line contains "certutil.exe" itself.
+        CommandLine|contains:
+            - '.dll'
+            - '.ps1'
+            - '.vbs'
+            - '.js'
+            - '.hta'
+            - '.bat'
+            - '.cmd'
+            - '.scr'
+            - '.sys'
+    condition: selection_img and selection_verb and (not filter_cert_files or selection_payload_ext)
+falsepositives:
+    - Administrators or scripts Base64-encoding non-certificate files for transport (configuration blobs, licence files)
+    - Certificate work using non-standard file extensions
+level: medium

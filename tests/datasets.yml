@@ -171,3 +171,8 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/sysmon_zipexec.evtx
     path: evtx-attack-samples/sysmon_zipexec.evtx
     sha256: 4d995c2a339d3c272afd4ac8cf01f009ca5358bafe3fa51889b28f86296cd894
+
+  # win_certutil_encode_decode (also uses panache_sysmon_vs_EDRTestingScript.evtx above)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    path: evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    sha256: 6903dff9f218fa027c704c8c445b74e08b952c8d71be79bd0327f1e792d4aa01

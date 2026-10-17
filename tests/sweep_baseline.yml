@@ -59,3 +59,7 @@ win_renamed_shell_or_lolbin:
   evtx-attack-samples: 2
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_certutil_encode_decode:
+  evtx-attack-samples: 3
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 1
