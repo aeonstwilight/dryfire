@@ -1,0 +1,4 @@
+{"SampleSource": "synthetic", "Channel": "Microsoft-Windows-ExampleApp/Operational", "EventID": 1102, "Provider_Name": "ExampleApp", "Computer": "SYNTH-HOST", "SystemTime": "2026-10-17T12:00:00.000Z"}
+{"SampleSource": "synthetic", "Channel": "Security", "EventID": 4624, "Provider_Name": "Microsoft-Windows-Security-Auditing", "Computer": "SYNTH-HOST", "SystemTime": "2026-10-17T12:00:01.000Z", "TargetUserName": "admin", "TargetDomainName": "SYNTH-HOST", "LogonType": 2}
+{"SampleSource": "synthetic", "Channel": "Security", "EventID": 4634, "Provider_Name": "Microsoft-Windows-Security-Auditing", "Computer": "SYNTH-HOST", "SystemTime": "2026-10-17T12:05:00.000Z", "TargetUserName": "admin", "TargetDomainName": "SYNTH-HOST", "LogonType": 2}
+{"SampleSource": "synthetic", "Channel": "Security", "EventID": 1104, "Provider_Name": "Microsoft-Windows-Eventlog", "Computer": "SYNTH-HOST", "SystemTime": "2026-10-17T12:10:00.000Z"}

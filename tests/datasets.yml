@@ -72,3 +72,17 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/System_7045_namedpipe_privesc.evtx
     path: evtx-attack-samples/System_7045_namedpipe_privesc.evtx
     sha256: 21a62694861beff246ea9fb357b908541b4acefaefdb7ecd6281b64df96cb187
+
+  # win_security_log_cleared
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_1102_security_log_cleared.evtx
+    path: evtx-attack-samples/DE_1102_security_log_cleared.evtx
+    sha256: a0615707b547a2ac254688fd725c3c590f62440fc9b7947c2843dd40498a39e8
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_suspicious_remote_eventlog_svc_access_5145.evtx
+    path: evtx-attack-samples/DE_suspicious_remote_eventlog_svc_access_5145.evtx
+    sha256: bd9b7712b67b16515f70fd5168142aca1f4cb88cdc1f51c08cf838e317cfdf59
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/cmd_psexec_lsa_secrets_dump.zip
+    path: otrf/cmd_psexec_lsa_secrets_dump.zip
+    sha256: c52e6145fefe37373a5274e2976ccf6d62e4d33e13c55dc1a2ce17f00506d1a6
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_104_system_log_cleared.evtx
+    path: evtx-attack-samples/DE_104_system_log_cleared.evtx
+    sha256: 5579cdca073ee4864ea82d656aa2d25400b5c1e85b8e688db5d85f6dc558c2af

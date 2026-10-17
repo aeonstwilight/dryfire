@@ -1,0 +1,18 @@
+rule: rules/windows/defense_impairment/win_security_log_cleared.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+pipelines: [windows-logsources]
+positive:
+  # Local clear
+  - file: tests/data/external/evtx-attack-samples/DE_1102_security_log_cleared.evtx
+    min_hits: 1
+  # Remote clear over the EventLog RPC interface (5145 on \PIPE\eventlog in the same file)
+  - file: tests/data/external/evtx-attack-samples/DE_suspicious_remote_eventlog_svc_access_5145.evtx
+    min_hits: 1
+  # Same event in OTRF's JSON format
+  - file: tests/data/external/otrf/cmd_psexec_lsa_secrets_dump.zip
+    min_hits: 1
+negative:
+  # Real System-log clear (System 104): a different event, must not match
+  - file: tests/data/external/evtx-attack-samples/DE_104_system_log_cleared.evtx
+  # Event ID 1102 in a non-Security channel, ordinary Security events, log-full (1104)
+  - file: tests/data/samples/win_security_log_cleared_benign.json
