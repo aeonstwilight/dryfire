@@ -1,0 +1,70 @@
+# Lint, convert, test and build coverage for every push and pull request.
+#
+# Runs the same Makefile targets as `make all`, but as separate steps so each
+# stage shows its own pass/fail in the GitHub UI. Every stage runs even if an
+# earlier one failed, so one push reports all problems at once; the job still
+# fails if any stage does.
+#
+# Actions are pinned to commit SHAs (version in the comment) so a moved tag
+# can't change what runs here.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint
+        id: lint
+        run: make lint
+
+      - name: Convert
+        id: convert
+        if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
+        run: make convert
+
+      - name: Test
+        id: test
+        if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
+        run: make test
+
+      - name: Coverage
+        id: coverage
+        if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
+        run: make coverage
+
+      # Show the conversion and test tables on the workflow run page.
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          for f in build/conversion_summary.md build/tests/results.md; do
+            if [ -f "$f" ]; then
+              echo "### $f" >> "$GITHUB_STEP_SUMMARY"
+              cat "$f" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Upload build output
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build
+          path: build/
+          if-no-files-found: ignore

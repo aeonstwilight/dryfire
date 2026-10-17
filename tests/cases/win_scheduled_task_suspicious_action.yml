@@ -1,0 +1,22 @@
+rule: rules/windows/persistence/win_scheduled_task_suspicious_action.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+pipelines: [windows-logsources]
+positive:
+  # Empire elevated: SYSTEM task, logon trigger, powershell IEX(FromBase64String(registry))
+  - file: tests/data/external/otrf/empire_schtasks_creation_execution_elevated_user.zip
+    min_hits: 1
+  # Empire standard user: same pattern with the payload in HKCU
+  - file: tests/data/external/otrf/empire_schtasks_creation_standard_user.zip
+    min_hits: 1
+  # Task named like a built-in (\Microsoft\Windows\SoftwareProtectionPlatform\...) running cmd.exe
+  - file: tests/data/external/otrf/schtask_create.zip
+    min_hits: 1
+  # Remote task via ATSVC (atexec-style): cmd.exe /C tasklist > %windir%\Temp\<random>.tmp
+  - file: tests/data/external/evtx-attack-samples/temp_scheduled_task_4698_4699.evtx
+    min_hits: 1
+  # FullPowers: task running C:\Users\Public\Tools\...\FullPowers.exe as LOCAL SERVICE
+  - file: tests/data/external/evtx-attack-samples/PrivEsc_SeImpersonatePriv_enabled_back_for_upnp_localsvc_4698.evtx
+    min_hits: 1
+negative:
+  # Real Windows Update Orchestrator tasks (OTRF) plus synthetic built-in and vendor tasks
+  - file: tests/data/samples/win_scheduled_task_suspicious_action_benign.json

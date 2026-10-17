@@ -1,0 +1,14 @@
+rule: rules/windows/persistence/win_local_admin_group_member_added.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+pipelines: [windows-logsources]
+positive:
+  # Real: Guest (RID 501) and NETWORK SERVICE (S-1-5-20) added to BUILTIN\Administrators
+  - file: tests/data/external/evtx-attack-samples/Network_Service_Guest_added_to_admins_4732.evtx
+    min_hits: 2
+  # Synthetic: French-localized group name with S-1-5-32-544; domain user added (MemberName as DN)
+  - file: tests/data/samples/win_local_admin_group_member_added_synthetic_positive.json
+    min_hits: 2
+negative:
+  # Synthetic: 4732 to Remote Desktop Users and Users, 4733 removal from Administrators,
+  # 4728 to Domain Admins (domain groups are out of scope)
+  - file: tests/data/samples/win_local_admin_group_member_added_benign.json

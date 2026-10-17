@@ -1,0 +1,23 @@
+rule: rules/windows/execution/win_wmiprvse_suspicious_child.yml
+positive:
+  # Impacket wmiexec: cmd.exe /Q /c <cmd> 1> \\127.0.0.1\ADMIN$\__<ts> 2>&1
+  - file: tests/data/external/evtx-attack-samples/LM_wmiexec_impacket_sysmon_whoami.evtx
+    min_hits: 3
+  # WMI CommandLineEventConsumer running cmd.exe as SYSTEM
+  - file: tests/data/external/evtx-attack-samples/sysmon_20_21_1_CommandLineEventConsumer.evtx
+    min_hits: 1
+  # Executable run from a volume shadow copy (path branch)
+  - file: tests/data/external/evtx-attack-samples/sysmon_exec_from_vss_persistence.evtx
+    min_hits: 1
+  # Empire WMI lateral movement: powershell -noP -sta -w 1 -enc
+  - file: tests/data/external/otrf/empire_wmi_dcerpc_wmi_IWbemServices_ExecMethod.zip
+    min_hits: 1
+  # Empire: cmd.exe /c MSBuild.exe C:\Windows\Tasks\pshell.xml
+  - file: tests/data/external/otrf/empire_msbuild_dcerpc_wmi_smb.zip
+    min_hits: 1
+  # Empire wmic backdoor: net user /add
+  - file: tests/data/external/otrf/empire_wmic_add_user_backdoor.zip
+    min_hits: 1
+negative:
+  # Synthetic: WerFault, msiexec, WmiApSrv, mofcomp under WmiPrvSE; PowerShell under svchost
+  - file: tests/data/samples/win_wmiprvse_suspicious_child_benign.json

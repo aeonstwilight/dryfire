@@ -1,0 +1,50 @@
+title: Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action
+id: ceca7f49-e620-45d8-b237-a34766b2b2fa
+status: experimental
+description: |
+    Detects a scheduled task being registered (Security 4698) whose task XML
+    runs a command interpreter, script host or common LOLBin, or runs something
+    from a user-writable folder. Covers persistence via schtasks/COM, remote
+    task creation over ATSVC (atexec-style), and tasks disguised with built-in
+    Windows task names. Matching is on plain text in TaskContent, so it works
+    whether the XML is stored escaped or not.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1053/005/
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4698
+    - https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-schema
+tags:
+    - attack.persistence
+    - attack.execution
+    - attack.t1053.005
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4698
+    selection_action_binary:
+        TaskContent|contains:
+            - 'cmd.exe'
+            - 'powershell'
+            - 'pwsh'
+            - 'wscript'
+            - 'cscript'
+            - 'mshta'
+            - 'rundll32'
+            - 'regsvr32'
+            - 'certutil'
+            - 'bitsadmin'
+    selection_action_path:
+        TaskContent|contains:
+            - '\Users\Public\'
+            - '\AppData\'
+            - '\Temp\'
+            - '\Downloads\'
+    condition: selection and (selection_action_binary or selection_action_path)
+falsepositives:
+    - Software installers and updaters that register tasks running from AppData or via cmd/PowerShell
+    - Admin and GPO-deployed maintenance tasks that wrap scripts in cmd.exe or PowerShell
+    - Tasks whose name, author or description (also part of TaskContent) contains one of the keywords
+level: medium

@@ -1,0 +1,11 @@
+rule: rules/windows/command_and_control/win_certutil_download.yml
+positive:
+  # Real: certutil.exe -urlcache -split -f https://raw.githubusercontent.com/... (EDR testing script)
+  - file: tests/data/external/evtx-attack-samples/panache_sysmon_vs_EDRTestingScript.evtx
+    min_hits: 1
+  # Synthetic variants: -verifyctl, /urlcache (slash), en-dash, ftp://
+  - file: tests/data/samples/win_certutil_download_synthetic_positive.json
+    min_hits: 4
+negative:
+  # Synthetic admin use: cache list/delete, hashfile, verify, store, dump, encode/decode
+  - file: tests/data/samples/win_certutil_download_benign.json

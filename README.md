@@ -41,7 +41,16 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 
 | Rule | Tactic | Technique | SPL | KQL | Tested |
 |------|--------|-----------|-----|-----|--------|
-| _(populated as rules are added)_ | | | | | |
+| [LSASS Process Opened With Memory Read Access](docs/rules/win_lsass_memory_access.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
+| [PowerShell Launched With Encoded or Base64-Decoded Command](docs/rules/win_powershell_encoded_command.md) | Execution, Stealth | T1059.001, T1027.010 | ✅ | ✅ | ✅ |
+| [Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action](docs/rules/win_scheduled_task_suspicious_action.md) | Persistence, Execution | T1053.005 | ✅ | Sentinel only | ✅ |
+| [Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path](docs/rules/win_service_install_suspicious_image_path.md) | Persistence, Privilege Escalation, Execution | T1543.003, T1569.002 | ✅ | — | ✅ |
+| [Windows Security Event Log Cleared](docs/rules/win_security_log_cleared.md) | Defense Impairment | T1685.005 | ✅ | Sentinel only | ✅ |
+| [Certutil Downloading From a URL](docs/rules/win_certutil_download.md) | Command and Control | T1105 | ✅ | ✅ | ✅ |
+| [Office Application Spawning a Shell or Script Host](docs/rules/win_office_spawning_shell_or_script_host.md) | Execution | T1204.002, T1059.001, T1059.003 | ✅ | ✅ | ✅ |
+| [WMI Provider Host Spawning a Shell, Proxy Binary or User-Folder Executable](docs/rules/win_wmiprvse_suspicious_child.md) | Execution | T1047 | ✅ | ✅ | ✅ |
+| [Member Added to Local Administrators Group](docs/rules/win_local_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
+| [Rundll32 Running Script, Proxy Export, User-Folder DLL or No Arguments](docs/rules/win_rundll32_suspicious_usage.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
 
 ## Adding a rule
 

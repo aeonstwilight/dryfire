@@ -1,0 +1,17 @@
+# Generated output (CI publishes this as an artifact)
+build/
+
+# Large datasets, downloaded by scripts/fetch_datasets.py
+tests/data/external/
+
+# Zircolite binary, downloaded by `make zircolite`
+tools/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Zircolite run files, if run by hand from the repo root
+zircolite.log
+detected_events.json

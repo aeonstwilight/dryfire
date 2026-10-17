@@ -1,0 +1,27 @@
+title: Windows Security Event Log Cleared
+id: 968031ca-04ab-489f-84e4-7475344ef73b
+status: experimental
+description: |
+    Detects the Security event log being cleared (Security 1102), whether
+    locally (wevtutil cl, Clear-EventLog, Event Viewer) or remotely over the
+    EventLog RPC interface. Nothing in normal operation generates this event:
+    size-based rotation and auto-archiving do not, only an explicit clear does.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1685/005/
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-1102
+tags:
+    - attack.defense-impairment
+    - attack.t1685.005
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 1102
+    condition: selection
+falsepositives:
+    - Administrators clearing the log during troubleshooting or before imaging a machine
+    - Lab and test environments that reset logs between runs
+level: high

@@ -1,0 +1,30 @@
+rule: rules/windows/stealth/win_rundll32_suspicious_usage.yml
+positive:
+  # Script branch: rundll32 javascript:"\..\mshtml,RunHTMLApplication " -> mshta https://...
+  - file: tests/data/external/evtx-attack-samples/exec_persist_rundll32_mshta_scheduledtask_sysmon_1_3_11.evtx
+    min_hits: 1
+  # url.dll branch: url.dll,FileProtocolHandler / OpenURL ms-browser:// (launched via WMI)
+  - file: tests/data/external/evtx-attack-samples/LM_wmi_PoisonHandler_Mr-Un1k0d3r_sysmon_1_13.evtx
+    min_hits: 2
+  # Proxy-export branch: advpack.dll,RegisterOCX calc.exe
+  - file: tests/data/external/evtx-attack-samples/exec_sysmon_1_lolbin_rundll32_advpack_RegisterOCX.evtx
+    min_hits: 1
+  # No-arguments branch: bare rundll32.exe spawned for reflective PE injection
+  - file: tests/data/external/evtx-attack-samples/Sysmon_meterpreter_ReflectivePEInjection_to_notepad_.evtx
+    min_hits: 1
+  # User-path branch: c:\users\public\memViewData.jpg,PluginInit (maldoc via mshta)
+  - file: tests/data/external/evtx-attack-samples/maldoc_mshta_via_shellbrowserwind_rundll32.evtx
+    min_hits: 1
+  # User-path branch with an 8.3 short name: C:\PROGRA~3\DATAUS~1.DLL
+  - file: tests/data/external/evtx-attack-samples/rundll32_cmd_schtask.evtx
+    min_hits: 3
+  # Proxy-export branch: comsvcs.dll MiniDump of LSASS (OTRF)
+  - file: tests/data/external/otrf/psh_lsass_memory_dump_comsvcs.zip
+    min_hits: 1
+  # User-path branch: Control_RunDLL C:\ProgramData\calc.cpl (OTRF)
+  - file: tests/data/external/otrf/psh_control_panel_execution.zip
+    min_hits: 2
+negative:
+  # Real svchost-launched SHCreateLocalServerRunDll and AppX ShellRefresh (EVTX), plus synthetic
+  # printing, Control_RunDLL desk.cpl, keymgr and url.dll opening an https link
+  - file: tests/data/samples/win_rundll32_suspicious_usage_benign.json

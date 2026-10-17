@@ -1,0 +1,49 @@
+title: PowerShell Launched With Encoded or Base64-Decoded Command
+id: d8bb28aa-d181-47ca-8da6-72692aa317de
+status: experimental
+description: |
+    Detects powershell.exe or pwsh.exe started with an encoded command
+    (-EncodedCommand or any of its abbreviations, with any dash style), or
+    with a command line that decodes Base64 inline via FromBase64String.
+    Both hide the real command from casual review and are standard in
+    loaders and C2 launchers (Empire, Meterpreter, webshells).
+    The flag list is written so that -Encoding (Get-Content, Out-File) does not match.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1059/001/
+    - https://attack.mitre.org/techniques/T1027/010/
+    - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe
+tags:
+    - attack.execution
+    - attack.t1059.001
+    - attack.stealth
+    - attack.t1027.010
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    selection_encoded_flag:
+        # -EncodedCommand abbreviations. Each short form needs a trailing space;
+        # only "-encoded" is an open prefix, so "-Encoding" never matches.
+        CommandLine|windash|contains:
+            - ' -e '
+            - ' -ec '
+            - ' -en '
+            - ' -enc '
+            - ' -enco '
+            - ' -encod '
+            - ' -encode '
+            - ' -encoded'
+    selection_inline_decode:
+        CommandLine|contains: 'FromBase64String'
+    condition: selection_img and (selection_encoded_flag or selection_inline_decode)
+falsepositives:
+    - Configuration management, RMM and monitoring agents that run PowerShell with -EncodedCommand
+    - Cloud VM extensions and deployment tooling that pass scripts as Base64
+    - Admin scripts that decode Base64 inline on the command line
+level: medium

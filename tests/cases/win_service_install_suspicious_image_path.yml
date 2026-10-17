@@ -1,0 +1,19 @@
+rule: rules/windows/persistence/win_service_install_suspicious_image_path.yml
+# System-log rule: windows-logsources adds the Channel=System condition.
+pipelines: [windows-logsources]
+positive:
+  # Empire psexec: %COMSPEC% /C start /b powershell -noP -sta -w 1 -enc
+  - file: tests/data/external/otrf/empire_psexec_dcerpc_tcp_svcctl.zip
+    min_hits: 1
+  # Empire smbexec: random 20-char service name, nested %COMSPEC% + encoded PowerShell
+  - file: tests/data/external/otrf/empire_smbexec_dcerpc_smb_svcctl.zip
+    min_hits: 1
+  # Remote service creation: ImagePath is a bare cmd.exe (x2) and calc.exe, no path
+  - file: tests/data/external/evtx-attack-samples/LM_Remote_Service02_7045.evtx
+    min_hits: 3
+  # Named-pipe privilege escalation: %COMSPEC% /c ... echo > \\.\pipe\WinPwnagePipe
+  - file: tests/data/external/evtx-attack-samples/System_7045_namedpipe_privesc.evtx
+    min_hits: 1
+negative:
+  # Real Defender kernel driver (OTRF) plus synthetic drivers, svchost-hosted and vendor services
+  - file: tests/data/samples/win_service_install_suspicious_image_path_benign.json

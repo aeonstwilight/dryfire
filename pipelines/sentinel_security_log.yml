@@ -1,0 +1,35 @@
+# Sentinel: send Windows Security-log rules to the SecurityEvent table.
+#
+# The Azure Monitor pipeline only knows tables for some log sources (process
+# creation, file, registry, network). This pipeline runs before it and, for
+# rules with `logsource: product: windows, service: security`, sets the table
+# to SecurityEvent. Azure Monitor then checks every field against that table.
+#
+# Field mappings: SecurityEvent has no column for some event-specific fields;
+# they only exist inside the raw EventData XML. Map them to EventData only
+# for rules that use them with `contains` matching, where searching EventData
+# gives the same result. Add each mapping deliberately, per field.
+#
+# Used by scripts/convert.py (the "sentinel" target).
+
+name: dryfire Sentinel Security-log table mapping
+priority: 5
+transformations:
+  - id: dryfire_securityevent_table
+    type: set_state
+    key: query_table
+    val: SecurityEvent
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: security
+
+  # 4698 / 4699 / 4700-4702: task XML lives in EventData, not its own column.
+  - id: dryfire_securityevent_taskcontent
+    type: field_name_mapping
+    mapping:
+      TaskContent: EventData
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: security

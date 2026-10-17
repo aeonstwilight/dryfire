@@ -1,0 +1,13 @@
+rule: rules/windows/execution/win_office_spawning_shell_or_script_host.yml
+positive:
+  # Real: a Word binary copied to AppData for wwlib.dll side-loading spawns cmd.exe
+  - file: tests/data/external/evtx-attack-samples/sideloading_uacbypass_rundll32_injection_c2.evtx
+    min_hits: 1
+  # Synthetic: Word->PowerShell -enc, Excel->cmd, Outlook->PowerShell, EQNEDT32->cmd,
+  # PowerPoint->mshta, uppercase WINWORD.EXE path->wscript
+  - file: tests/data/samples/win_office_spawning_shell_or_script_host_synthetic_positive.json
+    min_hits: 6
+negative:
+  # Real Excel -> Click-to-Run AppVDllSurrogate64 (OTRF), plus synthetic printing (splwow64,
+  # rundll32 PrintConfig), Outlook -> browser, and explorer -> cmd (non-Office parent)
+  - file: tests/data/samples/win_office_spawning_shell_or_script_host_benign.json

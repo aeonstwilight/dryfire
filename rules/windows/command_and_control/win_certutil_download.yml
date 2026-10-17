@@ -1,0 +1,35 @@
+title: Certutil Downloading From a URL
+id: 5ca93264-7d64-4e46-bef8-a556c4cdd42f
+status: experimental
+description: |
+    Detects certutil.exe run with -urlcache or -verifyctl (any dash style)
+    together with an http, https or ftp URL, which is how certutil is used to
+    pull payloads onto a host. Requiring the URL keeps routine cache
+    administration (listing or clearing the URL cache) out.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1105/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/certutil
+tags:
+    - attack.command-and-control
+    - attack.t1105
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith: '\certutil.exe'
+    selection_verb:
+        CommandLine|windash|contains:
+            - ' -urlcache'
+            - ' -verifyctl'
+    selection_url:
+        CommandLine|contains:
+            - 'http://'
+            - 'https://'
+            - 'ftp://'
+    condition: selection_img and selection_verb and selection_url
+falsepositives:
+    - Administrators testing CRL/AIA retrieval with -urlcache against a PKI URL
+level: high

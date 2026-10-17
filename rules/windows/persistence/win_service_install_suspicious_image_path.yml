@@ -1,0 +1,55 @@
+title: Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path
+id: 766335a9-08be-4da8-b038-aeb703bc5442
+status: experimental
+description: |
+    Detects a new service (System 7045) whose ImagePath runs a command
+    interpreter, script host or LOLBin, writes to a named pipe
+    (getsystem-style impersonation), runs from a user folder, or has no path
+    at all. Legitimate services use a full path (or %SystemRoot%/System32
+    based), so a bare "cmd.exe" is itself a signal. Covers PsExec-style
+    remote execution by Empire and smbexec, remote service creation, and
+    named-pipe privilege escalation.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1543/003/
+    - https://attack.mitre.org/techniques/T1569/002/
+    - https://learn.microsoft.com/en-us/windows/win32/services/service-control-manager
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1543.003
+    - attack.execution
+    - attack.t1569.002
+logsource:
+    product: windows
+    service: system
+detection:
+    selection:
+        EventID: 7045
+    selection_interpreter:
+        ImagePath|contains:
+            - 'cmd.exe'
+            - '%COMSPEC%'
+            - 'powershell'
+            - 'pwsh'
+            - 'mshta'
+            - 'rundll32'
+            - 'regsvr32'
+            - 'wscript'
+            - 'cscript'
+    selection_pipe:
+        ImagePath|contains: '\pipe\'
+    selection_user_path:
+        ImagePath|contains:
+            - '\Users\'
+            - '\AppData\'
+            - '\Temp\'
+    path_present:
+        # Any backslash means the image path has at least some path.
+        ImagePath|contains: '\'
+    condition: selection and (selection_interpreter or selection_pipe or selection_user_path or not path_present)
+falsepositives:
+    - Installers or management agents that register a service wrapping cmd.exe or PowerShell
+    - Software installed per-user that registers a service from the user profile
+level: high
