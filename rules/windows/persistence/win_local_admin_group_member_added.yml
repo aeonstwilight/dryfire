@@ -11,13 +11,13 @@ description: |
 author: aeonstwilight
 date: 2026-10-17
 references:
-    - https://attack.mitre.org/techniques/T1098/
+    - https://attack.mitre.org/techniques/T1098/007/
     - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732
     - https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
 tags:
     - attack.persistence
     - attack.privilege-escalation
-    - attack.t1098
+    - attack.t1098.007
 logsource:
     product: windows
     service: security

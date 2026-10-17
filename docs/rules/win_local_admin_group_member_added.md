@@ -5,7 +5,7 @@
 | **Rule** | [`rules/windows/persistence/win_local_admin_group_member_added.yml`](../../rules/windows/persistence/win_local_admin_group_member_added.yml) |
 | **Rule ID** | `2f487cc5-fa62-4eca-9403-419bbe64fe49` |
 | **Level** | medium |
-| **ATT&CK** | Persistence, Privilege Escalation: T1098 Account Manipulation |
+| **ATT&CK** | Persistence, Privilege Escalation: T1098.007 Account Manipulation: Additional Local or Domain Groups |
 | **Log source** | Security 4732 (requires "Audit Security Group Management") |
 
 ## Summary
@@ -50,7 +50,7 @@ Tune by subject and member together, for example "SYSTEM adding the policy-defin
 
 ## Related techniques
 
-- **T1098.007 Additional Local or Domain Groups:** the specific sub-technique for this activity.
+- **T1098 Account Manipulation:** the parent technique; other sub-techniques cover credentials, SSH keys and cloud roles.
 - **T1136.001 Local Account:** a new local account (4720) created just before being made admin.
 - **T1078.003 Local Accounts:** later use of the new admin account.
 - **T1484.001 Group Policy Modification:** attackers pushing admin membership through GPO.
