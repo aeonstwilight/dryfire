@@ -113,7 +113,7 @@ Milestone 2 is done when CI enforces rule metadata, a noise sweep over a large c
    - certutil encode/decode
    - LSASS access from unbacked memory (CallTrace `UNKNOWN`), and PPLdump-style access. **Decision (2026-10-17):** the `UNKNOWN`-frame rule was rejected (2 uncertain hits vs 8 .NET-agent false positives in the sweep corpus); PPLdump-style access is covered instead by `win_lsass_access_from_user_path` (any mask outside the memory-read rule's list, from a user/temp/network path).
    - Members added to other privileged built-in groups (Remote Desktop Users, Backup Operators, Remote Management Users)
-   - Members added to domain admin groups (4728/4756)
+   - Members added to domain admin groups (4728/4756), including DnsAdmins (domain-local, matched by name; deferred here from the built-in groups rule, owner decision 2026-10-17)
    - Rundll32 with a relative-path DLL (needs an allow-list approach)
 
 **Out of scope for M2:** the same as M1 (Elastic, cloud rules, live SIEM validation, web UI).

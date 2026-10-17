@@ -67,3 +67,7 @@ win_lsass_access_from_user_path:
   evtx-attack-samples: 2
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_privileged_builtin_group_member_added:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
