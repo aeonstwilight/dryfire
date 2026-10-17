@@ -41,7 +41,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 
 | Rule | Tactic | Technique | SPL | KQL | Tested |
 |------|--------|-----------|-----|-----|--------|
-| _(populated as rules are added)_ | | | | | |
+| [LSASS Process Opened With Memory Read Access](docs/rules/win_lsass_memory_access.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
 
 ## Adding a rule
 

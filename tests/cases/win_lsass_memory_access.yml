@@ -1,0 +1,14 @@
+rule: rules/windows/credential_access/win_lsass_memory_access.yml
+positive:
+  # mimikatz.exe sekurlsa::logonpasswords, 0x1010
+  - file: tests/data/external/evtx-attack-samples/sysmon_10_lsass_mimikatz_sekurlsa_logonpasswords.evtx
+    min_hits: 1
+  # Outflank-Dumpert, AndrewSpecial and the Dumpert DLL via rundll32, 0x1fffff
+  - file: tests/data/external/evtx-attack-samples/sysmon_10_11_outlfank_dumpert_and_andrewspecial_memdump.evtx
+    min_hits: 8
+  # Invoke-Mimikatz in powershell.exe (Empire), 0x1010
+  - file: tests/data/external/otrf/empire_mimikatz_logonpasswords.zip
+    min_hits: 1
+negative:
+  # OTRF svchost background access (0x1000, 0x2000) plus synthetic filter/target cases
+  - file: tests/data/samples/win_lsass_memory_access_benign.json

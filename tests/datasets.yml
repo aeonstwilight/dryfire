@@ -16,4 +16,14 @@
 #     path: evtx-attack-samples/DE_1102_security_log_cleared.evtx
 #     sha256: <hash>
 
-datasets: []
+datasets:
+  # win_lsass_memory_access
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/sysmon_10_lsass_mimikatz_sekurlsa_logonpasswords.evtx
+    path: evtx-attack-samples/sysmon_10_lsass_mimikatz_sekurlsa_logonpasswords.evtx
+    sha256: 9a1689574ed08c1fb18e7ff3f3bed612109aedcb7bf8efbf3537d756e669e96f
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/sysmon_10_11_outlfank_dumpert_and_andrewspecial_memdump.evtx
+    path: evtx-attack-samples/sysmon_10_11_outlfank_dumpert_and_andrewspecial_memdump.evtx
+    sha256: f0d11bf8e186947aaf64c3a57debb1b665f518e2dab13acdaafb30c7e8d262af
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_mimikatz_logonpasswords.zip
+    path: otrf/empire_mimikatz_logonpasswords.zip
+    sha256: bb4c057b62d781be5426e011872ba1a15070c07afbb24848a14458f4b22b06fb
