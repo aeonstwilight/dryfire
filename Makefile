@@ -32,8 +32,10 @@ all: lint convert test coverage
 # Validate every rule with `sigma check`, using a pinned ATT&CK version
 # (see scripts/lint.py). --fail-on-issues makes validator warnings fail the build too.
 # Extra flags can be passed in, e.g. make lint LINT_FLAGS="-x d3_fendtag"
+# Then check repo conventions (required fields, path, references, triage note).
 lint:
 	$(PYTHON) scripts/lint.py --fail-on-issues $(LINT_FLAGS) $(RULES)
+	$(PYTHON) scripts/check_metadata.py --rules-dir $(RULES)
 
 # Sigma -> SPL and KQL, written to build/.
 convert:
