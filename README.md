@@ -52,6 +52,8 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [WMI Provider Host Spawning a Shell, Proxy Binary or User-Folder Executable](docs/rules/win_wmiprvse_suspicious_child.md) | Execution | T1047 | ✅ | ✅ | ✅ |
 | [Member Added to Local Administrators Group](docs/rules/win_local_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 | [Rundll32 Running Script, Proxy Export, User-Folder DLL or No Arguments](docs/rules/win_rundll32_suspicious_usage.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
+| [PsExec Service Installed](docs/rules/win_psexec_service_installed.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
+| [PsExec-Style Named Pipes Created or Connected](docs/rules/win_psexec_named_pipes.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
 
 ## Adding a rule
 

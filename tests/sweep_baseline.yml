@@ -47,3 +47,11 @@ win_system_log_cleared:
   evtx-attack-samples: 2
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_psexec_named_pipes:
+  evtx-attack-samples: 9
+  otrf-apt29-day1: 32
+  otrf-apt29-day2: 0
+win_psexec_service_installed:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 4
+  otrf-apt29-day2: 0

@@ -1,0 +1,12 @@
+rule: rules/windows/lateral_movement/win_psexec_service_installed.yml
+# System-log rule: windows-logsources adds the Channel=System condition.
+pipelines: [windows-logsources]
+positive:
+  # Sysinternals PsExec: 7045 PSEXESVC, %SystemRoot%\PSEXESVC.exe
+  - file: tests/data/external/otrf/cmd_psexec_lsa_secrets_dump.zip
+    min_hits: 1
+negative:
+  # Real Defender driver install (OTRF) plus synthetic drivers, svchost-hosted and vendor services
+  - file: tests/data/samples/win_service_install_suspicious_image_path_benign.json
+  # Empire psexec module: its own service name and %COMSPEC% image path, not Sysinternals PsExec
+  - file: tests/data/external/otrf/empire_psexec_dcerpc_tcp_svcctl.zip

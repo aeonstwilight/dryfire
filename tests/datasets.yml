@@ -155,3 +155,11 @@ datasets:
   - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/defense_evasion/host/cmd_mshta_vbscript_execute_psh.zip
     path: otrf/cmd_mshta_vbscript_execute_psh.zip
     sha256: f5f700bc986bbe73edcc209754b28a3e0ad38c56877f7fc5ed6fd04bc036d9f4
+
+  # win_psexec_service_installed / win_psexec_named_pipes (also use otrf/cmd_psexec_lsa_secrets_dump.zip above)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_renamed_psexec_service_sysmon_17_18.evtx
+    path: evtx-attack-samples/DE_renamed_psexec_service_sysmon_17_18.evtx
+    sha256: 3b58311891bc80b239da102dec9c462d9c8d07c1f0ba5fedaf2c59e1e4447179
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/sysmon_privesc_psexec_dwell.evtx
+    path: evtx-attack-samples/sysmon_privesc_psexec_dwell.evtx
+    sha256: a79a14dcaac146c06c4d3dc3eb5a6ca1eaf62c93d65f47699a2aa5e88e436223

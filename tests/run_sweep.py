@@ -40,7 +40,7 @@ DEFAULT_PIPELINES = ["sysmon", "windows-logsources"]
 KEY_FIELDS = ["SystemTime", "UtcTime", "Computer", "Hostname", "EventID", "User",
               "ParentImage", "Image", "CommandLine",
               "SourceImage", "TargetImage", "GrantedAccess",
-              "ServiceName", "ImagePath", "TaskName",
+              "PipeName", "ServiceName", "ImagePath", "TaskName",
               "TargetUserName", "TargetSid", "MemberSid", "SubjectUserName"]
 
 

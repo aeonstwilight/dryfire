@@ -1,0 +1,33 @@
+title: PsExec Service Installed
+id: 9e2dd760-c1e9-4385-8256-ad0c7efc5f21
+status: experimental
+description: |
+    Detects the Sysinternals PsExec service being installed (System 7045 with
+    service name PSEXESVC or an image path ending in PSEXESVC.exe). PsExec
+    installs this service on the target to run commands remotely or as SYSTEM.
+    Renamed PsExec (-r) changes both values and is not visible in 7045;
+    the PsExec named-pipe rule covers that case.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1569/002/
+    - https://attack.mitre.org/techniques/T1021/002/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/psexec
+tags:
+    - attack.lateral-movement
+    - attack.t1021.002
+    - attack.execution
+    - attack.t1569.002
+logsource:
+    product: windows
+    service: system
+detection:
+    selection:
+        EventID: 7045
+    selection_name:
+        - ServiceName: 'PSEXESVC'
+        - ImagePath|endswith: '\PSEXESVC.exe'
+    condition: selection and selection_name
+falsepositives:
+    - Administrators and IT tooling using Sysinternals PsExec for remote administration
+level: medium

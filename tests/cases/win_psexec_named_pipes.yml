@@ -1,0 +1,15 @@
+rule: rules/windows/lateral_movement/win_psexec_named_pipes.yml
+positive:
+  # Sysinternals PsExec: \PSEXESVC plus \PSEXESVC-<host>-<pid>-stdin/stdout/stderr (17 and 18)
+  - file: tests/data/external/otrf/cmd_psexec_lsa_secrets_dump.zip
+    min_hits: 8
+  # Renamed PsExec (-r svchost): \svchost-MSEDGEWIN10-8116-stdin/stdout/stderr
+  - file: tests/data/external/evtx-attack-samples/DE_renamed_psexec_service_sysmon_17_18.evtx
+    min_hits: 6
+  # Local PsExec privilege escalation: \PSEXESVC control pipe only
+  - file: tests/data/external/evtx-attack-samples/sysmon_privesc_psexec_dwell.evtx
+    min_hits: 3
+negative:
+  # Real system pipes (\srvsvc, \wkssvc, \browser, \eventlog, \ntsvcs, \lsass) from EVTX, plus
+  # synthetic near-misses (\stdin, \ExampleApp-stdin-handler, \PSEXESVC2)
+  - file: tests/data/samples/win_psexec_named_pipes_benign.json
