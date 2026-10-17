@@ -118,3 +118,29 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/Network_Service_Guest_added_to_admins_4732.evtx
     path: evtx-attack-samples/Network_Service_Guest_added_to_admins_4732.evtx
     sha256: 9619b9d9d7bb8a277080167ff639fd9162e3d88d61d674cf1606beadce17ea5a
+
+  # win_rundll32_suspicious_usage
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/exec_persist_rundll32_mshta_scheduledtask_sysmon_1_3_11.evtx
+    path: evtx-attack-samples/exec_persist_rundll32_mshta_scheduledtask_sysmon_1_3_11.evtx
+    sha256: fb5679aec77dc45a35902f705b513811dfea0f2f93c9c8503464a20270c3222f
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/LM_wmi_PoisonHandler_Mr-Un1k0d3r_sysmon_1_13.evtx
+    path: evtx-attack-samples/LM_wmi_PoisonHandler_Mr-Un1k0d3r_sysmon_1_13.evtx
+    sha256: 9d10de497c8d7929f262be305547d148bac17e1d4fd72222bfae3855ddf9c93a
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/exec_sysmon_1_lolbin_rundll32_advpack_RegisterOCX.evtx
+    path: evtx-attack-samples/exec_sysmon_1_lolbin_rundll32_advpack_RegisterOCX.evtx
+    sha256: 6d5b52398a67b36c160ec22db8e027efbc3e40943075d2d79c748931bc8d9982
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/Sysmon_meterpreter_ReflectivePEInjection_to_notepad_.evtx
+    path: evtx-attack-samples/Sysmon_meterpreter_ReflectivePEInjection_to_notepad_.evtx
+    sha256: 872e959cb691d3e3d3a48068c02c7fb579c2d818a007fbd2831f6616bb8c7082
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Other/maldoc_mshta_via_shellbrowserwind_rundll32.evtx
+    path: evtx-attack-samples/maldoc_mshta_via_shellbrowserwind_rundll32.evtx
+    sha256: fd59102d39891a81ee0e002bec2a855998c57e6439a10608fd9f4b12861e34a5
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/Malware/rundll32_cmd_schtask.evtx
+    path: evtx-attack-samples/rundll32_cmd_schtask.evtx
+    sha256: 4ee3de8ac48d973a800666c3e1d757d11eaf9a960e7144db566bb51d903b4b09
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/psh_lsass_memory_dump_comsvcs.zip
+    path: otrf/psh_lsass_memory_dump_comsvcs.zip
+    sha256: 0af9e920220d746432f0972be83ad057629695540aecd68c15869d190786e1ae
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/defense_evasion/host/psh_control_panel_execution.zip
+    path: otrf/psh_control_panel_execution.zip
+    sha256: d0c6ab023cb7c9db716dce58f68658d7ab25e7c8ebaaa6fe851a2fa01c55555a

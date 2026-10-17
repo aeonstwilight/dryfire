@@ -1,0 +1,62 @@
+title: Rundll32 Running Script, Proxy Export, User-Folder DLL or No Arguments
+id: fac47e33-6ef7-4f7a-8cdc-6e976ee7f717
+status: experimental
+description: |
+    Detects rundll32.exe used as a proxy rather than to call a normal system
+    DLL export: running JavaScript/VBScript through mshtml, calling LOLBAS
+    exports that launch or load something else (comsvcs MiniDump, zipfldr
+    RouteTheCall, advpack, pcwutl, ieframe/shdocvw OpenURL, url.dll for
+    non-web targets), loading a DLL or CPL from a user or data folder
+    (including 8.3 short paths), or starting with no arguments at all, which
+    is how rundll32 is spawned as a host for process injection.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1218/011/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/rundll32
+tags:
+    - attack.stealth
+    - attack.t1218.011
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith: '\rundll32.exe'
+    selection_script:
+        CommandLine|contains:
+            - 'javascript:'
+            - 'vbscript:'
+            - 'RunHTMLApplication'
+    selection_proxy_export:
+        CommandLine|contains:
+            - 'comsvcs.dll'
+            - 'zipfldr.dll'
+            - 'advpack.dll'
+            - 'pcwutl.dll'
+            - 'ieframe.dll,OpenURL'
+            - 'shdocvw.dll,OpenURL'
+    selection_url_dll:
+        CommandLine|contains: 'url.dll,'
+    filter_url_web:
+        # Opening an ordinary web link through url.dll is normal app behaviour.
+        CommandLine|contains:
+            - 'http://'
+            - 'https://'
+    selection_user_path:
+        CommandLine|contains:
+            - '\Users\Public\'
+            - '\AppData\'
+            - '\Temp\'
+            - '\Downloads\'
+            - '\ProgramData\'
+            - '\PROGRA~3\'
+    selection_no_args:
+        CommandLine|endswith:
+            - 'rundll32.exe'
+            - 'rundll32.exe"'
+    condition: selection_img and (selection_script or selection_proxy_export or (selection_url_dll and not filter_url_web) or selection_user_path or selection_no_args)
+falsepositives:
+    - Legitimate software that ships a DLL or control panel applet under ProgramData or AppData and loads it with rundll32
+    - Administrators using advpack.dll LaunchINFSection to install drivers or INF-based software
+level: high
