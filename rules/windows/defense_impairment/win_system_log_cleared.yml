@@ -1,0 +1,29 @@
+title: Windows Event Log Other Than Security Cleared
+id: 182e1296-8856-49de-ac0a-00ad45bb8676
+status: experimental
+description: |
+    Detects System 104 (provider Microsoft-Windows-Eventlog), logged when any
+    event log other than Security is cleared: System, Application, Sysmon,
+    PowerShell/Operational and the rest. Complements the Security 1102 rule.
+    The rule is scoped to the System channel by its log source; other
+    channels that reuse Event ID 104 (for example RdpCoreTS/Operational) do
+    not match.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1685/005/
+    - https://learn.microsoft.com/en-us/windows/win32/wes/eventschema-systempropertiestype-complextype
+tags:
+    - attack.defense-impairment
+    - attack.t1685.005
+logsource:
+    product: windows
+    service: system
+detection:
+    selection:
+        EventID: 104
+    condition: selection
+falsepositives:
+    - Administrators clearing logs during troubleshooting or before imaging a machine
+    - Lab and test environments that reset logs between runs
+level: high

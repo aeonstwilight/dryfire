@@ -43,3 +43,7 @@ win_wmiprvse_suspicious_child:
   evtx-attack-samples: 12
   otrf-apt29-day1: 0
   otrf-apt29-day2: 4
+win_system_log_cleared:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

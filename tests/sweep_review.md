@@ -48,6 +48,12 @@ No false positives. Every hit outside a rule's own test samples is either an att
 - **APT29, attack:** day 1 has APT29's `javamtsup.exe` starting a bare `rundll32.exe` as SYSTEM; day 2 has `rundll32 …\AppData\Roaming\Microsoft\kxwn.lock,VoidFunc`.
 - **Borderline, labelled attack:** `zipfldr.dll,RouteTheCall shell:::{769f9427-…}` under `explorer.exe`, from a LOLBAS demo sample. A user opening a shell folder could look the same, so this is the first candidate for tuning if it shows up in production.
 
+## Additions
+
+| Date | Rule | Hits outside own samples | Notes |
+|---|---|---|---|
+| 2026-10-17 | win_system_log_cleared | 0 | Only its two own EVTX samples match; nothing to review. |
+
 ## Limits of this review
 
 A clean sweep shows the rules are precise on these datasets, not that they're free of false positives in a real fleet. The APT29 background traffic is the only sizeable stretch of normal activity in the corpus, and it comes from a small lab with few third-party tools. Software inventories, EDR agents and management tooling in a real environment will need their own tuning; each triage note lists the expected sources.
