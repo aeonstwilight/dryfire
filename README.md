@@ -1,0 +1,81 @@
+# detection-lab
+
+Detection-as-code for SOC teams. Every detection is written once as a [Sigma](https://sigmahq.io/) rule, tested against real attack data in CI, and converted to Splunk SPL and Microsoft Sentinel / Defender KQL. An ATT&CK Navigator layer is generated from the rule tags so coverage is always visible.
+
+## Why
+
+Detections usually live inside a SIEM, untested and undocumented. This repo treats them like code:
+
+- **One source of truth.** Rules are vendor-neutral Sigma YAML; SIEM queries are build output.
+- **Tested.** Each rule must fire on a known-malicious sample and stay quiet on benign baseline logs.
+- **Documented for the analyst.** Each rule ships with a triage note: what it means when it fires, what to check next, and known false positives.
+- **Coverage you can see.** CI publishes an ATT&CK Navigator layer built from the rules.
+
+## Repo layout
+
+```
+rules/               Sigma rules, grouped by platform and ATT&CK tactic
+tests/cases/         One test case per rule (positive and negative samples, expected hits)
+tests/data/          Small checked-in log samples; larger datasets fetched by script
+tests/run_tests.py   Runs every rule against its test case
+pipelines/           Custom pySigma processing pipelines / field mappings
+scripts/             convert.py, coverage.py, fetch_datasets.py
+docs/rules/          Per-rule triage notes
+build/               Generated output (gitignored; published as CI artifacts)
+```
+
+## How CI works
+
+On every push and pull request:
+
+1. **Lint:** `sigma check` validates every rule.
+2. **Convert:** each rule is converted to SPL and KQL; a conversion failure fails the build.
+3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
+4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
+
+Converted queries and the coverage layer are uploaded as build artifacts.
+
+> **Note:** step 3 tests the Sigma logic, not the converted queries. Validating SPL and KQL against live backends is on the roadmap.
+
+## Rule coverage
+
+| Rule | Tactic | Technique | SPL | KQL | Tested |
+|------|--------|-----------|-----|-----|--------|
+| _(populated as rules are added)_ | | | | | |
+
+## Adding a rule
+
+1. Write the rule in `rules/<platform>/<tactic>/` using the naming convention `<platform>_<short_description>.yml`.
+2. Include ATT&CK tags (`attack.<tactic>`, `attack.tXXXX`), `level`, `falsepositives`, and `references`.
+3. Add a test case in `tests/cases/` pointing to a positive sample (should fire) and a negative sample (should not).
+4. Write a triage note in `docs/rules/` using the template.
+5. Run `make test` locally, then open a pull request.
+
+## Running locally
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/fetch_datasets.py   # pull test datasets
+make lint convert test coverage
+```
+
+## Roadmap
+
+- **M1:** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
+- **M2:** False-positive tuning against a larger benign dataset; stricter rule metadata checks
+- **M3:** Validate converted queries against live backends (Splunk container, Azure Data Explorer)
+- **M4:** AWS CloudTrail detections
+
+## Data sources
+
+- [EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES): Windows event logs mapped to ATT&CK
+- [OTRF Security Datasets](https://github.com/OTRF/Security-Datasets): recorded attack and benign telemetry
+
+## How this was built
+
+The detection logic, rule design, test strategy and guardrails are mine. Code was written with Claude Code as a coding partner.
+
+## License and attribution
+
+Rules in this repo are original unless noted. Any rule adapted from [SigmaHQ](https://github.com/SigmaHQ/sigma) is credited in its `references` and `author` fields, per the [Detection Rule License](https://github.com/SigmaHQ/Detection-Rule-License).
