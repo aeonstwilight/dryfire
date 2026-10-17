@@ -17,6 +17,9 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 - **All rules are original.** Do not copy rules from SigmaHQ or anywhere else. If the owner explicitly chooses to adapt a SigmaHQ rule, credit it in `author` and `references` (Detection Rule License requires attribution).
 - **No employer material.** Never reproduce detections, queries, field names, hostnames, or anything else from the owner's former employers. If something looks like it came from a work environment, stop and ask.
 - **No secrets or real environment data** in the repo. Test data comes only from public datasets (EVTX-ATTACK-SAMPLES, OTRF Security Datasets) or is synthetic.
+- **Public tools only.** Build the pipeline only from public tools (pySigma, sigma-cli, Zircolite, GitHub Actions, Make). Don't model the CI, repo structure or tooling on any employer's internal detection-as-code pipeline.
+- **ATT&CK is the only framework mapping.** Do not add NIST 800-53, FedRAMP or any other compliance-control mapping: no control tags in rules, no control fields in test cases or triage notes, no control columns in reports or coverage output.
+- **No document generation.** Don't add features that generate compliance, audit or customer-facing documents from the rules. The per-rule triage notes are hand-written Markdown, and `build/` holds only build reports (conversion summary, test results, Navigator layer).
 - **Check current versions.** Verify package names, CLI flags and backend/pipeline names (pySigma, sigma-cli, pySigma-backend-splunk, pySigma-backend-kusto, Zircolite) against their current docs before using them. Don't rely on memory.
 
 ## Conventions
@@ -33,6 +36,12 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
   - Triage steps
   - Known false positives
   - Related techniques
+- ATT&CK tags are validated against a pinned ATT&CK version (v20.0, set in `scripts/lint.py`). Use v20 tactic names: `attack.stealth` and `attack.defense-impairment`, not `attack.defense-evasion`.
+- Conversion targets (owner decisions, 2026-10-17):
+  - Splunk: Sysmon-based (`sysmon` + `splunk_windows` pipelines) for every rule.
+  - Sentinel: Security-log rules (e.g. 4698, 1102, 4732) get a custom table mapping to `SecurityEvent` in `pipelines/`, checked field by field per rule. System 7045 and Sysmon rules other than process creation stay "unsupported" for M1.
+  - Defender XDR: anything outside the backend's built-in tables stays "unsupported" for M1. Revisit in M3.
+  - A rule field that doesn't exist in the target table fails the build. Don't relax this.
 - `build/` is generated and gitignored. Never hand-edit it.
 - Keep large datasets out of git; `scripts/fetch_datasets.py` downloads them into `tests/data/external/` (gitignored). Only small, trimmed samples are checked in.
 
