@@ -91,3 +91,8 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/panache_sysmon_vs_EDRTestingScript.evtx
     path: evtx-attack-samples/panache_sysmon_vs_EDRTestingScript.evtx
     sha256: 9c1371a0632de15095b6ffe2e38991b764d4beaddb1722178e93aa476f83f52f
+
+  # win_office_spawning_shell_or_script_host
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/Malware/sideloading_uacbypass_rundll32_injection_c2.evtx
+    path: evtx-attack-samples/sideloading_uacbypass_rundll32_injection_c2.evtx
+    sha256: ead8a4c6c822da22ac98c6f16123090f0eb30955666c63f9acaa0d51561925da
