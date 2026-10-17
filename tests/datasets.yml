@@ -96,3 +96,20 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/Malware/sideloading_uacbypass_rundll32_injection_c2.evtx
     path: evtx-attack-samples/sideloading_uacbypass_rundll32_injection_c2.evtx
     sha256: ead8a4c6c822da22ac98c6f16123090f0eb30955666c63f9acaa0d51561925da
+
+  # win_wmiprvse_suspicious_child (also uses otrf/empire_wmi_dcerpc_wmi_IWbemServices_ExecMethod.zip above)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/LM_wmiexec_impacket_sysmon_whoami.evtx
+    path: evtx-attack-samples/LM_wmiexec_impacket_sysmon_whoami.evtx
+    sha256: 21b8852b2b386f4d3f6f0c8a7304de8e628bb43cfa23888ab317b95b784ffe59
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/sysmon_20_21_1_CommandLineEventConsumer.evtx
+    path: evtx-attack-samples/sysmon_20_21_1_CommandLineEventConsumer.evtx
+    sha256: 136cd2549e4944e66c6f26aabafea84011ba011982ac1cf35cde7cb52d32b358
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/sysmon_exec_from_vss_persistence.evtx
+    path: evtx-attack-samples/sysmon_exec_from_vss_persistence.evtx
+    sha256: 9abd2bd89115f77f79a96d0ffcc0b1cdb238d2c6d3edcaf24abddc50ee405964
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_msbuild_dcerpc_wmi_smb.zip
+    path: otrf/empire_msbuild_dcerpc_wmi_smb.zip
+    sha256: edbc2fdd9e118da0999d7b941c78501cd4142e2afe9e794aed4349101fb59ca8
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_wmic_add_user_backdoor.zip
+    path: otrf/empire_wmic_add_user_backdoor.zip
+    sha256: 88502d9a8d90f17aa638d7331120d52e7295480ea5fc4a156463399181d1c6e1
