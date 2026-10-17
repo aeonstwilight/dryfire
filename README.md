@@ -49,6 +49,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [Certutil Downloading From a URL](docs/rules/win_certutil_download.md) | Command and Control | T1105 | ✅ | ✅ | ✅ |
 | [Office Application Spawning a Shell or Script Host](docs/rules/win_office_spawning_shell_or_script_host.md) | Execution | T1204.002, T1059.001, T1059.003 | ✅ | ✅ | ✅ |
 | [WMI Provider Host Spawning a Shell, Proxy Binary or User-Folder Executable](docs/rules/win_wmiprvse_suspicious_child.md) | Execution | T1047 | ✅ | ✅ | ✅ |
+| [Member Added to Local Administrators Group](docs/rules/win_local_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 

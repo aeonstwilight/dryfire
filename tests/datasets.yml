@@ -113,3 +113,8 @@ datasets:
   - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_wmic_add_user_backdoor.zip
     path: otrf/empire_wmic_add_user_backdoor.zip
     sha256: 88502d9a8d90f17aa638d7331120d52e7295480ea5fc4a156463399181d1c6e1
+
+  # win_local_admin_group_member_added
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/Network_Service_Guest_added_to_admins_4732.evtx
+    path: evtx-attack-samples/Network_Service_Guest_added_to_admins_4732.evtx
+    sha256: 9619b9d9d7bb8a277080167ff639fd9162e3d88d61d674cf1606beadce17ea5a

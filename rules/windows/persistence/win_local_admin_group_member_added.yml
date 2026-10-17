@@ -1,0 +1,33 @@
+title: Member Added to Local Administrators Group
+id: 2f487cc5-fa62-4eca-9403-419bbe64fe49
+status: experimental
+description: |
+    Detects an account or SID being added to the built-in local Administrators
+    group (Security 4732 with TargetSid S-1-5-32-544). Matching on the
+    well-known SID instead of the group name works on localized Windows
+    (Administrateurs, Administratoren) and if the group is renamed.
+    MemberName is only populated for domain accounts, so MemberSid is the
+    field to check for local accounts and built-in principals.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1098/
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732
+    - https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1098
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4732
+        TargetSid: 'S-1-5-32-544'
+    condition: selection
+falsepositives:
+    - Group Policy Restricted Groups or Intune local-admin policies re-applying membership (often logged as SYSTEM)
+    - Helpdesk or deployment processes granting temporary local admin
+    - Software installers adding service accounts to Administrators
+level: medium
