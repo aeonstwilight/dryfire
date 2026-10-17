@@ -54,6 +54,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [Rundll32 Running Script, Proxy Export, User-Folder DLL or No Arguments](docs/rules/win_rundll32_suspicious_usage.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
 | [PsExec Service Installed](docs/rules/win_psexec_service_installed.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
 | [PsExec-Style Named Pipes Created or Connected](docs/rules/win_psexec_named_pipes.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
+| [Renamed Shell, Script Host or LOLBin Executed](docs/rules/win_renamed_shell_or_lolbin.md) | Stealth | T1036.003 | ✅ | Defender only | ✅ |
 
 ## Adding a rule
 

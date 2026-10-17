@@ -163,3 +163,11 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/sysmon_privesc_psexec_dwell.evtx
     path: evtx-attack-samples/sysmon_privesc_psexec_dwell.evtx
     sha256: a79a14dcaac146c06c4d3dc3eb5a6ca1eaf62c93d65f47699a2aa5e88e436223
+
+  # win_renamed_shell_or_lolbin
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/privesc_unquoted_svc_sysmon_1_11.evtx
+    path: evtx-attack-samples/privesc_unquoted_svc_sysmon_1_11.evtx
+    sha256: 5b3bd618ff215254db994f223f1700082dbb1f339a651e1c89ae41d857edbcc2
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Execution/sysmon_zipexec.evtx
+    path: evtx-attack-samples/sysmon_zipexec.evtx
+    sha256: 4d995c2a339d3c272afd4ac8cf01f009ca5358bafe3fa51889b28f86296cd894

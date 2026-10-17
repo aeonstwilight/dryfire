@@ -1,0 +1,16 @@
+rule: rules/windows/stealth/win_renamed_shell_or_lolbin.yml
+positive:
+  # Real: cmd.exe renamed to program.exe (unquoted service path privilege escalation)
+  - file: tests/data/external/evtx-attack-samples/privesc_unquoted_svc_sysmon_1_11.evtx
+    min_hits: 1
+  # Real: cmd.exe renamed to i.exe, run from a zip in Temp
+  - file: tests/data/external/evtx-attack-samples/sysmon_zipexec.evtx
+    min_hits: 1
+  # Synthetic: one renamed copy of each other listed binary
+  - file: tests/data/samples/win_renamed_shell_or_lolbin_synthetic_positive.json
+    min_hits: 12
+negative:
+  # Real normal OriginalFileName mismatches from APT29 (Google, Azure agent, Teams, TSTheme,
+  # wlrmdr, wmiadap, AppHostRegistrationVerifier, PsExec64, sdelete64), plain cmd/powershell,
+  # plus synthetic normal pwsh.exe and bitsadmin.exe
+  - file: tests/data/samples/win_renamed_shell_or_lolbin_benign.json

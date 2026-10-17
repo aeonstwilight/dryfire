@@ -55,3 +55,7 @@ win_psexec_service_installed:
   evtx-attack-samples: 0
   otrf-apt29-day1: 4
   otrf-apt29-day2: 0
+win_renamed_shell_or_lolbin:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

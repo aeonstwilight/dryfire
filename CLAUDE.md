@@ -42,6 +42,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
   - Sentinel: Security-log rules (e.g. 4698, 1102, 4732) get a custom table mapping to `SecurityEvent` in `pipelines/`, checked field by field per rule. System 7045 and Sysmon rules other than process creation stay "unsupported" for M1.
   - Defender XDR: anything outside the backend's built-in tables stays "unsupported" for M1. Revisit in M3.
   - A rule field that doesn't exist in the target table fails the build. Don't relax this.
+  - The only exception: a rule/target pair listed in `pipelines/unsupported_targets.yml` with a reason, approved by the owner (owner decision, 2026-10-17). `convert.py` reports it as "unsupported (declared)", and fails if a listed pair converts after all or names a rule that doesn't exist.
 - `build/` is generated and gitignored. Never hand-edit it.
 - Keep large datasets out of git; `scripts/fetch_datasets.py` downloads them into `tests/data/external/` (gitignored). Only small, trimmed samples are checked in.
 
