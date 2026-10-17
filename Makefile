@@ -29,10 +29,11 @@ ZIRCOLITE_URL := https://github.com/wagga40/Zircolite/releases/download/v$(ZIRCO
 
 all: lint convert test coverage
 
-# Validate every rule. --fail-on-issues makes validator warnings fail the build too.
+# Validate every rule with `sigma check`, using a pinned ATT&CK version
+# (see scripts/lint.py). --fail-on-issues makes validator warnings fail the build too.
 # Extra flags can be passed in, e.g. make lint LINT_FLAGS="-x d3_fendtag"
 lint:
-	sigma check --fail-on-issues $(LINT_FLAGS) $(RULES)
+	$(PYTHON) scripts/lint.py --fail-on-issues $(LINT_FLAGS) $(RULES)
 
 # Sigma -> SPL and KQL, written to build/.
 convert:
