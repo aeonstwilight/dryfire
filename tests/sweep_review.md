@@ -57,6 +57,8 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-17 | win_psexec_named_pipes | 32 (APT29 day 1) | **Attack** (owner confirmed): the same 4 PsExec runs on NASHUA, each `\PSEXESVC` plus `\PSEXESVC-SCRANTON-<pid>-stdin/stdout/stderr` (created and connected). The pipe names show SCRANTON as the source host. |
 | 2026-10-17 | win_renamed_shell_or_lolbin | 0 | Only its two own EVTX samples match. None of the ~35 normal OriginalFileName mismatches in APT29 (Google, Azure agent, Teams, Sysinternals 64-bit builds, Windows binaries) match the targeted list. |
 | 2026-10-17 | win_certutil_encode_decode | 1 (APT29 day 2) | **Attack** (owner confirmed): on UTICA, `powershell.exe` runs `certutil -decode blob …\AppData\Roaming\Microsoft\kxwn.lock`, the DLL later loaded by `rundll32 kxwn.lock,VoidFunc` (already a rundll32-rule hit). |
+| 2026-10-17 | win_lsass_access_from_user_path | 0 | Only its own PPLdump sample matches. None of the ~1,000 normal LSASS accesses in APT29 (svchost, services, wininit, csrss, wmiprvse, Azure agents) come from a user or network path. |
+| 2026-10-17 | *(rejected)* LSASS access with `UNKNOWN` CallTrace frames | — | Investigated, not built: 7 attack hits already caught by the memory-read rule, 2 uncertain APT29 PowerShell `0x1000` hits, and 8 false positives from .NET agents (`AntimalwareConfig.exe`, `WindowsAzureTelemetryService.exe`). |
 
 ## Limits of this review
 

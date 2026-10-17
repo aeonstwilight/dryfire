@@ -24,8 +24,8 @@ Excluded by exact path: `services.exe`, `wininit.exe` and `csrss.exe` in `C:\Win
 Not covered:
 
 - **Other access masks.** A tool that requests a read mask not in the list won't fire. The list is a starting point, not an exhaustive bitmask check, which Sigma can't express.
-- **Tools that don't need a read handle.** PPLdump, for example, requests only `0x1000` and reaches LSASS another way. This needs a separate rule.
-- **CallTrace indicators** (`dbghelp.dll`, `dbgcore.dll`, `UNKNOWN(`) are deliberately not used. Against the current test data they added no detections the access masks didn't already catch, and they depend on the Sysmon config. They're a candidate for a separate "unbacked memory accessing LSASS" rule.
+- **Tools that don't need a read handle.** PPLdump, for example, requests only `0x1000` and reaches LSASS another way. The rule [LSASS Opened by a Process From a User or Network Path](win_lsass_access_from_user_path.md) covers that case when the tool runs from a user, temp or network path.
+- **CallTrace indicators** (`dbghelp.dll`, `dbgcore.dll`, `UNKNOWN(`) are deliberately not used. Against the test data they added no detections the access masks didn't already catch. A separate `UNKNOWN`-frame rule was investigated in M2 and rejected: across the sweep corpus it added 2 uncertain hits against 8 false positives from .NET agents (Azure antimalware and telemetry), because JIT-compiled .NET code, PowerShell included, also shows as `UNKNOWN`. The frames are still useful in triage (step 4).
 - **Hosts whose Sysmon config doesn't log ProcessAccess to `lsass.exe`.** Check this before trusting silence from this rule.
 
 ## Triage steps

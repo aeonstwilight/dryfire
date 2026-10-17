@@ -56,6 +56,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [PsExec-Style Named Pipes Created or Connected](docs/rules/win_psexec_named_pipes.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
 | [Renamed Shell, Script Host or LOLBin Executed](docs/rules/win_renamed_shell_or_lolbin.md) | Stealth | T1036.003 | ✅ | Defender only | ✅ |
 | [Certutil Encoding or Decoding a Non-Certificate File](docs/rules/win_certutil_encode_decode.md) | Stealth | T1140, T1027 | ✅ | ✅ | ✅ |
+| [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
 
 ## Adding a rule
 

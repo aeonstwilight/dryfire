@@ -1,0 +1,49 @@
+title: LSASS Opened by a Process From a User or Network Path
+id: 9f96c1ba-b381-436d-9c3c-858dfc7f10ed
+status: experimental
+description: |
+    Detects a process running from a user folder, temp/data folder or a UNC
+    network path opening a handle to lsass.exe with an access mask that the
+    LSASS memory-read rule does not already cover (for example 0x1000, as used
+    by PPLdump). Normal LSASS access in the test corpus comes from processes in
+    Windows, Program Files and agent install folders; credential tools run from
+    Desktop, Downloads, Public or a share. Complements the LSASS memory-read
+    rule, so one access never raises both.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1003/001/
+    - https://learn.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights
+tags:
+    - attack.credential-access
+    - attack.t1003.001
+logsource:
+    product: windows
+    category: process_access
+detection:
+    selection_target:
+        TargetImage|endswith: '\lsass.exe'
+    selection_path:
+        - SourceImage|contains:
+              - '\Users\'
+              - '\AppData\'
+              - '\Temp\'
+              - '\ProgramData\'
+              - '\Downloads\'
+        - SourceImage|startswith: '\\\\'   # UNC path: two literal backslashes
+    filter_read_masks:
+        # Covered by the LSASS memory-read rule (win_lsass_memory_access).
+        GrantedAccess:
+            - '0x1010'
+            - '0x1410'
+            - '0x1438'
+            - '0x143a'
+            - '0x1f0fff'
+            - '0x1f1fff'
+            - '0x1f3fff'
+            - '0x1fffff'
+    condition: selection_target and selection_path and not filter_read_masks
+falsepositives:
+    - Per-user or portable security, monitoring or backup tools run from a user profile or ProgramData that query LSASS
+    - Administrators running Sysinternals or diagnostic tools from their Desktop or Downloads
+level: high

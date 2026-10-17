@@ -63,3 +63,7 @@ win_certutil_encode_decode:
   evtx-attack-samples: 3
   otrf-apt29-day1: 0
   otrf-apt29-day2: 1
+win_lsass_access_from_user_path:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

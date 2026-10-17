@@ -176,3 +176,8 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/PanacheSysmon_vs_AtomicRedTeam01.evtx
     path: evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
     sha256: 6903dff9f218fa027c704c8c445b74e08b952c8d71be79bd0327f1e792d4aa01
+
+  # win_lsass_access_from_user_path
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/ppl_bypass_ppldump_knowdll_hijack_sysmon_security.evtx
+    path: evtx-attack-samples/ppl_bypass_ppldump_knowdll_hijack_sysmon_security.evtx
+    sha256: 9ac47a1ab7ac5e899dede49a4ea3512f0d3628edb9605981fe78bc0aec6f296f
