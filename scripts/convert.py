@@ -21,10 +21,18 @@ from pathlib import Path
 from sigma.backends.kusto import KustoBackend
 from sigma.backends.splunk import SplunkBackend
 from sigma.collection import SigmaCollection
+from sigma.processing.pipeline import ProcessingPipeline
 from sigma.pipelines.azuremonitor import azure_monitor_pipeline
 from sigma.pipelines.microsoftxdr import microsoft_xdr_pipeline
 from sigma.pipelines.splunk import splunk_windows_pipeline
 from sigma.pipelines.sysmon import sysmon_pipeline
+
+
+def sentinel_security_log_pipeline():
+    """Our own pipeline: Security-log rules -> SecurityEvent (see the YAML file)."""
+    path = Path("pipelines/sentinel_security_log.yml")
+    return ProcessingPipeline.from_yaml(path.read_text(encoding="utf-8"))
+
 
 # Each target: which backend to use, which pipelines to apply (in order),
 # and where to write the output. Pipelines map generic Sigma log sources and
@@ -32,7 +40,9 @@ from sigma.pipelines.sysmon import sysmon_pipeline
 #
 # Splunk: `sysmon` turns generic categories (process_creation, process_access...)
 #   into Sysmon Event IDs; `splunk_windows` adds the source="WinEventLog:..." filter.
-# Sentinel: `azure_monitor` maps to the SecurityEvent table.
+# Sentinel: our own pipelines/sentinel_security_log.yml first (Security-log
+#   rules -> SecurityEvent), then `azure_monitor`, which maps process creation
+#   to SecurityEvent and checks every field against the table.
 # Defender: `microsoft_xdr` maps to DeviceProcessEvents and friends.
 TARGETS = {
     "splunk": {
@@ -43,7 +53,7 @@ TARGETS = {
     },
     "sentinel": {
         "backend": KustoBackend,
-        "pipelines": [azure_monitor_pipeline],
+        "pipelines": [sentinel_security_log_pipeline, azure_monitor_pipeline],
         "out_dir": Path("build/kql/sentinel"),
         "ext": ".kql",
     },
