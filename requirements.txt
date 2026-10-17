@@ -1,0 +1,12 @@
+# Pinned so CI results only change when we change them.
+# Versions checked against PyPI on 2026-10-17.
+sigma-cli==3.1.0
+pySigma==1.5.1
+pySigma-backend-splunk==2.1.0
+pySigma-backend-kusto==1.0.1
+pySigma-pipeline-sysmon==2.0.0
+pySigma-pipeline-windows==2.0.1
+PyYAML==6.0.3
+
+# Zircolite (used by tests/run_tests.py) is not on PyPI.
+# `make zircolite` downloads its pinned release binary into tools/.

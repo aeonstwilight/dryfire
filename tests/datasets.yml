@@ -1,0 +1,19 @@
+# Public attack datasets used by the test cases.
+#
+# scripts/fetch_datasets.py downloads every entry into tests/data/external/
+# (gitignored) and checks its SHA-256. Pin each URL to a commit, not a branch,
+# so the file can't change underneath the tests.
+#
+# Fields:
+#   url:    raw download URL, pinned to a commit
+#   path:   where to save it, relative to tests/data/external/
+#   sha256: expected hash. Leave it out on a new entry: the script prints the
+#           hash it got and fails, so you can review the file and paste it in.
+#
+# Example (EVTX-ATTACK-SAMPLES, commit 4ceed2f):
+#
+#   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/DE_1102_security_log_cleared.evtx
+#     path: evtx-attack-samples/DE_1102_security_log_cleared.evtx
+#     sha256: <hash>
+
+datasets: []
