@@ -58,3 +58,17 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/PrivEsc_SeImpersonatePriv_enabled_back_for_upnp_localsvc_4698.evtx
     path: evtx-attack-samples/PrivEsc_SeImpersonatePriv_enabled_back_for_upnp_localsvc_4698.evtx
     sha256: d6840c8618b24ef671a9810daad60cbd1e12dafe35fba300f5bc54d71a94156a
+
+  # win_service_install_suspicious_image_path
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_psexec_dcerpc_tcp_svcctl.zip
+    path: otrf/empire_psexec_dcerpc_tcp_svcctl.zip
+    sha256: 8f40e7fc86bbbf31ebd50b3ba537cf0f4378392ae3e74de84bee00aeb0de1fa5
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/empire_smbexec_dcerpc_smb_svcctl.zip
+    path: otrf/empire_smbexec_dcerpc_smb_svcctl.zip
+    sha256: c0fc435c9ce0ecdc7cd57b4055977b949ac6b1cae9d7f4ce7aa0f0e5eae7d7f1
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/LM_Remote_Service02_7045.evtx
+    path: evtx-attack-samples/LM_Remote_Service02_7045.evtx
+    sha256: af758eb492b6d5ab6665f7e4c44b31490f57be78c37dc0a8b1da714bb0d3d458
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Privilege%20Escalation/System_7045_namedpipe_privesc.evtx
+    path: evtx-attack-samples/System_7045_namedpipe_privesc.evtx
+    sha256: 21a62694861beff246ea9fb357b908541b4acefaefdb7ecd6281b64df96cb187
