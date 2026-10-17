@@ -60,6 +60,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-17 | win_lsass_access_from_user_path | 0 | Only its own PPLdump sample matches. None of the ~1,000 normal LSASS accesses in APT29 (svchost, services, wininit, csrss, wmiprvse, Azure agents) come from a user or network path. |
 | 2026-10-17 | *(rejected)* LSASS access with `UNKNOWN` CallTrace frames | — | Investigated, not built: 7 attack hits already caught by the memory-read rule, 2 uncertain APT29 PowerShell `0x1000` hits, and 8 false positives from .NET agents (`AntimalwareConfig.exe`, `WindowsAzureTelemetryService.exe`). |
 | 2026-10-17 | win_privileged_builtin_group_member_added | 0 | No hits anywhere: the corpus has no adds to these groups (positives are synthetic). The only other 4732 in the corpus, APT29's new account joining `Builtin\Users` by default, correctly doesn't match. |
+| 2026-10-17 | win_domain_admin_group_member_added | 0 | No hits anywhere: the corpus has no adds to these groups (positives are synthetic). The only 4728/4756 in the corpus, APT29's new account joining the local `None` group (RID 513) on SCRANTON by default, correctly doesn't match. |
 
 ## Limits of this review
 

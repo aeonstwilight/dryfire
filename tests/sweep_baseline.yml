@@ -71,3 +71,7 @@ win_privileged_builtin_group_member_added:
   evtx-attack-samples: 0
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_domain_admin_group_member_added:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

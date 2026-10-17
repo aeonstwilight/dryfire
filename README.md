@@ -58,6 +58,7 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [Certutil Encoding or Decoding a Non-Certificate File](docs/rules/win_certutil_encode_decode.md) | Stealth | T1140, T1027 | ✅ | ✅ | ✅ |
 | [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
+| [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 

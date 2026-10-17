@@ -1,0 +1,58 @@
+title: Member Added to a Domain Admin Group
+id: ae831178-fccd-46fd-b498-af3dc619d54b
+status: experimental
+description: |
+    Detects an account being added to a highly privileged Active Directory
+    group. Global and universal groups (Security 4728/4756) are matched on the
+    domain-relative RID: Domain Admins (512), Schema Admins (518), Enterprise
+    Admins (519), Group Policy Creator Owners (520), Key Admins (526) and
+    Enterprise Key Admins (527). Domain-local groups (Security 4732) are Cert
+    Publishers (517) and DnsAdmins. DnsAdmins has no fixed RID, so it is
+    matched by name and is missed if the group is renamed or localized.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1098/007/
+    - https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4728
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4756
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1098.007
+logsource:
+    product: windows
+    service: security
+detection:
+    # 4728 and 4756 are separate selections with the same group list on purpose: an EventID
+    # list makes the Kusto backend write EventID in~ ("4728", "4756"), a string operator on an
+    # integer column. Two selections give plain EventID == 4728 / == 4756.
+    selection_global:
+        EventID: 4728  # added to a security-enabled global group
+        TargetSid|endswith:
+            - '-512'  # Domain Admins
+            - '-518'  # Schema Admins
+            - '-519'  # Enterprise Admins
+            - '-520'  # Group Policy Creator Owners
+            - '-526'  # Key Admins
+            - '-527'  # Enterprise Key Admins
+    selection_universal:
+        EventID: 4756  # added to a security-enabled universal group
+        TargetSid|endswith:
+            - '-512'  # Domain Admins
+            - '-518'  # Schema Admins
+            - '-519'  # Enterprise Admins
+            - '-520'  # Group Policy Creator Owners
+            - '-526'  # Key Admins
+            - '-527'  # Enterprise Key Admins
+    selection_domain_local_event:
+        EventID: 4732
+    selection_domain_local_group:
+        - TargetSid|endswith: '-517'  # Cert Publishers
+        - TargetUserName: 'DnsAdmins'  # no fixed RID, matched by name
+    condition: selection_global or selection_universal or (selection_domain_local_event and selection_domain_local_group)
+falsepositives:
+    - Planned admin onboarding or role changes made by identity administrators
+    - Identity management or privileged access tools adding and removing members on a schedule
+    - Certificate Services setup adding CA servers to Cert Publishers
+level: high

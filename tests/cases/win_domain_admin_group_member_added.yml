@@ -1,0 +1,14 @@
+rule: rules/windows/persistence/win_domain_admin_group_member_added.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+pipelines: [windows-logsources]
+positive:
+  # Synthetic: one add per listed group (4728 for global, 4756 for universal, 4732 for
+  # Cert Publishers and DnsAdmins). No public sample in EVTX-ATTACK-SAMPLES or OTRF adds a
+  # member to these groups.
+  - file: tests/data/samples/win_domain_admin_group_member_added_synthetic_positive.json
+    min_hits: 8
+negative:
+  # Real: new APT29 account added to the local "None" group (RID 513) by default (OTRF APT29
+  # day 2), plus synthetic: a group RID ending in 1512, a 4729 removal from Domain Admins,
+  # and an add to Protected Users (525, deliberately not in the list)
+  - file: tests/data/samples/win_domain_admin_group_member_added_benign.json

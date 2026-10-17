@@ -30,7 +30,7 @@ Security 4732 where `TargetSid` is one of these groups. Matching is on the SID, 
 Not covered:
 
 - **Administrators:** see the Administrators rule.
-- **Domain groups** (Domain Admins, Enterprise Admins, DnsAdmins and others, logged as 4728/4756 or with domain-specific SIDs). Candidate follow-up rule.
+- **Domain groups** (Domain Admins, Enterprise Admins, DnsAdmins and others): see [Member Added to a Domain Admin Group](win_domain_admin_group_member_added.md).
 - **Lower-impact built-ins,** such as Event Log Readers or Network Configuration Operators, left out on purpose.
 - **Changes made without a 4732** (GPO Restricted Groups with auditing off, offline edits).
 
