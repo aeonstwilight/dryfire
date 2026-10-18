@@ -80,6 +80,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-18 | aws_s3_bucket_made_public | 0 | Only its own samples: 8 public ACLs (2 AllUsers, 6 AuthenticatedUsers) in Splunk's T1530 dataset and the 2 `Principal: *` policies in T1485. The Stratus Red Team cross-account backdoor policy and the CloudTrail log-bucket policies correctly don't match. |
 | 2026-10-18 | aws_guardduty_disabled | 0 | Only its own samples: the 2 failed `DeleteDetector` calls in Splunk's T1562.008 `aws_delete_security_services`. The Invictus GuardDuty read calls (`ListDetectors`, `ListFindings`) correctly don't match. |
 | 2026-10-18 | aws_guardduty_findings_suppressed | 0 | Only its own samples: the failed `DeleteIPSet` call in the same Splunk dataset. |
+| 2026-10-18 | aws_secretsmanager_many_secrets_read | 0 | Counted per identity over the threshold, not per event. Only its own sample: the Stratus Red Team retrieve-secrets run in Invictus (one user, 20 secrets in 4 seconds). The same user's other reads in the Invictus files (at most 7 distinct secrets per file) don't add a second hit. |
 
 ## Limits of this review
 

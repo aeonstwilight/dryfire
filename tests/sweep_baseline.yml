@@ -123,3 +123,7 @@ aws_guardduty_findings_suppressed:
   aws-invictus: 0
   aws-splunk-attack-data: 1
   aws-otrf: 0
+aws_secretsmanager_many_secrets_read:
+  aws-invictus: 1
+  aws-splunk-attack-data: 0
+  aws-otrf: 0

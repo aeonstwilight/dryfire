@@ -309,3 +309,8 @@ datasets:
     path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1230Z_9SJSsrxJ0ChF5VFb.json
     jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_9SJSsrxJ0ChF5VFb.jsonl
     sha256: 465526269cc637a3fb56135990a6e3b9bbec64cf021603932a9951513e143a79
+  # aws_secretsmanager_many_secrets_read (the positive, iLj9fb7yyUG9X4Bf, is listed above)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.jsonl
+    sha256: 7db0ceb54599584f166a8413d5f17152c98bba275eaa3602f76b53b3255ad674

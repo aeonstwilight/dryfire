@@ -75,6 +75,7 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | ✅ |
 | [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
 | [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
+| [AWS Secrets Manager Many Distinct Secrets Read by One Identity](docs/rules/aws_secretsmanager_many_secrets_read.md) | Credential Access | T1555.006 | ✅ | — | ✅ |
 
 ## Adding a rule
 
