@@ -20,9 +20,11 @@ import hashlib
 import io
 import json
 import sys
-import zipfile
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
+import zipfile
 from pathlib import Path
 
 import yaml
@@ -39,15 +41,35 @@ def sha256_of(path):
     return digest.hexdigest()
 
 
+# GitHub answers 429 (Too Many Requests) when a CI runner downloads hundreds of
+# files in a row; 5xx errors are usually short outages. Both are retried.
+RETRY_STATUS = {429, 500, 502, 503, 504}
+ATTEMPTS = 6
+
+
 def download(url, dest):
-    """Download url to dest via a temp file, so a failed download leaves nothing behind."""
+    """Download url to dest via a temp file, so a failed download leaves nothing behind.
+
+    Retries on rate limiting and server errors, waiting as long as the server's
+    Retry-After header asks, or 5, 10, 20, 40, 80 seconds.
+    """
     # Encode spaces etc. in the URL path (leaves already-encoded %20 alone).
     url = urllib.parse.quote(url, safe=":/%?=&")
     tmp = dest.with_name(dest.name + ".part")
-    with urllib.request.urlopen(url, timeout=120) as response, open(tmp, "wb") as f:
-        while chunk := response.read(1024 * 1024):
-            f.write(chunk)
-    tmp.replace(dest)
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=120) as response, open(tmp, "wb") as f:
+                while chunk := response.read(1024 * 1024):
+                    f.write(chunk)
+            tmp.replace(dest)
+            return
+        except urllib.error.HTTPError as e:
+            if e.code not in RETRY_STATUS or attempt == ATTEMPTS:
+                raise
+            retry_after = e.headers.get("Retry-After", "")
+            wait = int(retry_after) if retry_after.isdigit() else 5 * 2 ** (attempt - 1)
+            print(f"      HTTP {e.code}, retrying {dest.name} in {wait}s")
+            time.sleep(wait)
 
 
 def cloudtrail_records(path):

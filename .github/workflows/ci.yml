@@ -35,6 +35,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # Public datasets (tests/data/external/) are cached between runs: GitHub
+      # rate-limits a runner that downloads hundreds of raw files every time.
+      # The key changes whenever a manifest or the fetch script changes, and each
+      # job keeps its own copy (build also fetches the sweep corpus).
+      - name: Cache datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tests/data/external
+          key: datasets-${{ github.job }}-${{ hashFiles('tests/datasets.yml', 'tests/sweep_corpus.yml', 'scripts/fetch_datasets.py') }}
+
       - name: Lint
         id: lint
         run: make lint
@@ -97,6 +107,16 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # Public datasets (tests/data/external/) are cached between runs: GitHub
+      # rate-limits a runner that downloads hundreds of raw files every time.
+      # The key changes whenever a manifest or the fetch script changes, and each
+      # job keeps its own copy (build also fetches the sweep corpus).
+      - name: Cache datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tests/data/external
+          key: datasets-${{ github.job }}-${{ hashFiles('tests/datasets.yml', 'tests/sweep_corpus.yml', 'scripts/fetch_datasets.py') }}
 
       # The two images are about 11 GB unpacked. Remove large preinstalled
       # toolchains this job doesn't use so they fit on the runner's disk.
