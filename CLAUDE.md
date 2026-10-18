@@ -20,7 +20,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 - **Public tools only.** Build the pipeline only from public tools (pySigma, sigma-cli, Zircolite, GitHub Actions, Make). Don't model the CI, repo structure or tooling on any employer's internal detection-as-code pipeline.
 - **ATT&CK is the only framework mapping.** Do not add NIST 800-53, FedRAMP or any other compliance-control mapping: no control tags in rules, no control fields in test cases or triage notes, no control columns in reports or coverage output.
 - **No document generation.** Don't add features that generate compliance, audit or customer-facing documents from the rules. The per-rule triage notes are hand-written Markdown, and `build/` holds only build reports (conversion summary, test results, Navigator layer).
-- **Check current versions.** Verify package names, CLI flags and backend/pipeline names (pySigma, sigma-cli, pySigma-backend-splunk, pySigma-backend-kusto, Zircolite) against their current docs before using them. Don't rely on memory.
+- **Check current versions.** Verify package names, CLI flags and backend/pipeline names (pySigma, sigma-cli, pySigma-backend-splunk, pySigma-backend-kusto, pySigma-backend-elasticsearch, Zircolite) against their current docs before using them. Don't rely on memory.
 
 ## Conventions
 
@@ -193,3 +193,30 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
 - Correlation rules (rule 8, 2026-10-18): one file, base rule(s) first and the correlation rule last (it holds the detection's id, title, level and tags); `scripts/rule_file.py` reads it for the metadata, coverage and sweep scripts. A correlation's hit count is the number of distinct groups over the threshold (Zircolite reports one alert per qualifying moment). Splunk converts to fixed `bin _time` buckets, Zircolite slides; samples keep each burst inside one bucket. pySigma-backend-kusto 1.0.1 doesn't convert correlation rules, so Sentinel is declared unsupported (owner decision, 2026-10-18).
 
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
+
+## Milestone 5 (current)
+
+Milestone 5 is done when every rule converts to Elastic (or is declared unsupported with the owner's approval) and the Elastic queries return the same hits as Zircolite on a real Elasticsearch container in CI.
+
+**Owner decisions (2026-10-18):**
+
+- Query language: ES|QL, if pySigma-backend-elasticsearch supports what the rules use (regex, correlations); confirm in step 1 and come back to the owner if not.
+- Field names: convert to ECS, the names Elastic's own integrations produce (Windows/Sysmon and AWS CloudTrail), not the raw field names.
+- The owner accepts the Elasticsearch container's licence for CI (exact terms named in step 1 and recorded in the CI settings, as for Splunk and Kusto).
+- If the runner can't hold Splunk, Kusto and Elasticsearch together, Elastic validation runs as its own CI job.
+- Same guardrails as the other targets: a rule field with no mapping fails the build; the only exception is `pipelines/unsupported_targets.yml` with the owner's approval.
+
+**Build order:**
+
+1. Check current docs and versions: pySigma-backend-elasticsearch (ES|QL support, regex, correlations), the ECS field-name pipelines for Windows and for CloudTrail, the Elasticsearch container image, its licence and settings; pin by digest.
+2. Conversion: `make convert` writes ES|QL to `build/elastic/`; ECS field mappings in `pipelines/` where the backend's own pipelines don't cover a field.
+3. Loader: put each rule's test events into Elasticsearch in the ECS layout the pipeline expects, one index per log source, mapping plain and documented (as for the M3 tables).
+4. `make validate`: run each ES|QL query on its own test events and compare the hit count with Zircolite's. CI runs it alongside (or next to) the M3 engines.
+5. Correlation rule: convert `aws_secretsmanager_many_secrets_read` if the backend supports it; otherwise ask the owner about declaring it.
+6. README: an Elastic column in the rule table, and the validation note extended to Elastic.
+
+**Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
+
+## Milestone 6 (planned)
+
+More detections on the current pipeline (owner decision, 2026-10-18): the AWS follow-ups (network ACL opened, cross-account S3 bucket policy) and Windows correlation rules (password spray, brute force followed by a successful logon). Each rule follows the usual process; the owner confirms the logic first.
