@@ -225,6 +225,13 @@ Milestone 5 is done when every rule converts to Elastic (or is declared unsuppor
   - `rlike` is Lucene regex on the whole value: no `^`/`$`, no `(?i)`; `\s` works. The backend passes Sigma regexes through unchanged, so unanchored Sigma regexes don't match.
   - The AWS integration stores `requestParameters` as Java `Map.toString()` text in `aws.cloudtrail.request_parameters` (`{bucketName=x, enable=false}`), not JSON; its structured copy is a `flattened` field, which ES|QL can't query ("Unknown column").
 
+**Owner decisions after step 1 (2026-10-18):**
+
+- Case: our ES|QL backend (a small subclass of the package's) writes every string match as `to_lower(field)` against a lower-cased value, except `|cased` matches; no `.caseless` sub-fields.
+- Regex: a small translator wraps Sigma's search-style regex for Lucene's whole-value `rlike` (`.*(…).*`, the anchor forms our rules use, `(?i)` via `to_lower`); a rule it can't translate exactly is declared unsupported for Elastic with the owner's OK; `make validate` proves the rest.
+- CloudTrail `requestParameters`: map a request field to `aws.cloudtrail.request_parameters` (the integration's `Map.toString()` text) only where the rule's match gives the same result on that text (plain `contains`), proven by validate; otherwise declare Elastic unsupported for the rule.
+- Indexes: queries read the Elastic integrations' data streams (`logs-windows.sysmon_operational-*`, `logs-system.security-*`, `logs-system.system-*`, `logs-aws.cloudtrail-*`), and the loader writes to matching data streams.
+
 **Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
 
 ## Milestone 6 (planned)

@@ -1,0 +1,65 @@
+# Elastic (ES|QL): AWS CloudTrail rules (scripts/convert.py, "elastic" target).
+#
+# Field names follow Elastic's AWS integration (package aws 8.11.0, ingest
+# pipeline data_stream/cloudtrail/elasticsearch/ingest_pipeline/default.yml):
+# eventName -> event.action, eventSource -> event.provider, the userIdentity
+# fields -> aws.cloudtrail.user_identity.*, and so on. Queries read the
+# integration's data stream, logs-aws.cloudtrail-*.
+#
+# requestParameters: the integration stores it as one text field,
+# aws.cloudtrail.request_parameters, written with Java's Map.toString()
+# ({groupId=sg-1, ipPermissions={items=[{cidrIp=0.0.0.0/0}]}}), not JSON. Its
+# structured copy is a `flattened` field, which ES|QL can't read. A request
+# field is mapped to that text only where the rule's match gives the same
+# result on it (a plain `contains`), proven by `make validate` (owner decision,
+# 2026-10-18). Rules with other matches on request fields fail conversion and
+# are declared in pipelines/unsupported_targets.yml.
+#
+# Any field not mapped here fails the conversion (detection_item_failure at
+# the end), as for the other targets.
+
+name: dryfire Elastic CloudTrail
+priority: 30
+transformations:
+  - id: dryfire_elastic_index_cloudtrail
+    type: set_state
+    key: index
+    val: logs-aws.cloudtrail-*
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail
+
+  - id: dryfire_elastic_cloudtrail_fields
+    type: field_name_mapping
+    mapping:
+      eventName: event.action
+      eventSource: event.provider
+      eventType: aws.cloudtrail.event_type
+      errorCode: aws.cloudtrail.error_code
+      sourceIPAddress: source.address
+      userIdentity.type: aws.cloudtrail.user_identity.type
+      userIdentity.arn: aws.cloudtrail.user_identity.arn
+      userIdentity.accessKeyId: aws.cloudtrail.user_identity.access_key_id
+      # aws_security_group_ingress_open_to_internet: contains 0.0.0.0/0 or ::/0
+      requestParameters.ipPermissions.items: aws.cloudtrail.request_parameters
+      requestParameters.cidrIp: aws.cloudtrail.request_parameters
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail
+
+  - id: dryfire_elastic_cloudtrail_allowed_fields
+    type: detection_item_failure
+    message: "Field has no Elastic mapping for the AWS CloudTrail integration (see pipelines/elastic_cloudtrail.yml)"
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail
+    field_name_conditions:
+      - type: exclude_fields
+        mode: re
+        fields:
+          - '^(event\.action|event\.provider|source\.address)$'
+          - '^aws\.cloudtrail\.(event_type|error_code|request_parameters)$'
+          - '^aws\.cloudtrail\.user_identity\.(type|arn|access_key_id)$'

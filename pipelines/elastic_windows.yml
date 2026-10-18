@@ -1,0 +1,67 @@
+# Elastic (ES|QL): Windows rules, after pySigma's `sysmon` and the Elastic
+# backend's `ecs_windows` pipelines (scripts/convert.py, "elastic" target).
+#
+# - `sysmon` adds each Sysmon rule's EventID (process_creation -> 1, ...) and
+#   `ecs_windows` renames fields to the ECS names Elastic's Windows integration
+#   uses (Image -> process.executable, EventID -> event.code, other event
+#   fields -> winlog.event_data.*).
+# - ecs_windows uses `.caseless` sub-fields for Image and ParentImage. Our
+#   backend (scripts/esql_backend.py) handles case with to_lower() instead, so
+#   they go back to the plain fields here.
+# - Each rule reads the data stream its log source is shipped to by Elastic's
+#   integrations (Windows integration for Sysmon, System integration for the
+#   Security and System logs).
+# - Any field not in the allowed list fails the conversion, as for the other
+#   targets ("a rule field that doesn't exist in the target table fails the
+#   build"). The list is the ECS fields our rules map to, checked against the
+#   fields of Elastic's windows and system integration packages, plus
+#   winlog.event_data.*, which those packages keep for every event field.
+
+name: dryfire Elastic Windows
+priority: 30
+transformations:
+  - id: dryfire_elastic_no_caseless
+    type: field_name_mapping
+    mapping:
+      process.executable.caseless: process.executable
+      process.parent.executable.caseless: process.parent.executable
+
+  - id: dryfire_elastic_index_sysmon
+    type: set_state
+    key: index
+    val: logs-windows.sysmon_operational-*
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: sysmon
+  - id: dryfire_elastic_index_security
+    type: set_state
+    key: index
+    val: logs-system.security-*
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: security
+  - id: dryfire_elastic_index_system
+    type: set_state
+    key: index
+    val: logs-system.system-*
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: system
+
+  - id: dryfire_elastic_windows_allowed_fields
+    type: detection_item_failure
+    message: "Field has no Elastic (ECS) mapping for the Windows integration data streams"
+    rule_conditions:
+      - type: logsource
+        product: windows
+    field_name_conditions:
+      - type: exclude_fields
+        mode: re
+        fields:
+          - '^(event\.code|winlog\.channel|winlog\.provider_name)$'
+          - '^(process\.executable|process\.command_line|process\.pe\.original_file_name)$'
+          - '^(process\.parent\.executable|file\.name)$'
+          - '^winlog\.event_data\.[A-Za-z0-9_]+$'

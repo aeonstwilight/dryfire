@@ -1,9 +1,10 @@
-"""Convert every Sigma rule into Splunk SPL and Microsoft KQL.
+"""Convert every Sigma rule into Splunk SPL, Microsoft KQL and Elastic ES|QL.
 
 Output goes to build/:
     build/spl/<rule>.spl              Splunk
     build/kql/sentinel/<rule>.kql     Microsoft Sentinel (SecurityEvent, AWSCloudTrail)
     build/kql/defender/<rule>.kql     Microsoft Defender XDR (Device* tables)
+    build/elastic/<rule>.esql         Elastic ES|QL (ECS field names, integration data streams)
     build/conversion_summary.md       One row per rule, one column per target
 
 Exit code is 1 if any rule fails to convert, so CI goes red.
@@ -21,6 +22,7 @@ file that doesn't exist, fails the build so the list stays accurate.
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -31,9 +33,14 @@ from sigma.backends.splunk import SplunkBackend
 from sigma.collection import SigmaCollection
 from sigma.processing.pipeline import ProcessingPipeline
 from sigma.pipelines.azuremonitor import azure_monitor_pipeline
+from sigma.pipelines.elasticsearch import ecs_windows
 from sigma.pipelines.microsoftxdr import microsoft_xdr_pipeline
 from sigma.pipelines.splunk import splunk_windows_pipeline
 from sigma.pipelines.sysmon import sysmon_pipeline
+
+# Our ES|QL backend: the Elastic package's, with case-insensitive strings and
+# regexes rewritten for Lucene (see the docstring in scripts/esql_backend.py).
+from esql_backend import DryfireESQLBackend
 
 
 def load_pipeline(path):
@@ -56,6 +63,32 @@ def splunk_cloudtrail_pipeline():
     return load_pipeline("pipelines/splunk_cloudtrail.yml")
 
 
+def elastic_windows_pipeline():
+    """Windows rules -> plain ECS fields, Elastic integration data streams, allowed fields only."""
+    return load_pipeline("pipelines/elastic_windows.yml")
+
+
+def elastic_cloudtrail_pipeline():
+    """AWS CloudTrail rules -> Elastic AWS integration field names, allowed fields only."""
+    return load_pipeline("pipelines/elastic_cloudtrail.yml")
+
+
+# A CloudTrail field name as written in a rule (eventName, requestParameters.x):
+# it has a capital letter, which none of the Elastic AWS integration's field
+# names do. String values are lower-cased by our backend, so after removing
+# the quoted values any capital letter left is an unmapped field.
+QUOTED = re.compile(r'"(?:[^"\\]|\\.)*"')
+RAW_CLOUDTRAIL_FIELD = re.compile(r"[A-Za-z_][\w.]*[A-Z][\w.]*")
+
+
+def elastic_unmapped_fields(rule_path, query):
+    """Fields left unmapped in an Elastic CloudTrail query, e.g. those a correlation
+    counts or groups by: pipelines check only the fields in detections."""
+    if "/aws/" not in rule_path.as_posix():
+        return []
+    return sorted(set(RAW_CLOUDTRAIL_FIELD.findall(QUOTED.sub("", query))))
+
+
 # Each target: which backend to use, which pipelines to apply (in order),
 # and where to write the output. Pipelines map generic Sigma log sources and
 # field names onto what each SIEM actually stores.
@@ -67,6 +100,9 @@ def splunk_cloudtrail_pipeline():
 #   CloudTrail rules -> AWSCloudTrail), then `azure_monitor`, which maps process
 #   creation to SecurityEvent and checks every field against the table.
 # Defender: `microsoft_xdr` maps to DeviceProcessEvents and friends.
+# Elastic: `sysmon` as for Splunk, then the Elastic package's `ecs_windows` (ECS
+#   field names), then ours: pipelines/elastic_windows.yml and
+#   pipelines/elastic_cloudtrail.yml (data streams, field names, allowed fields).
 TARGETS = {
     "splunk": {
         "backend": SplunkBackend,
@@ -85,6 +121,13 @@ TARGETS = {
         "pipelines": [microsoft_xdr_pipeline],
         "out_dir": Path("build/kql/defender"),
         "ext": ".kql",
+    },
+    "elastic": {
+        "backend": DryfireESQLBackend,
+        "pipelines": [sysmon_pipeline, ecs_windows, elastic_windows_pipeline, elastic_cloudtrail_pipeline],
+        "out_dir": Path("build/elastic"),
+        "ext": ".esql",
+        "check": elastic_unmapped_fields,
     },
 }
 
@@ -121,7 +164,11 @@ def convert_rule(rule_path, target):
 
     if not queries:
         return "error", "backend returned no query"
-    return "ok", "\n\n".join(str(q) for q in queries) + "\n"
+    text = "\n\n".join(str(q) for q in queries) + "\n"
+    unmapped = target.get("check", lambda path, query: [])(rule_path, text)
+    if unmapped:
+        return "error", "field(s) with no mapping for this target: " + ", ".join(unmapped)
+    return "ok", text
 
 
 def main():
