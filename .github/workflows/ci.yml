@@ -5,6 +5,10 @@
 # earlier one failed, so one push reports all problems at once; the job still
 # fails if any stage does.
 #
+# A second job, `validate`, runs the converted queries on the Splunk and Kusto
+# emulator containers (M3). It uploads only its results table, never
+# build/validate/engines.env (the throwaway Splunk password and HEC token).
+#
 # Actions are pinned to commit SHAs (version in the comment) so a moved tag
 # can't change what runs here.
 
@@ -75,3 +79,54 @@ jobs:
           name: build
           path: build/
           if-no-files-found: ignore
+
+  # M3: run the converted SPL and KQL on real query engines (the Splunk
+  # container and the Kusto emulator) and check they find the same events as
+  # Zircolite. Separate job so its slower start-up runs alongside `build`.
+  # Starting the engines accepts the Splunk licence and General Terms and the
+  # Kusto emulator licence terms (owner decision, 2026-10-18).
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # The two images are about 11 GB unpacked. Remove large preinstalled
+      # toolchains this job doesn't use so they fit on the runner's disk.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Start Splunk and the Kusto emulator
+        run: make engines-up
+
+      - name: Validate converted queries
+        run: make validate
+
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f build/validate/results.md ]; then
+            echo "### build/validate/results.md" >> "$GITHUB_STEP_SUMMARY"
+            cat build/validate/results.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload validation results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validate
+          path: build/validate/results.md
+          if-no-files-found: ignore
+
+      - name: Stop the engines
+        if: ${{ always() }}
+        run: make engines-down

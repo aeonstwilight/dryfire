@@ -9,8 +9,9 @@ Kusto, and find the same events. For every rule, target and test sample:
   3. The converted query runs on those events and its hit count is compared.
 
 A check fails if the query errors, its count differs from Zircolite's, or no
-events from the sample could be loaded for that target (a 0-hit result would
-then prove nothing).
+events from a positive sample could be loaded for that target. A negative
+sample with no events for a target (for example a System-log sample against a
+Security-log query) is reported as N/A.
 Targets where the rule doesn't convert ("unsupported") are skipped.
 
 Engines (start them with `scripts/engines.sh up`):
@@ -56,6 +57,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 
 import yaml
@@ -89,13 +91,16 @@ SCHEMAS = {
 }
 
 # Event Channel -> Splunk source, as written by the splunk_windows pipeline.
+# Keys are lowercase: some OTRF datasets record the channel in lowercase
+# ("security"), and Zircolite matches it case-insensitively too.
 SPLUNK_SOURCES = {
-    "Security": "WinEventLog:Security",
-    "System": "WinEventLog:System",
-    "Microsoft-Windows-Sysmon/Operational": "WinEventLog:Microsoft-Windows-Sysmon/Operational",
+    "security": "WinEventLog:Security",
+    "system": "WinEventLog:System",
+    "microsoft-windows-sysmon/operational": "WinEventLog:Microsoft-Windows-Sysmon/Operational",
 }
 
-SYSMON = "Microsoft-Windows-Sysmon/Operational"
+SECURITY = "security"
+SYSMON = "microsoft-windows-sysmon/operational"
 
 # Splunk runs with a self-signed certificate inside the local container.
 NO_VERIFY = ssl.create_default_context()
@@ -122,6 +127,11 @@ def flattened_events(zircolite, sample, rule_path):
         return [json.loads(line) for line in flat[0].read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def channel(event):
+    """The event's channel in lowercase ("" if missing)."""
+    return str(event.get("Channel") or "").lower()
+
+
 def basename(path):
     """File name from a Windows path ("C:\\a\\b.exe" -> "b.exe")."""
     return path.replace("/", "\\").rsplit("\\", 1)[-1] if path else path
@@ -131,7 +141,7 @@ def basename(path):
 
 def to_splunk(event):
     """Return (source, event) for Splunk, or None if the channel isn't one we query."""
-    source = SPLUNK_SOURCES.get(event.get("Channel"))
+    source = SPLUNK_SOURCES.get(channel(event))
     if source is None:
         return None
     event = dict(event)
@@ -142,8 +152,8 @@ def to_splunk(event):
 
 def to_security_event(event):
     """Return a SecurityEvent row, or None if the event doesn't belong in that table."""
-    channel, event_id = event.get("Channel"), str(event.get("EventID"))
-    if channel == SYSMON and event_id == "1":
+    event_id = str(event.get("EventID"))
+    if channel(event) == SYSMON and event_id == "1":
         return {
             "EventID": 4688,
             "Computer": event.get("Computer"),
@@ -152,7 +162,7 @@ def to_security_event(event):
             "ParentProcessName": event.get("ParentImage"),
             "Process": basename(event.get("Image")),
         }
-    if channel != "Security" or event_id == "4688":
+    if channel(event) != SECURITY or event_id == "4688":
         return None
     row = {k: v for k, v in event.items() if k in SCHEMAS["SecurityEvent"]}
     if "TaskContent" in event:
@@ -164,7 +174,7 @@ def to_security_event(event):
 
 def to_device_process_event(event):
     """Return a DeviceProcessEvents row for a Sysmon 1 event, otherwise None."""
-    if event.get("Channel") != SYSMON or str(event.get("EventID")) != "1":
+    if channel(event) != SYSMON or str(event.get("EventID")) != "1":
         return None
     return {
         "ActionType": "ProcessCreated",
@@ -209,7 +219,10 @@ class Splunk:
     def __init__(self, password, hec_token):
         self.auth = "Basic " + base64.b64encode(f"admin:{password}".encode()).decode()
         self.hec_token = hec_token
-        self.loaded = {}  # sample path -> dryfire_file value
+        self.loaded = {}  # sample path -> (dryfire_file value, number of events)
+        # The index keeps events between runs, so every run labels its events
+        # with its own random prefix and only searches for those.
+        self.run_id = uuid.uuid4().hex[:8]
 
     def _post(self, url, data, headers):
         request = urllib.request.Request(url, data=data, headers=headers)
@@ -241,13 +254,13 @@ class Splunk:
         """Send a sample's events once and wait until Splunk has indexed all of them."""
         if sample in self.loaded:
             return self.loaded[sample]  # (file id, number of events)
-        file_id = f"f{len(self.loaded)}"
+        file_id = f"{self.run_id}-{len(self.loaded)}"
         batch = []
         for event in events:
             mapped = to_splunk(event)
             if mapped:
                 source, data = mapped
-                data["dryfire_file"] = file_id
+                data = {"dryfire_file": file_id, **data}
                 batch.append(json.dumps({"index": SPLUNK_INDEX, "source": source, "sourcetype": "_json", "event": data}))
         for i in range(0, len(batch), 500):
             self._post(f"{SPLUNK_HEC}/services/collector/event", "".join(batch[i:i + 500]).encode(),
@@ -362,10 +375,14 @@ def main():
                         mapper = to_security_event if target == "sentinel" else to_device_process_event
                         rows = [typed_row(r, info["table"]) for r in map(mapper, events) if r]
                         got, loaded = kusto.run(query, info["table"], rows)
-                    # A 0-hit result only means something if events were loaded.
-                    passed = got == expected and loaded > 0
-                    result = "PASS" if passed else "FAIL"
                     detail = f"{got} hit(s), Zircolite {expected}, {loaded} event(s) loaded"
+                    if loaded == 0 and expected == 0:
+                        # e.g. a System-log negative against a Security-log query:
+                        # nothing to test here, and not a failure.
+                        passed, result = True, "N/A"
+                    else:
+                        passed = got == expected and loaded > 0
+                        result = "PASS" if passed else "FAIL"
                 except (RuntimeError, urllib.error.URLError, OSError) as e:
                     passed, result, expected, got, loaded, detail = False, "ERROR", "?", "?", "?", str(e)
                 failures += not passed

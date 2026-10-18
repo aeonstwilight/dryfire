@@ -55,12 +55,17 @@ up() {
     docker rm -f dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
 
     echo "Starting Splunk ($SPLUNK_IMAGE)"
+    # Our small Splunk app (index and sourcetype settings for the test events) is
+    # packaged and installed by the image at start-up through SPLUNK_APPS_URL.
+    tar -czf build/validate/dryfire_validate.tgz -C tests/validate/splunk_app dryfire_validate
     docker run -d --name dryfire-splunk --memory 6g \
         -p 8089:8089 -p 8088:8088 \
         -e SPLUNK_START_ARGS=--accept-license \
         -e SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com \
         -e SPLUNK_PASSWORD="$password" \
         -e SPLUNK_HEC_TOKEN="$hec_token" \
+        -e SPLUNK_APPS_URL=/tmp/dryfire_validate.tgz \
+        -v "$PWD/build/validate/dryfire_validate.tgz:/tmp/dryfire_validate.tgz:ro" \
         "$SPLUNK_IMAGE" >/dev/null
 
     echo "Starting the Kusto emulator ($KUSTO_IMAGE)"

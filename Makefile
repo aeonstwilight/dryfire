@@ -25,7 +25,7 @@ endif
 ZIRCOLITE_ZIP := Zircolite-$(ZIRCOLITE_VERSION)-$(ZIRCOLITE_PLATFORM).zip
 ZIRCOLITE_URL := https://github.com/wagga40/Zircolite/releases/download/v$(ZIRCOLITE_VERSION)/$(ZIRCOLITE_ZIP)
 
-.PHONY: all lint convert test coverage datasets sweep sweep-datasets zircolite clean
+.PHONY: all lint convert test coverage datasets sweep sweep-datasets validate engines-up engines-down zircolite clean
 
 all: lint convert test coverage
 
@@ -61,6 +61,18 @@ sweep: sweep-datasets $(ZIRCOLITE)
 # Download the sweep corpus (~110 MB) into tests/data/external/sweep/.
 sweep-datasets:
 	$(PYTHON) scripts/fetch_datasets.py --manifest tests/sweep_corpus.yml
+
+# M3: run the converted SPL and KQL on Splunk and Kusto and compare with Zircolite.
+# Needs Docker and the engines running (make engines-up). Report in build/validate/.
+validate: convert datasets $(ZIRCOLITE)
+	$(PYTHON) tests/run_validate.py --rules-dir $(RULES) --zircolite $(ZIRCOLITE)
+
+# Start / stop the Splunk and Kusto emulator containers (scripts/engines.sh).
+engines-up:
+	scripts/engines.sh up
+
+engines-down:
+	scripts/engines.sh down
 
 zircolite: $(ZIRCOLITE)
 
