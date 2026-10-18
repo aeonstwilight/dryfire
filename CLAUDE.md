@@ -169,4 +169,12 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
    7. GuardDuty detector deleted or disabled
    8. Unusual volume of Secrets Manager `GetSecretValue` calls
 
+**Step 1 findings (2026-10-18):**
+
+- Zircolite 4.5.0 doesn't read CloudTrail's `{"Records": [...]}` files; they must be unwrapped to one event per line (JSON Lines, `-j`).
+- Zircolite flattens nested fields to their last key (`userIdentity.type` → `type`) and strips dots from keys. A Zircolite config with `path: path` mappings keeps dotted names; it can be generated from the field paths found in the data.
+- Arrays (e.g. `requestParameters.ipPermissions.items`) stay one text column holding the whole list, so array contents can only be matched with `contains`. `AuthorizeSecurityGroupIngress` has two shapes: rules under `ipPermissions.items[].ipRanges` and an older flat `cidrIp`.
+- Splunk: no pySigma AWS pipeline; CloudTrail sourcetype is `aws:cloudtrail` (Splunk Add-on for AWS docs). Fields are the dotted JSON paths; array leaves use `{}`.
+- Sentinel: pySigma-backend-kusto knows the `AWSCloudTrail` table (53 columns) but has no mapping for the `aws`/`cloudtrail` log source; nested `requestParameters.*` lives in the `RequestParameters` text column.
+
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
