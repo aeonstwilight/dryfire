@@ -14,3 +14,9 @@ win_renamed_shell_or_lolbin:
   sentinel: >-
     SecurityEvent (4688) does not record the PE original file name, and the rule
     depends on OriginalFileName; there is no field to map it to.
+aws_iam_access_key_created_for_other_user:
+  sentinel: >-
+    The rule compares the target user (requestParameters.userName) with the
+    caller (userIdentity.userName). AWSCloudTrail keeps requestParameters as
+    JSON text in one column, so the target user has no column of its own and
+    the comparison can't be expressed through the field mapping.

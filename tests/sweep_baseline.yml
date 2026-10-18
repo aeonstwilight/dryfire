@@ -95,3 +95,7 @@ aws_root_access_key_used:
   aws-invictus: 0
   aws-splunk-attack-data: 0
   aws-otrf: 0
+aws_iam_access_key_created_for_other_user:
+  aws-invictus: 2
+  aws-splunk-attack-data: 61
+  aws-otrf: 0

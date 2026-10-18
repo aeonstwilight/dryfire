@@ -1,0 +1,34 @@
+title: AWS IAM Access Key Created for Another User
+id: cf22be98-14d9-48b3-920a-ff0be93c27e9
+status: experimental
+description: |
+    Detects CreateAccessKey where the request names a target user that isn't
+    the caller: an IAM user creating a key for someone else, or a role (which
+    has no userName of its own) creating a key for an IAM user. A new
+    long-term key on another identity is a common way to keep access after
+    the original credentials are found or rotated. Failed calls are included
+    on purpose (for example attempts against non-existent or protected users).
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1098/001/
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateAccessKey.html
+    - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-user-identity.html
+tags:
+    - attack.persistence
+    - attack.t1098.001
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: iam.amazonaws.com
+        eventName: CreateAccessKey
+        requestParameters.userName|exists: true  # a target user was named
+    filter_self:
+        requestParameters.userName|fieldref: userIdentity.userName  # ... and it's the caller
+    condition: selection and not filter_self
+falsepositives:
+    - Administrators or identity tooling provisioning keys for service users
+    - Key rotation done by a central automation role
+level: medium

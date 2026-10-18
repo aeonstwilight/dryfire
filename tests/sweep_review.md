@@ -73,6 +73,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-18 | aws_cloudtrail_logging_stopped_or_deleted | 7 | Labels confirmed by the owner. Invictus: 2 × `DeleteTrail` by Terraform at 12:08:04 (two different trails, Stratus Red Team cleanup: correct, benign), 1 × failed `DeleteTrail` (`TrailNotFoundException`) by Stratus Red Team (attack simulation). Splunk: `DeleteTrail` by aws-cli in the `update_cloudtrail` dataset (attack simulation); 3 events in `delete_cloudwatch_log_group` are copies of the `stop_delete_cloudtrail` dataset's events (same `eventID`s; attack simulation). |
 | 2026-10-18 | aws_root_console_login | 0 | Only its own samples: all 24 root `ConsoleLogin` events in the corpus are in the three Splunk datasets it tests with (8 successful, all without MFA; 16 failed). Invictus has no root activity. |
 | 2026-10-18 | aws_root_access_key_used | 0 | No hits: no dataset in the corpus uses a root access key (positives are synthetic). The 11 root API calls in Splunk attack_data all come from console sessions (`ASIA` keys) and correctly don't match. |
+| 2026-10-18 | aws_iam_access_key_created_for_other_user | 0 | Only its own samples: the Stratus Red Team backdoor and admin-user keys (Invictus) and the 61 matching `CreateAccessKey` calls in Splunk's T1078 dataset (38 for another named user, 23 by an Okta admin role). The 6 own-key calls in that dataset correctly don't match. |
 
 ## Limits of this review
 
