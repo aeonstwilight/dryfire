@@ -7,12 +7,20 @@ changing test results. Files already present with the right hash are skipped.
 Use --manifest to read a different list, e.g. tests/sweep_corpus.yml for the
 noise sweep.
 
+AWS CloudTrail files come in different shapes ({"Records": [...]} as AWS
+writes them, one event per line, or zipped). Zircolite only reads one event
+per line (JSON Lines), so an entry with a `jsonl:` path also gets a JSON Lines
+copy written there after its hash check. The original is kept as downloaded.
+
 Exit code is 1 if any download fails or any hash doesn't match.
 """
 
 import argparse
 import hashlib
+import io
+import json
 import sys
+import zipfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -42,6 +50,43 @@ def download(url, dest):
     tmp.replace(dest)
 
 
+def cloudtrail_records(path):
+    """Return the CloudTrail events in a file, whatever its shape.
+
+    Handles a zip (reads every .json file in it), {"Records": [...]},
+    a plain JSON list, or one JSON event per line.
+    """
+    if zipfile.is_zipfile(path):
+        records = []
+        with zipfile.ZipFile(path) as z:
+            for name in z.namelist():
+                if name.endswith(".json"):
+                    records += parse_cloudtrail_text(z.read(name).decode("utf-8"))
+        return records
+    return parse_cloudtrail_text(Path(path).read_text(encoding="utf-8"))
+
+
+def parse_cloudtrail_text(text):
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        # Not one JSON document: read it as one event per line.
+        return [json.loads(line) for line in io.StringIO(text) if line.strip()]
+    if isinstance(data, dict) and "Records" in data:
+        return data["Records"]
+    return data if isinstance(data, list) else [data]
+
+
+def write_jsonl(source, dest):
+    """Write the CloudTrail events in `source` to `dest`, one JSON event per line."""
+    records = cloudtrail_records(source)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with open(dest, "w", encoding="utf-8") as f:
+        for record in records:
+            f.write(json.dumps(record) + "\n")
+    return len(records)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--manifest", default=MANIFEST, type=Path)
@@ -64,8 +109,16 @@ def main():
             failures += 1
             continue
 
+        jsonl = DEST_DIR / entry["jsonl"] if entry.get("jsonl") else None
+        if jsonl and not jsonl.resolve().is_relative_to(DEST_DIR.resolve()):
+            print(f"FAIL  {entry['jsonl']}: path must stay inside {DEST_DIR}/")
+            failures += 1
+            continue
+
         if dest.exists() and expected and sha256_of(dest) == expected:
             already_there += 1
+            if jsonl and not jsonl.exists():
+                write_jsonl(dest, jsonl)
             continue
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -88,6 +141,9 @@ def main():
             failures += 1
         else:
             print(f"OK    {dest}")
+            if jsonl:
+                count = write_jsonl(dest, jsonl)
+                print(f"      {count} event(s) -> {jsonl}")
 
     if already_there:
         print(f"OK    {already_there} file(s) already downloaded with the right hash")

@@ -24,8 +24,10 @@ KUSTO_IMAGE="mcr.microsoft.com/azuredataexplorer/kustainer-linux:2026.09.25.1529
 ENV_FILE="build/validate/engines.env"
 
 splunk_ready() {
-    # Management API and HTTP Event Collector both answer.
-    curl -sk -o /dev/null -w '%{http_code}' -u "admin:$password" https://localhost:8089/services/server/info | grep -q 200 \
+    # The image's own health check passes only once its start-up (app install and
+    # any restart that needs) has finished; then the API and HEC must answer.
+    [ "$(docker inspect -f '{{.State.Health.Status}}' dryfire-splunk 2>/dev/null)" = "healthy" ] \
+        && curl -sk -o /dev/null -w '%{http_code}' -u "admin:$password" https://localhost:8089/services/server/info | grep -q 200 \
         && curl -sk -o /dev/null -w '%{http_code}' https://localhost:8088/services/collector/health | grep -q 200
 }
 

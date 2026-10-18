@@ -1,0 +1,74 @@
+# Sentinel: send AWS CloudTrail rules to the AWSCloudTrail table.
+#
+# The Azure Monitor pipeline knows the AWSCloudTrail table (and checks every
+# field against it) but has no mapping for `logsource: product: aws,
+# service: cloudtrail` or for CloudTrail's field names. This pipeline runs
+# before it, sets the table and renames each CloudTrail field to its column.
+#
+# Each mapping is one CloudTrail field to the AWSCloudTrail column that holds
+# the same value, per the column descriptions in Microsoft's table schema
+# (as shipped in pySigma-backend-kusto).
+#
+# Not mapped on purpose: requestParameters.*, responseElements.* and
+# additionalEventData.*. Sentinel keeps those as JSON text in one column
+# (RequestParameters, ...), so a field inside them can only be matched with
+# `contains` on that column. Add such a mapping per field, only for rules
+# that match it with `contains`, after checking it gives the same result.
+# Until then a rule using one fails conversion for Sentinel.
+#
+# Used by scripts/convert.py (the "sentinel" target).
+
+name: dryfire Sentinel AWSCloudTrail table mapping
+priority: 5
+transformations:
+  - id: dryfire_awscloudtrail_table
+    type: set_state
+    key: query_table
+    val: AWSCloudTrail
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail
+
+  - id: dryfire_awscloudtrail_fields
+    type: field_name_mapping
+    mapping:
+      eventName: EventName
+      eventSource: EventSource
+      eventVersion: EventVersion
+      eventType: EventTypeName
+      eventCategory: Category
+      eventID: AwsEventId
+      sharedEventID: SharedEventId
+      requestID: AwsRequestId_
+      apiVersion: APIVersion
+      awsRegion: AWSRegion
+      sourceIPAddress: SourceIpAddress
+      userAgent: UserAgent
+      errorCode: ErrorCode
+      errorMessage: ErrorMessage
+      readOnly: ReadOnly
+      managementEvent: ManagementEvent
+      recipientAccountId: RecipientAccountId
+      vpcEndpointId: VpcEndpointId
+      tlsDetails.tlsVersion: TlsVersion
+      tlsDetails.cipherSuite: CipherSuite
+      tlsDetails.clientProvidedHostHeader: ClientProvidedHostHeader
+      userIdentity.type: UserIdentityType
+      userIdentity.principalId: UserIdentityPrincipalid
+      userIdentity.arn: UserIdentityArn
+      userIdentity.accountId: UserIdentityAccountId
+      userIdentity.accessKeyId: UserIdentityAccessKeyId
+      userIdentity.userName: UserIdentityUserName
+      userIdentity.invokedBy: UserIdentityInvokedBy
+      userIdentity.sessionContext.sessionIssuer.type: SessionIssuerType
+      userIdentity.sessionContext.sessionIssuer.userName: SessionIssuerUserName
+      userIdentity.sessionContext.sessionIssuer.arn: SessionIssuerArn
+      userIdentity.sessionContext.sessionIssuer.accountId: SessionIssuerAccountId
+      userIdentity.sessionContext.sessionIssuer.principalId: SessionIssuerPrincipalId
+      userIdentity.sessionContext.attributes.mfaAuthenticated: SessionMfaAuthenticated
+      userIdentity.sessionContext.attributes.creationDate: SessionCreationDate
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail

@@ -17,6 +17,7 @@ Targets where the rule doesn't convert ("unsupported") are skipped.
 Engines (start them with `scripts/engines.sh up`):
   - Splunk Enterprise container: SPL from build/spl/
   - Kusto emulator container: KQL from build/kql/sentinel/ and build/kql/defender/
+    (the table a query reads is the first word of the query)
 
 How events are loaded:
   - Splunk: every event as JSON (sourcetype _json) through the HTTP Event
@@ -35,6 +36,13 @@ How events are loaded:
     (Image -> FolderPath, CommandLine -> ProcessCommandLine, ParentImage ->
     InitiatingProcessFolderPath, OriginalFileName ->
     ProcessVersionInfoOriginalFileName, and the file names split from the paths).
+
+  - AWS CloudTrail: Splunk gets the original nested records with sourcetype
+    aws:cloudtrail (fields extracted with their dotted names, list items with
+    {}). The Kusto emulator gets an AWSCloudTrail row per record, using the
+    same field-to-column mapping as the Sentinel conversion
+    (pipelines/sentinel_cloudtrail.yml); requestParameters, responseElements
+    and the other nested objects go in as JSON text, as Sentinel stores them.
 
 The table schemas (column names and types) come from pySigma-backend-kusto, the
 same lists the build uses to reject fields that don't exist in a table.
@@ -67,6 +75,7 @@ from sigma.pipelines.microsoftxdr.tables import MICROSOFT_XDR_TABLES
 # Reuse the Zircolite runner from the unit tests so counts are computed the same way.
 sys.path.insert(0, str(Path(__file__).parent))
 from run_tests import DEFAULT_PIPELINES, count_hits  # noqa: E402
+from zircolite_cloudtrail import is_cloudtrail, jsonl_files  # noqa: E402
 
 RESULTS_FILE = Path("build/validate/results.md")
 ENV_FILE = Path("build/validate/engines.env")
@@ -77,17 +86,35 @@ SPLUNK_INDEX = "dryfire"
 KUSTO_URL = "http://localhost:8080"
 KUSTO_DB = "NetDefaultDB"
 
-# Where each target's converted queries are, and which table it reads (KQL only).
+# Where each target's converted queries are. For KQL, the table a query reads
+# is the first word of the query.
 TARGETS = {
     "splunk": {"dir": Path("build/spl"), "ext": ".spl"},
-    "sentinel": {"dir": Path("build/kql/sentinel"), "ext": ".kql", "table": "SecurityEvent"},
-    "defender": {"dir": Path("build/kql/defender"), "ext": ".kql", "table": "DeviceProcessEvents"},
+    "sentinel": {"dir": Path("build/kql/sentinel"), "ext": ".kql"},
+    "defender": {"dir": Path("build/kql/defender"), "ext": ".kql"},
 }
 
 # Column name -> Kusto type, from the backend's copy of Microsoft's schema.
 SCHEMAS = {
     "SecurityEvent": {c: v["data_type"].lower() for c, v in AZURE_MONITOR_TABLES["SecurityEvent"].items()},
     "DeviceProcessEvents": {c: v["data_type"].lower() for c, v in MICROSOFT_XDR_TABLES["DeviceProcessEvents"].items()},
+    "AWSCloudTrail": {c: v["data_type"].lower() for c, v in AZURE_MONITOR_TABLES["AWSCloudTrail"].items()},
+}
+
+# CloudTrail field -> AWSCloudTrail column: the same mapping the Sentinel
+# conversion uses (pipelines/sentinel_cloudtrail.yml), so loaded rows and
+# converted queries agree on which column holds what.
+CLOUDTRAIL_PIPELINE = Path("pipelines/sentinel_cloudtrail.yml")
+CLOUDTRAIL_COLUMNS = next(
+    t["mapping"] for t in yaml.safe_load(CLOUDTRAIL_PIPELINE.read_text(encoding="utf-8"))["transformations"]
+    if t["type"] == "field_name_mapping")
+# CloudTrail objects that AWSCloudTrail keeps as JSON text in one column.
+CLOUDTRAIL_JSON_COLUMNS = {
+    "requestParameters": "RequestParameters",
+    "responseElements": "ResponseElements",
+    "additionalEventData": "AdditionalEventData",
+    "resources": "Resources",
+    "serviceEventDetails": "ServiceEventDetails",
 }
 
 # Event Channel -> Splunk source, as written by the splunk_windows pipeline.
@@ -109,6 +136,18 @@ NO_VERIFY.verify_mode = ssl.CERT_NONE
 
 
 # --- Reading events -----------------------------------------------------------
+
+def read_events(zircolite, sample, rule_path):
+    """The sample's events: CloudTrail as the original nested records, Windows as
+    Zircolite's flattened events."""
+    if is_cloudtrail(sample):
+        events = []
+        for path in jsonl_files(sample):
+            with open(path, encoding="utf-8") as f:
+                events += [json.loads(line) for line in f if line.strip()]
+        return events
+    return flattened_events(zircolite, sample, rule_path)
+
 
 def flattened_events(zircolite, sample, rule_path):
     """Return the sample's events as Zircolite sees them (flat dicts).
@@ -139,15 +178,26 @@ def basename(path):
 
 # --- Event -> engine mappings --------------------------------------------------
 
+def is_cloudtrail_event(event):
+    return "eventVersion" in event and "eventSource" in event
+
+
 def to_splunk(event):
-    """Return (source, event) for Splunk, or None if the channel isn't one we query."""
+    """Return (source, sourcetype, event) for Splunk, or None if it's not a log we query.
+
+    CloudTrail events keep their nested JSON and get sourcetype aws:cloudtrail,
+    as the Splunk Add-on for AWS gives them; Splunk then extracts fields with
+    the same dotted names (userIdentity.type).
+    """
+    if is_cloudtrail_event(event):
+        return "dryfire:cloudtrail", "aws:cloudtrail", event
     source = SPLUNK_SOURCES.get(channel(event))
     if source is None:
         return None
     event = dict(event)
     if "EventID" in event:
         event["EventCode"] = event["EventID"]
-    return source, event
+    return source, "_json", event
 
 
 def to_security_event(event):
@@ -169,6 +219,28 @@ def to_security_event(event):
         row["EventData"] = ('<EventData xmlns="http://schemas.microsoft.com/win/2004/08/events/event">'
                             f'<Data Name="TaskName">{event.get("TaskName", "")}</Data>'
                             f'<Data Name="TaskContent">{event["TaskContent"]}</Data></EventData>')
+    return row
+
+
+def nested_value(event, path):
+    """The value at a dotted path ("userIdentity.type"), or None."""
+    value = event
+    for key in path.split("."):
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+    return value
+
+
+def to_aws_cloudtrail(event):
+    """Return an AWSCloudTrail row for a CloudTrail record, otherwise None."""
+    if not is_cloudtrail_event(event):
+        return None
+    row = {column: nested_value(event, path) for path, column in CLOUDTRAIL_COLUMNS.items()}
+    for field, column in CLOUDTRAIL_JSON_COLUMNS.items():
+        if event.get(field) is not None:
+            row[column] = json.dumps(event[field])
+    row["TimeGenerated"] = event.get("eventTime")
     return row
 
 
@@ -207,10 +279,20 @@ def typed_row(row, table):
                 value = str(value).lower() in ("1", "true")
             elif kind == "string":
                 value = str(value)
+            elif kind == "datetime":
+                value = str(value)  # Kusto reads ISO 8601 text
         except ValueError:
             continue  # a value that doesn't fit the column stays empty, as in a real table
         out[column] = value
     return out
+
+
+# Which loader builds rows for each Kusto table.
+TABLE_MAPPERS = {
+    "SecurityEvent": to_security_event,
+    "DeviceProcessEvents": to_device_process_event,
+    "AWSCloudTrail": to_aws_cloudtrail,
+}
 
 
 # --- Splunk -------------------------------------------------------------------
@@ -259,9 +341,10 @@ class Splunk:
         for event in events:
             mapped = to_splunk(event)
             if mapped:
-                source, data = mapped
+                source, sourcetype, data = mapped
                 data = {"dryfire_file": file_id, **data}
-                batch.append(json.dumps({"index": SPLUNK_INDEX, "source": source, "sourcetype": "_json", "event": data}))
+                batch.append(json.dumps({"index": SPLUNK_INDEX, "source": source, "sourcetype": sourcetype,
+                                         "event": data}))
         for i in range(0, len(batch), 500):
             self._post(f"{SPLUNK_HEC}/services/collector/event", "".join(batch[i:i + 500]).encode(),
                        {"Authorization": f"Splunk {self.hec_token}"})
@@ -348,7 +431,7 @@ def main():
         if args.rule and name != args.rule:
             continue
         case = yaml.safe_load((args.cases_dir / f"{name}.yml").read_text(encoding="utf-8"))
-        pipelines = case.get("pipelines") or DEFAULT_PIPELINES
+        pipelines = case.get("pipelines", DEFAULT_PIPELINES)
         samples = [Path(p["file"]) for p in case.get("positive") or []]
         samples += [Path(n["file"] if isinstance(n, dict) else n) for n in case.get("negative") or []]
         print(f"\n{rule_path}")
@@ -367,14 +450,15 @@ def main():
                         counts_cache[(name, sample)] = count_hits(args.zircolite, rule_path, sample, pipelines)
                     expected = counts_cache[(name, sample)]
                     if sample not in events_cache:
-                        events_cache[sample] = flattened_events(args.zircolite, sample, rule_path)
+                        events_cache[sample] = read_events(args.zircolite, sample, rule_path)
                     events = events_cache[sample]
                     if target == "splunk":
                         got, loaded = splunk.run(query, sample, events)
                     else:
-                        mapper = to_security_event if target == "sentinel" else to_device_process_event
-                        rows = [typed_row(r, info["table"]) for r in map(mapper, events) if r]
-                        got, loaded = kusto.run(query, info["table"], rows)
+                        table = query.split()[0]
+                        mapper = TABLE_MAPPERS[table]
+                        rows = [typed_row(r, table) for r in map(mapper, events) if r]
+                        got, loaded = kusto.run(query, table, rows)
                     detail = f"{got} hit(s), Zircolite {expected}, {loaded} event(s) loaded"
                     if loaded == 0 and expected == 0:
                         # e.g. a System-log negative against a Security-log query:

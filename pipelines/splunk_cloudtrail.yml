@@ -1,0 +1,22 @@
+# Splunk: limit AWS CloudTrail rules to CloudTrail data.
+#
+# pySigma's Splunk pipelines only cover Windows. For rules with
+# `logsource: product: aws, service: cloudtrail` this adds
+# sourcetype="aws:cloudtrail", the sourcetype the Splunk Add-on for AWS gives
+# CloudTrail events. Field names stay as written in the rule: Splunk extracts
+# CloudTrail's JSON with the same dotted names (userIdentity.type), and list
+# items with {} (requestParameters.ipPermissions.items{}.ipRanges.items{}.cidrIp).
+#
+# Used by scripts/convert.py (the "splunk" target).
+
+name: dryfire Splunk CloudTrail sourcetype
+priority: 25
+transformations:
+  - id: dryfire_splunk_cloudtrail_sourcetype
+    type: add_condition
+    conditions:
+      sourcetype: "aws:cloudtrail"
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail

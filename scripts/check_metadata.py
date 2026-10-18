@@ -29,7 +29,7 @@ REQUIRED_FIELDS = ["id", "title", "status", "description", "author", "date", "ta
 STATUSES = {"stable", "test", "experimental", "deprecated", "unsupported"}
 LEVELS = {"informational", "low", "medium", "high", "critical"}
 # Platform folder -> required filename prefix.
-PLATFORM_PREFIX = {"windows": "win"}
+PLATFORM_PREFIX = {"windows": "win", "aws": "aws"}
 
 TECHNIQUE_TAG = re.compile(r"^attack\.t(\d{4})(?:\.(\d{3}))?$")
 TACTIC_TAG = re.compile(r"^attack\.([a-z][a-z_-]+)$")

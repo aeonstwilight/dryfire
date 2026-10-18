@@ -2,7 +2,7 @@
 
 Output goes to build/:
     build/spl/<rule>.spl              Splunk
-    build/kql/sentinel/<rule>.kql     Microsoft Sentinel (SecurityEvent table)
+    build/kql/sentinel/<rule>.kql     Microsoft Sentinel (SecurityEvent, AWSCloudTrail)
     build/kql/defender/<rule>.kql     Microsoft Defender XDR (Device* tables)
     build/conversion_summary.md       One row per rule, one column per target
 
@@ -36,10 +36,24 @@ from sigma.pipelines.splunk import splunk_windows_pipeline
 from sigma.pipelines.sysmon import sysmon_pipeline
 
 
+def load_pipeline(path):
+    """Load one of our own pipelines from pipelines/ (see the comments in each YAML file)."""
+    return ProcessingPipeline.from_yaml(Path(path).read_text(encoding="utf-8"))
+
+
 def sentinel_security_log_pipeline():
-    """Our own pipeline: Security-log rules -> SecurityEvent (see the YAML file)."""
-    path = Path("pipelines/sentinel_security_log.yml")
-    return ProcessingPipeline.from_yaml(path.read_text(encoding="utf-8"))
+    """Security-log rules -> SecurityEvent."""
+    return load_pipeline("pipelines/sentinel_security_log.yml")
+
+
+def sentinel_cloudtrail_pipeline():
+    """AWS CloudTrail rules -> AWSCloudTrail, with CloudTrail fields renamed to its columns."""
+    return load_pipeline("pipelines/sentinel_cloudtrail.yml")
+
+
+def splunk_cloudtrail_pipeline():
+    """AWS CloudTrail rules -> sourcetype="aws:cloudtrail"."""
+    return load_pipeline("pipelines/splunk_cloudtrail.yml")
 
 
 # Each target: which backend to use, which pipelines to apply (in order),
@@ -47,21 +61,22 @@ def sentinel_security_log_pipeline():
 # field names onto what each SIEM actually stores.
 #
 # Splunk: `sysmon` turns generic categories (process_creation, process_access...)
-#   into Sysmon Event IDs; `splunk_windows` adds the source="WinEventLog:..." filter.
-# Sentinel: our own pipelines/sentinel_security_log.yml first (Security-log
-#   rules -> SecurityEvent), then `azure_monitor`, which maps process creation
-#   to SecurityEvent and checks every field against the table.
+#   into Sysmon Event IDs; `splunk_windows` adds the source="WinEventLog:..." filter;
+#   our pipelines/splunk_cloudtrail.yml adds sourcetype="aws:cloudtrail" for AWS rules.
+# Sentinel: our own pipelines first (Security-log rules -> SecurityEvent, AWS
+#   CloudTrail rules -> AWSCloudTrail), then `azure_monitor`, which maps process
+#   creation to SecurityEvent and checks every field against the table.
 # Defender: `microsoft_xdr` maps to DeviceProcessEvents and friends.
 TARGETS = {
     "splunk": {
         "backend": SplunkBackend,
-        "pipelines": [sysmon_pipeline, splunk_windows_pipeline],
+        "pipelines": [sysmon_pipeline, splunk_windows_pipeline, splunk_cloudtrail_pipeline],
         "out_dir": Path("build/spl"),
         "ext": ".spl",
     },
     "sentinel": {
         "backend": KustoBackend,
-        "pipelines": [sentinel_security_log_pipeline, azure_monitor_pipeline],
+        "pipelines": [sentinel_security_log_pipeline, sentinel_cloudtrail_pipeline, azure_monitor_pipeline],
         "out_dir": Path("build/kql/sentinel"),
         "ext": ".kql",
     },

@@ -24,7 +24,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 
 ## Conventions
 
-- Rule path: `rules/<platform>/<tactic>/<platform>_<short_description>.yml`
+- Rule path: `rules/<platform>/<tactic>/<prefix>_<short_description>.yml` (prefix `win` for windows, `aws` for aws)
 - Every rule needs: a UUID `id`, `title`, `status`, `description`, `author`, `date`, ATT&CK tags (`attack.<tactic>`, `attack.tXXXX[.XXX]`), `logsource`, `detection`, `falsepositives`, `level`, `references`.
 - Every rule needs a matching test case in `tests/cases/<rule_filename>.yml` with:
   - `rule`: path to the rule
@@ -176,5 +176,14 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
 - Arrays (e.g. `requestParameters.ipPermissions.items`) stay one text column holding the whole list, so array contents can only be matched with `contains`. `AuthorizeSecurityGroupIngress` has two shapes: rules under `ipPermissions.items[].ipRanges` and an older flat `cidrIp`.
 - Splunk: no pySigma AWS pipeline; CloudTrail sourcetype is `aws:cloudtrail` (Splunk Add-on for AWS docs). Fields are the dotted JSON paths; array leaves use `{}`.
 - Sentinel: pySigma-backend-kusto knows the `AWSCloudTrail` table (53 columns) but has no mapping for the `aws`/`cloudtrail` log source; nested `requestParameters.*` lives in the `RequestParameters` text column.
+
+**Step 2 (pipeline) done, 2026-10-18:**
+
+- `scripts/fetch_datasets.py`: a manifest entry with `jsonl:` also gets a one-event-per-line copy (handles `{"Records": [...]}`, JSON Lines and zips). AWS test cases point at the `.jsonl` files (or a folder of them) and use `pipelines: []`.
+- `tests/zircolite_cloudtrail.py`: for CloudTrail samples, writes a Zircolite config (default config plus a `path: path` mapping for every nested field in the sample); used by the test, sweep and validate scripts.
+- `pipelines/splunk_cloudtrail.yml` (adds `sourcetype="aws:cloudtrail"`) and `pipelines/sentinel_cloudtrail.yml` (`AWSCloudTrail` table, field-to-column mapping; `requestParameters.*` etc. deliberately unmapped, so a rule using them fails Sentinel conversion until a per-field decision).
+- Sweep: sources have a `platform`; rules only run on sources of their own platform. AWS corpus: Invictus IR (55 files), Splunk attack_data (40 raw CloudTrail files) and OTRF EC2 proxy exfiltration, 38,793 events. OTRF's honey-bucket dataset is a CSV export, not CloudTrail, so it's left out.
+- Validate: CloudTrail records go to Splunk as `aws:cloudtrail` (nested JSON) and to an `AWSCloudTrail` table in Kusto built from the Sentinel pipeline's mapping. The Splunk test app also lowers `minFreeSpace` (Splunk stops indexing below 5 GB free), and `engines.sh` waits for the Splunk image's health check.
+- Found with probe rules: list contents differ by engine. Zircolite keeps a list as one text column (`requestParameters.ipPermissions.items`), Splunk extracts list items as `...items{}.ipRanges.items{}.cidrIp`, Sentinel has them in `RequestParameters`. Rules matching inside lists (security group, S3 public) need a per-rule design.
 
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.

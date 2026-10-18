@@ -18,7 +18,8 @@ Test case format (paths relative to the repo root):
 
 `pipelines` are the pySigma pipelines Zircolite applies before matching.
 The default suits Sysmon samples. For Security 4688 process-creation samples
-use [windows-audit, windows-logsources].
+use [windows-audit, windows-logsources]. AWS CloudTrail rules use
+`pipelines: []` and JSON Lines samples (.jsonl); see zircolite_cloudtrail.py.
 
 Exit code is 1 if anything fails. Results are also written to build/tests/results.md.
 """
@@ -32,6 +33,8 @@ import tempfile
 from pathlib import Path
 
 import yaml
+
+from zircolite_cloudtrail import write_config
 
 DEFAULT_PIPELINES = ["sysmon", "windows-logsources"]
 RESULTS_FILE = Path("build/tests/results.md")
@@ -51,6 +54,10 @@ def count_hits(zircolite, rule_path, sample_path, pipelines):
                "--outfile", str(out_file)]
         for pipeline in pipelines:
             cmd += ["--pipeline", pipeline]
+        # CloudTrail samples need a config that keeps nested field names (see zircolite_cloudtrail.py).
+        config = write_config(sample_path, zircolite, tmp)
+        if config:
+            cmd += ["--config", str(config)]
 
         result = subprocess.run(cmd, cwd=tmp, capture_output=True, text=True)
         if result.returncode != 0 or not out_file.exists():
@@ -87,7 +94,7 @@ def check_rule(rule_path, args):
         results.append(("test case", False, f"{case_path} needs at least one positive and one negative sample"))
         return results
 
-    pipelines = case.get("pipelines") or DEFAULT_PIPELINES
+    pipelines = case.get("pipelines", DEFAULT_PIPELINES)
     samples = [(p["file"], int(p.get("min_hits", 1)), "positive") for p in positives]
     samples += [(n["file"] if isinstance(n, dict) else n, 0, "negative") for n in negatives]
 
