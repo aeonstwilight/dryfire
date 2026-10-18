@@ -81,7 +81,7 @@ make lint convert test coverage
 ## Roadmap
 
 - **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
-- **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; eight more rules
+- **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3:** Validate converted queries against live backends (Splunk container, Azure Data Explorer)
 - **M4:** AWS CloudTrail detections
 
