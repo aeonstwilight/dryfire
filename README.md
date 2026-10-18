@@ -73,6 +73,8 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ |
 | [AWS S3 Block Public Access Removed or Weakened](docs/rules/aws_s3_public_access_block_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
 | [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | ✅ |
+| [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
+| [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 

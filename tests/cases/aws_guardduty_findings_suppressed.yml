@@ -1,0 +1,17 @@
+rule: rules/aws/defense_impairment/aws_guardduty_findings_suppressed.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1562.008): a failed DeleteIPSet call
+  - file: tests/data/external/aws/splunk-attack-data/T1562.008_aws_delete_security_services.jsonl
+    min_hits: 1
+  # Synthetic: CreateFilter and UpdateFilter with ARCHIVE, trusted IP list created, updated
+  # and deleted (denied), threat list deleted
+  - file: tests/data/samples/aws_guardduty_findings_suppressed_synthetic_positive.jsonl
+    min_hits: 6
+negative:
+  # Real (Invictus IR): GuardDuty read calls (ListFindings, ListDetectors)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_9JM8uKEITHqwJKXr.jsonl
+  # Synthetic: NOOP filters named or described "ARCHIVE", an UpdateFilter without action,
+  # a threat list added, read calls and a filter deleted
+  - file: tests/data/samples/aws_guardduty_findings_suppressed_benign.jsonl

@@ -115,3 +115,11 @@ aws_s3_bucket_made_public:
   aws-invictus: 0
   aws-splunk-attack-data: 10
   aws-otrf: 0
+aws_guardduty_disabled:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0
+aws_guardduty_findings_suppressed:
+  aws-invictus: 0
+  aws-splunk-attack-data: 1
+  aws-otrf: 0

@@ -41,6 +41,10 @@ transformations:
       # be one value or a list (x-amz-acl{}), and the backend can't run a regex
       # on a field name containing {}. Both patterns only match their own text.
       requestParameters.bucketPolicy.Statement: _raw
+      # aws_guardduty_disabled: feature and additional-configuration statuses
+      requestParameters.features:
+        - requestParameters.features{}.status
+        - requestParameters.features{}.additionalConfiguration{}.status
       requestParameters.x-amz-acl: _raw
     rule_conditions:
       - type: logsource

@@ -88,6 +88,12 @@ transformations:
       requestParameters.AccessControlPolicy.AccessControlList.Grant: RequestParameters  # aws_s3_bucket_made_public
       requestParameters.AccessControlPolicy.AccessControlList.Grant.Grantee.URI: RequestParameters  # aws_s3_bucket_made_public
       requestParameters.x-amz-acl: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.enable: RequestParameters  # aws_guardduty_disabled
+      requestParameters.features: RequestParameters  # aws_guardduty_disabled
+      requestParameters.dataSources.s3Logs.enable: RequestParameters  # aws_guardduty_disabled
+      requestParameters.dataSources.kubernetes.auditLogs.enable: RequestParameters  # aws_guardduty_disabled
+      requestParameters.dataSources.malwareProtection.scanEc2InstanceWithFindings.ebsVolumes: RequestParameters  # aws_guardduty_disabled
+      requestParameters.action: RequestParameters  # aws_guardduty_findings_suppressed
     rule_conditions:
       - type: logsource
         product: aws

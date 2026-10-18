@@ -78,6 +78,8 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-18 | aws_security_group_ingress_open_to_internet | 62 | **Proposed labels, awaiting owner review.** 60 × port 80 opened to 0.0.0.0/0 by the EC2 console launch wizard (`console.ec2.amazonaws.com`) in `abnormally_high_cloud_instances_launched`: correct, benign (public web servers). 2 × in `T1562.007_aws_delete_acl`: the same events as `aws_create_acl` (same `eventID`s; one call opening 22, 3389, WinRM and others, one opening all traffic): attack simulation. |
 | 2026-10-18 | aws_s3_public_access_block_disabled | 0 | Only its own samples: the two `PutBucketPublicAccessBlock` calls with all protections off before the public policy in Splunk's T1485 dataset. |
 | 2026-10-18 | aws_s3_bucket_made_public | 0 | Only its own samples: 8 public ACLs (2 AllUsers, 6 AuthenticatedUsers) in Splunk's T1530 dataset and the 2 `Principal: *` policies in T1485. The Stratus Red Team cross-account backdoor policy and the CloudTrail log-bucket policies correctly don't match. |
+| 2026-10-18 | aws_guardduty_disabled | 0 | Only its own samples: the 2 failed `DeleteDetector` calls in Splunk's T1562.008 `aws_delete_security_services`. The Invictus GuardDuty read calls (`ListDetectors`, `ListFindings`) correctly don't match. |
+| 2026-10-18 | aws_guardduty_findings_suppressed | 0 | Only its own samples: the failed `DeleteIPSet` call in the same Splunk dataset. |
 
 ## Limits of this review
 
