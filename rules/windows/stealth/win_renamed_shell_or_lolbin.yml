@@ -1,0 +1,80 @@
+title: Renamed Shell, Script Host or LOLBin Executed
+id: 162a5bc1-60f8-4335-a9cd-9ff02fc9c52e
+status: experimental
+description: |
+    Detects a process whose PE original file name (OriginalFileName, from the
+    version resource) is one of the shells, script hosts and proxy binaries
+    that other rules in this repo match by file name, while the file on disk
+    has a different name. Renaming cmd, PowerShell, certutil, rundll32 and
+    similar defeats name-based detections, so this closes that gap for the
+    process-creation rules here. The list is deliberately targeted: in the
+    test corpus most OriginalFileName mismatches are normal vendor and
+    Windows binaries.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1036/003/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
+tags:
+    - attack.stealth
+    - attack.t1036.003
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    sel_cmd:
+        OriginalFileName: 'Cmd.Exe'
+    filter_cmd:
+        Image|endswith: '\cmd.exe'
+    sel_powershell:
+        OriginalFileName: 'PowerShell.EXE'
+    filter_powershell:
+        Image|endswith: '\powershell.exe'
+    sel_pwsh:
+        OriginalFileName: 'pwsh.dll'  # not seen in the public test corpus; covered by synthetic tests only
+    filter_pwsh:
+        Image|endswith: '\pwsh.exe'
+    sel_certutil:
+        OriginalFileName: 'CertUtil.exe'
+    filter_certutil:
+        Image|endswith: '\certutil.exe'
+    sel_rundll32:
+        OriginalFileName: 'RUNDLL32.EXE'
+    filter_rundll32:
+        Image|endswith: '\rundll32.exe'
+    sel_regsvr32:
+        OriginalFileName: 'REGSVR32.EXE'
+    filter_regsvr32:
+        Image|endswith: '\regsvr32.exe'
+    sel_mshta:
+        OriginalFileName: 'MSHTA.EXE'
+    filter_mshta:
+        Image|endswith: '\mshta.exe'
+    sel_wscript:
+        OriginalFileName: 'wscript.exe'
+    filter_wscript:
+        Image|endswith: '\wscript.exe'
+    sel_cscript:
+        OriginalFileName: 'cscript.exe'
+    filter_cscript:
+        Image|endswith: '\cscript.exe'
+    sel_msbuild:
+        OriginalFileName: 'MSBuild.exe'
+    filter_msbuild:
+        Image|endswith: '\msbuild.exe'
+    sel_net:
+        OriginalFileName: 'net.exe'
+    filter_net:
+        Image|endswith: '\net.exe'
+    sel_net1:
+        OriginalFileName: 'net1.exe'
+    filter_net1:
+        Image|endswith: '\net1.exe'
+    sel_bitsadmin:
+        OriginalFileName: 'bitsadmin.exe'  # not seen in the public test corpus; covered by synthetic tests only
+    filter_bitsadmin:
+        Image|endswith: '\bitsadmin.exe'
+    condition: (sel_cmd and not filter_cmd) or (sel_powershell and not filter_powershell) or (sel_pwsh and not filter_pwsh) or (sel_certutil and not filter_certutil) or (sel_rundll32 and not filter_rundll32) or (sel_regsvr32 and not filter_regsvr32) or (sel_mshta and not filter_mshta) or (sel_wscript and not filter_wscript) or (sel_cscript and not filter_cscript) or (sel_msbuild and not filter_msbuild) or (sel_net and not filter_net) or (sel_net1 and not filter_net1) or (sel_bitsadmin and not filter_bitsadmin)
+falsepositives:
+    - Software that bundles a renamed copy of a Windows shell or script host (rare; usually an installer or packaging tool)
+level: high

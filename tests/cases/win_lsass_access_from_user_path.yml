@@ -1,0 +1,14 @@
+rule: rules/windows/credential_access/win_lsass_access_from_user_path.yml
+positive:
+  # Real: c:\Users\IEUser\Desktop\PPLdump.exe opening LSASS with 0x1000 (twice).
+  # services.exe in the same file must not count.
+  - file: tests/data/external/evtx-attack-samples/ppl_bypass_ppldump_knowdll_hijack_sysmon_security.evtx
+    min_hits: 2
+  # Synthetic: 0x1000 from AppData\Temp, 0x1400 from a UNC share, 0x1000 from Users\Public
+  - file: tests/data/samples/win_lsass_access_from_user_path_synthetic_positive.json
+    min_hits: 3
+negative:
+  # Real normal LSASS access (svchost, services, wininit, csrss, wmiprvse, Azure antimalware and
+  # telemetry agents from APT29; python27 from EVTX), plus synthetic procdump 0x1fffff from the
+  # Desktop (the LSASS memory-read rule's job) and a Program Files agent at 0x1000
+  - file: tests/data/samples/win_lsass_access_from_user_path_benign.json

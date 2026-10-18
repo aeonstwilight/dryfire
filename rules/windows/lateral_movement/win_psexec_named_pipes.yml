@@ -1,0 +1,36 @@
+title: PsExec-Style Named Pipes Created or Connected
+id: 1aac3869-250d-4f3b-8957-86a466a5329a
+status: experimental
+description: |
+    Detects the named pipes PsExec uses: its control pipe \PSEXESVC and the
+    per-session I/O pipes named <service>-<host>-<pid>-stdin, -stdout and
+    -stderr (Sysmon 17/18). The I/O pipe suffixes stay the same when PsExec
+    is run with -r to rename its service, so this catches renamed PsExec,
+    which the 7045 service rule cannot see. It also catches PsExec-style
+    tools that copy the same naming scheme.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1021/002/
+    - https://attack.mitre.org/techniques/T1569/002/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
+tags:
+    - attack.lateral-movement
+    - attack.t1021.002
+    - attack.execution
+    - attack.t1569.002
+logsource:
+    product: windows
+    category: pipe_created
+detection:
+    selection:
+        - PipeName: '\PSEXESVC'
+        - PipeName|endswith:
+              - '-stdin'
+              - '-stdout'
+              - '-stderr'
+    condition: selection
+falsepositives:
+    - Administrators and IT tooling using Sysinternals PsExec (original or renamed) for remote administration
+    - Other remote-execution tools that use the same pipe naming scheme
+level: medium

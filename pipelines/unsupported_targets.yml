@@ -1,0 +1,16 @@
+# Declared conversion exceptions, reviewed by the owner.
+#
+# By default a rule field that doesn't exist in a target's table fails the
+# build. List a rule/target pair here only when the target genuinely can't
+# express the rule, with the reason. scripts/convert.py then reports it as
+# "unsupported (declared)". If a listed pair starts converting, or a listed
+# rule no longer exists, the build fails until this file is updated.
+#
+# Format:
+#   <rule file name without .yml>:
+#     <target: splunk | sentinel | defender>: <reason>
+
+win_renamed_shell_or_lolbin:
+  sentinel: >-
+    SecurityEvent (4688) does not record the PE original file name, and the rule
+    depends on OriginalFileName; there is no field to map it to.

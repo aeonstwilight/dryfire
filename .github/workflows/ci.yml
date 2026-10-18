@@ -50,11 +50,18 @@ jobs:
         if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
         run: make coverage
 
+      # Every rule against a large corpus. Report-only until
+      # tests/sweep_baseline.yml exists; then it fails on any count change.
+      - name: Noise sweep
+        id: sweep
+        if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
+        run: make sweep
+
       # Show the conversion and test tables on the workflow run page.
       - name: Job summary
         if: ${{ !cancelled() }}
         run: |
-          for f in build/conversion_summary.md build/tests/results.md; do
+          for f in build/conversion_summary.md build/tests/results.md build/sweep/summary.md; do
             if [ -f "$f" ]; then
               echo "### $f" >> "$GITHUB_STEP_SUMMARY"
               cat "$f" >> "$GITHUB_STEP_SUMMARY"

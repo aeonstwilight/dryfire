@@ -1,0 +1,81 @@
+# Noise-sweep baseline: hits per rule per source (own test samples + others).
+# Reviewed 2026-10-17; see tests/sweep_review.md for what every hit is.
+# `make sweep` fails if any count changes. If a change is intended (a rule was
+# tuned, or a new rule added), review build/sweep/ and update this file to match.
+
+win_certutil_download:
+  evtx-attack-samples: 1
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_local_admin_group_member_added:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_lsass_memory_access:
+  evtx-attack-samples: 23
+  otrf-apt29-day1: 3
+  otrf-apt29-day2: 2
+win_office_spawning_shell_or_script_host:
+  evtx-attack-samples: 1
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_powershell_encoded_command:
+  evtx-attack-samples: 3
+  otrf-apt29-day1: 1
+  otrf-apt29-day2: 5
+win_rundll32_suspicious_usage:
+  evtx-attack-samples: 24
+  otrf-apt29-day1: 1
+  otrf-apt29-day2: 1
+win_scheduled_task_suspicious_action:
+  evtx-attack-samples: 3
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_security_log_cleared:
+  evtx-attack-samples: 24
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_service_install_suspicious_image_path:
+  evtx-attack-samples: 4
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_wmiprvse_suspicious_child:
+  evtx-attack-samples: 12
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 4
+win_system_log_cleared:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_psexec_named_pipes:
+  evtx-attack-samples: 9
+  otrf-apt29-day1: 32
+  otrf-apt29-day2: 0
+win_psexec_service_installed:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 4
+  otrf-apt29-day2: 0
+win_renamed_shell_or_lolbin:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_certutil_encode_decode:
+  evtx-attack-samples: 3
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 1
+win_lsass_access_from_user_path:
+  evtx-attack-samples: 2
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_privileged_builtin_group_member_added:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_domain_admin_group_member_added:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_rundll32_relative_path_dll:
+  evtx-attack-samples: 22
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

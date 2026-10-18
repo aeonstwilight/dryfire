@@ -1,0 +1,43 @@
+title: Rundll32 Loading a DLL by Bare Name Not on the Allow-List
+id: 853446b7-6671-455a-8c2d-d106a015e256
+status: experimental
+description: |
+    Detects rundll32.exe whose first argument is a file name with no path
+    (no backslash, slash or drive colon), where that name isn't one of the
+    Windows DLLs normally called this way. Rundll32 resolves a bare name
+    through the DLL search order, so this catches attacker DLLs run from the
+    current folder (rundll32 payload.dll,Start), DLLs planted in System32
+    under a name Windows doesn't ship, and 8.3 short names. Known Windows
+    DLLs are allow-listed by name; the ones that act as proxies (url,
+    zipfldr, advpack and others) are covered by the rundll32 suspicious-usage
+    rule instead, so they don't alert twice.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1218/011/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/rundll32
+    - https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order
+tags:
+    - attack.stealth
+    - attack.t1218.011
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith: '\rundll32.exe'
+    selection_bare_name:
+        # The command line starts with rundll32[.exe] (quoted or not, with or without a
+        # folder). Its first argument, optionally quoted, has no \ / or : in it and is
+        # followed by a comma, a space, a quote or the end of the line. Anchored to the
+        # start so a later "rundll32.exe" in the command line (taskkill /im rundll32.exe)
+        # isn't mistaken for the start.
+        CommandLine|re|i: '^\s*("[^"]*rundll32(\.exe)?"|[^"\s]*rundll32(\.exe)?)\s+"?[^\\/:,"\s]+("|,|\s|$)'
+    filter_allowlist:
+        # Windows DLLs commonly called by bare name, as the first argument. Extend per environment.
+        CommandLine|re|i: '^\s*("[^"]*rundll32(\.exe)?"|[^"\s]*rundll32(\.exe)?)\s+"?(shell32|user32|url|ieframe|shdocvw|zipfldr|pcwutl|advpack|printui|keymgr|setupapi|powrprof|appxdeploymentextensions\.onecore)(\.dll)?("|,|\s|$)'
+    condition: selection_img and selection_bare_name and not filter_allowlist
+falsepositives:
+    - Windows or vendor DLLs called by bare name that aren't on the allow-list yet
+    - Installers that change into their own folder and run rundll32 on a bundled DLL
+level: medium

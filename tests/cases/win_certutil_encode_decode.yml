@@ -1,0 +1,15 @@
+rule: rules/windows/stealth/win_certutil_encode_decode.yml
+positive:
+  # Real: certutil -f -decode fi.b64 AllTheThings.dll (EDR testing script). The same file
+  # also has a certutil -urlcache download, which this rule must not count.
+  - file: tests/data/external/evtx-attack-samples/panache_sysmon_vs_EDRTestingScript.evtx
+    min_hits: 1
+  # Real: certutil -encode c:\file.exe file.txt and -decode file.txt c:\file.exe (Atomic Red Team)
+  - file: tests/data/external/evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    min_hits: 2
+  # Synthetic: /decode (slash), -decodehex, and -decode a.crt payload.dll (executable override)
+  - file: tests/data/samples/win_certutil_encode_decode_synthetic_positive.json
+    min_hits: 3
+negative:
+  # Synthetic certificate admin: .b64->.cer, .cer->.b64, .pfx->.txt, .pem->.crt, -dump, -hashfile
+  - file: tests/data/samples/win_certutil_encode_decode_benign.json

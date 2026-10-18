@@ -1,4 +1,4 @@
-# detection-lab
+# dryfire
 
 Detection-as-code for SOC teams. Every detection is written once as a [Sigma](https://sigmahq.io/) rule, tested against real attack data in CI, and converted to Splunk SPL and Microsoft Sentinel / Defender KQL. An ATT&CK Navigator layer is generated from the rule tags so coverage is always visible.
 
@@ -46,11 +46,20 @@ Converted queries and the coverage layer are uploaded as build artifacts.
 | [Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action](docs/rules/win_scheduled_task_suspicious_action.md) | Persistence, Execution | T1053.005 | ✅ | Sentinel only | ✅ |
 | [Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path](docs/rules/win_service_install_suspicious_image_path.md) | Persistence, Privilege Escalation, Execution | T1543.003, T1569.002 | ✅ | — | ✅ |
 | [Windows Security Event Log Cleared](docs/rules/win_security_log_cleared.md) | Defense Impairment | T1685.005 | ✅ | Sentinel only | ✅ |
+| [Windows Event Log Other Than Security Cleared](docs/rules/win_system_log_cleared.md) | Defense Impairment | T1685.005 | ✅ | — | ✅ |
 | [Certutil Downloading From a URL](docs/rules/win_certutil_download.md) | Command and Control | T1105 | ✅ | ✅ | ✅ |
 | [Office Application Spawning a Shell or Script Host](docs/rules/win_office_spawning_shell_or_script_host.md) | Execution | T1204.002, T1059.001, T1059.003 | ✅ | ✅ | ✅ |
 | [WMI Provider Host Spawning a Shell, Proxy Binary or User-Folder Executable](docs/rules/win_wmiprvse_suspicious_child.md) | Execution | T1047 | ✅ | ✅ | ✅ |
 | [Member Added to Local Administrators Group](docs/rules/win_local_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 | [Rundll32 Running Script, Proxy Export, User-Folder DLL or No Arguments](docs/rules/win_rundll32_suspicious_usage.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
+| [PsExec Service Installed](docs/rules/win_psexec_service_installed.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
+| [PsExec-Style Named Pipes Created or Connected](docs/rules/win_psexec_named_pipes.md) | Lateral Movement, Execution | T1021.002, T1569.002 | ✅ | — | ✅ |
+| [Renamed Shell, Script Host or LOLBin Executed](docs/rules/win_renamed_shell_or_lolbin.md) | Stealth | T1036.003 | ✅ | Defender only | ✅ |
+| [Certutil Encoding or Decoding a Non-Certificate File](docs/rules/win_certutil_encode_decode.md) | Stealth | T1140, T1027 | ✅ | ✅ | ✅ |
+| [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ |
+| [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
+| [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
+| [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
 
 ## Adding a rule
 
@@ -71,8 +80,8 @@ make lint convert test coverage
 
 ## Roadmap
 
-- **M1:** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
-- **M2:** False-positive tuning against a larger benign dataset; stricter rule metadata checks
+- **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
+- **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3:** Validate converted queries against live backends (Splunk container, Azure Data Explorer)
 - **M4:** AWS CloudTrail detections
 

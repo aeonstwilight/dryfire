@@ -1,0 +1,42 @@
+title: Member Added to a Privileged Built-in Group Other Than Administrators
+id: fca64eca-1a82-404f-879a-097c3fbdac4a
+status: experimental
+description: |
+    Detects an account being added (Security 4732) to a built-in local group
+    that grants remote access or powerful rights without full admin: Remote
+    Desktop Users, Remote Management Users (WinRM), Backup Operators,
+    Hyper-V Administrators and Distributed COM Users, plus the domain
+    controller groups Account Operators, Server Operators and Print Operators.
+    Matching is on the well-known group SID, so localized or renamed groups
+    match too. Administrators (S-1-5-32-544) is covered by its own rule.
+author: aeonstwilight
+date: 2026-10-17
+references:
+    - https://attack.mitre.org/techniques/T1098/007/
+    - https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4732
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1098.007
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4732
+        TargetSid:
+            - 'S-1-5-32-555'  # Remote Desktop Users
+            - 'S-1-5-32-580'  # Remote Management Users
+            - 'S-1-5-32-551'  # Backup Operators
+            - 'S-1-5-32-578'  # Hyper-V Administrators
+            - 'S-1-5-32-562'  # Distributed COM Users
+            - 'S-1-5-32-548'  # Account Operators (domain controllers)
+            - 'S-1-5-32-549'  # Server Operators (domain controllers)
+            - 'S-1-5-32-550'  # Print Operators (domain controllers)
+    condition: selection
+falsepositives:
+    - Helpdesk granting Remote Desktop or WinRM access to users or support staff
+    - Group Policy Restricted Groups or Intune policies re-applying membership
+    - Backup software installers adding their service account to Backup Operators
+level: medium

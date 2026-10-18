@@ -1,12 +1,16 @@
-"""Download the public datasets listed in tests/datasets.yml.
+"""Download the public datasets listed in tests/datasets.yml (or another manifest).
 
 Files go to tests/data/external/ (gitignored). Each file's SHA-256 is checked
 against the manifest, so a changed or tampered file fails instead of silently
 changing test results. Files already present with the right hash are skipped.
 
+Use --manifest to read a different list, e.g. tests/sweep_corpus.yml for the
+noise sweep.
+
 Exit code is 1 if any download fails or any hash doesn't match.
 """
 
+import argparse
 import hashlib
 import sys
 import urllib.parse
@@ -39,13 +43,18 @@ def download(url, dest):
 
 
 def main():
-    manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8")) or {}
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--manifest", default=MANIFEST, type=Path)
+    args = parser.parse_args()
+
+    manifest = yaml.safe_load(args.manifest.read_text(encoding="utf-8")) or {}
     entries = manifest.get("datasets") or []
     if not entries:
-        print(f"No datasets listed in {MANIFEST}.")
+        print(f"No datasets listed in {args.manifest}.")
         return 0
 
     failures = 0
+    already_there = 0
     for entry in entries:
         url, expected = entry["url"], entry.get("sha256")
         dest = DEST_DIR / entry["path"]
@@ -56,7 +65,7 @@ def main():
             continue
 
         if dest.exists() and expected and sha256_of(dest) == expected:
-            print(f"OK    {dest} (already downloaded)")
+            already_there += 1
             continue
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -71,7 +80,7 @@ def main():
         if not expected:
             print(f"FAIL  {dest}: no sha256 in manifest. Downloaded file hashes to:\n"
                   f"      sha256: {actual}\n"
-                  f"      Check the file, then add that line to its entry in {MANIFEST}.")
+                  f"      Check the file, then add that line to its entry in {args.manifest}.")
             failures += 1
         elif actual != expected:
             print(f"FAIL  {dest}: sha256 mismatch\n      expected {expected}\n      got      {actual}")
@@ -80,6 +89,8 @@ def main():
         else:
             print(f"OK    {dest}")
 
+    if already_there:
+        print(f"OK    {already_there} file(s) already downloaded with the right hash")
     if failures:
         print(f"{failures} dataset(s) failed.")
         return 1

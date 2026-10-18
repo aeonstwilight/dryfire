@@ -12,11 +12,19 @@ One exception: the Kusto pipelines only know tables for some log sources
 (process creation, file, registry, network...). When a pipeline has no table
 for a rule's log source, that rule/target pair is reported as "unsupported"
 and does not fail the build. Any other error does.
+
+Declared exceptions: pipelines/unsupported_targets.yml lists rule/target pairs
+that are known not to convert, each with a reason (for example a field the
+target table doesn't have). Those are reported as "unsupported (declared)"
+instead of failing. A declared pair that converts fine, or a rule name in that
+file that doesn't exist, fails the build so the list stays accurate.
 """
 
 import argparse
 import sys
 from pathlib import Path
+
+import yaml
 
 from sigma.backends.kusto import KustoBackend
 from sigma.backends.splunk import SplunkBackend
@@ -65,6 +73,9 @@ TARGETS = {
     },
 }
 
+# Reviewed exceptions: rule name -> target -> reason.
+DECLARED_UNSUPPORTED = Path("pipelines/unsupported_targets.yml")
+
 # Error text the Kusto pipelines raise when they have no table for a log source.
 NO_TABLE_ERROR = "Unable to determine table name"
 
@@ -111,13 +122,31 @@ def main():
     for target in TARGETS.values():
         target["out_dir"].mkdir(parents=True, exist_ok=True)
 
+    declared = {}
+    if DECLARED_UNSUPPORTED.exists():
+        declared = yaml.safe_load(DECLARED_UNSUPPORTED.read_text(encoding="utf-8")) or {}
+
     failures = 0
+    # Every rule named in the exceptions file must exist.
+    for name in sorted(set(declared) - {p.stem for p in rule_paths}):
+        print(f"FAIL  {DECLARED_UNSUPPORTED}: no rule named {name}")
+        failures += 1
+
     summary_rows = []
     for rule_path in rule_paths:
         row = [rule_path.stem]
         for name, target in TARGETS.items():
             status, text = convert_rule(rule_path, target)
-            if status == "ok":
+            reason = (declared.get(rule_path.stem) or {}).get(name)
+            if reason and status == "ok":
+                print(f"FAIL  {rule_path} -> {name}: declared unsupported in {DECLARED_UNSUPPORTED} "
+                      "but it converts; remove the entry")
+                row.append("FAILED")
+                failures += 1
+            elif reason:
+                print(f"SKIP  {rule_path} -> {name}: declared unsupported: {reason}")
+                row.append("unsupported (declared)")
+            elif status == "ok":
                 out_file = target["out_dir"] / (rule_path.stem + target["ext"])
                 out_file.write_text(text, encoding="utf-8")
                 row.append("ok")

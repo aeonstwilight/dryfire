@@ -1,0 +1,18 @@
+rule: rules/windows/defense_impairment/win_system_log_cleared.yml
+# System-log rule: windows-logsources adds the Channel=System condition.
+pipelines: [windows-logsources]
+positive:
+  # System log cleared (System 104)
+  - file: tests/data/external/evtx-attack-samples/DE_104_system_log_cleared.evtx
+    min_hits: 1
+  # System log cleared on a DC in the Zerologon recording
+  - file: tests/data/external/evtx-attack-samples/Zerologon_CVE-2020-1472_DFIR_System_NetLogon_Error_EventID_5805.evtx
+    min_hits: 1
+  # Same event in OTRF's JSON format (two logs cleared)
+  - file: tests/data/external/otrf/cmd_mshta_vbscript_execute_psh.zip
+    min_hits: 2
+negative:
+  # RdpCoreTS/Operational reuses Event ID 104 for something unrelated (21 events)
+  - file: tests/data/external/evtx-attack-samples/DFIR_RDP_Client_TimeZone_RdpCoreTs_104_example.evtx
+  # Security-log clear (1102) belongs to the Security log rule
+  - file: tests/data/external/evtx-attack-samples/DE_1102_security_log_cleared.evtx
