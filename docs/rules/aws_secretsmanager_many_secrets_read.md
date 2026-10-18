@@ -26,7 +26,7 @@ One alert per identity over the threshold, however long the burst lasts.
 Engine differences:
 
 - **Splunk** counts in fixed 10-minute buckets (`bin _time span=10m`). A burst split across a bucket boundary (say 6 secrets at 10:08 and 6 at 10:11) alerts in a sliding window but not in Splunk. Lower the threshold or use `streamstats` if that matters.
-- **Sentinel:** pySigma-backend-kusto doesn't convert correlation rules, so no KQL is generated.
+- **Sentinel:** pySigma-backend-kusto doesn't convert correlation rules, so Sentinel is declared unsupported (`pipelines/unsupported_targets.yml`).
 - **Distinct values:** a secret read once by name and once by ARN counts twice. Zircolite compares secret IDs ignoring case; Splunk's `dc()` doesn't.
 
 Not covered:
