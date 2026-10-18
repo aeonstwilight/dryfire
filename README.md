@@ -66,6 +66,7 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
 | [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
 | [AWS CloudTrail Trail Configuration or Event Selectors Changed](docs/rules/aws_cloudtrail_logging_config_changed.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
+| [AWS Root Account Console Login](docs/rules/aws_root_console_login.md) | Initial Access, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 
