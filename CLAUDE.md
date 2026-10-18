@@ -40,7 +40,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 - Conversion targets (owner decisions, 2026-10-17):
   - Splunk: Sysmon-based (`sysmon` + `splunk_windows` pipelines) for every rule.
   - Sentinel: Security-log rules (e.g. 4698, 1102, 4732) get a custom table mapping to `SecurityEvent` in `pipelines/`, checked field by field per rule. System 7045 and Sysmon rules other than process creation stay "unsupported" for M1.
-  - Defender XDR: anything outside the backend's built-in tables stays "unsupported" for M1. Revisit in M3.
+  - Defender XDR: anything outside the backend's built-in tables stays "unsupported". Revisited for M3 and kept as is (owner decision, 2026-10-18).
   - A rule field that doesn't exist in the target table fails the build. Don't relax this.
   - The only exception: a rule/target pair listed in `pipelines/unsupported_targets.yml` with a reason, approved by the owner (owner decision, 2026-10-17). `convert.py` reports it as "unsupported (declared)", and fails if a listed pair converts after all or names a rule that doesn't exist.
 - `build/` is generated and gitignored. Never hand-edit it.
@@ -56,6 +56,7 @@ The Makefile should expose these targets:
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
+- `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
 
 CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact.
 
@@ -117,3 +118,23 @@ Milestone 2 is done when CI enforces rule metadata, a noise sweep over a large c
    - Rundll32 with a relative-path DLL (needs an allow-list approach)
 
 **Out of scope for M2:** the same as M1 (Elastic, cloud rules, live SIEM validation, web UI).
+
+## Milestone 3 (current)
+
+Milestone 3 is done when every converted query runs on a real query engine in CI and returns the same hits as the Zircolite tests.
+
+**Owner decisions (2026-10-18):**
+
+- Engines: the official Splunk Enterprise container (`splunk/splunk`) and Microsoft's Kusto emulator container (`kustainer-linux`). No Azure account, cloud cluster or CI secrets.
+- The owner accepts the Splunk licence and General Terms and the Kusto emulator licence terms; the CI settings record that acceptance.
+- Runs as a separate CI job on every push and pull request, and fails the build like the other steps.
+- Defender targets that don't convert stay "unsupported"; M3 validates only what already converts.
+
+**Build order:**
+
+1. Check current image names, tags, licence settings and APIs for both containers against their docs, and pin image versions.
+2. Loader: put each rule's positive and negative test events into the engines. Splunk gets the source and field names the `splunk_windows` pipeline expects; the Kusto emulator gets `SecurityEvent` and `DeviceProcessEvents` tables built from Microsoft's published column lists. Field-to-column mapping is plain and documented, one table per target.
+3. `make validate`: run each rule's converted query on its own test events and compare the hit count with Zircolite's. Fail if a query errors or a count differs.
+4. CI job, plus a README note: this proves the queries run and match the Sigma logic on our loaded events, not that real Sentinel or Defender data looks exactly like them.
+
+**Out of scope for M3:** Elastic, cloud rules (M4), real Sentinel/Defender/Splunk tenants, web UI.

@@ -1,4 +1,4 @@
-# detection-lab
+# dryfire
 
 Detection-as-code for SOC teams. Every detection is written once as a [Sigma](https://sigmahq.io/) rule, tested against real attack data in CI, and converted to Splunk SPL and Microsoft Sentinel / Defender KQL. An ATT&CK Navigator layer is generated from the rule tags so coverage is always visible.
 
