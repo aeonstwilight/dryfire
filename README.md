@@ -70,6 +70,7 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
 | [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | ✅ |
 | [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | ✅ |
+| [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 

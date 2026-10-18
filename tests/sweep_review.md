@@ -75,6 +75,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-18 | aws_root_access_key_used | 0 | No hits: no dataset in the corpus uses a root access key (positives are synthetic). The 11 root API calls in Splunk attack_data all come from console sessions (`ASIA` keys) and correctly don't match. |
 | 2026-10-18 | aws_iam_access_key_created_for_other_user | 0 | Only its own samples: the Stratus Red Team backdoor and admin-user keys (Invictus) and the 61 matching `CreateAccessKey` calls in Splunk's T1078 dataset (38 for another named user, 23 by an Okta admin role). The 6 own-key calls in that dataset correctly don't match. |
 | 2026-10-18 | aws_iam_admin_policy_granted | 0 | Only its own samples: the two Stratus Red Team AdministratorAccess attaches (Invictus) and Splunk's 3 CreatePolicyVersion (`*` and `iam:*`) and 4 SetDefaultPolicyVersion events. The Stratus setup policies (`AmazonSSMManagedInstanceCore`, narrow inline role policies) correctly don't match. |
+| 2026-10-18 | aws_security_group_ingress_open_to_internet | 62 | **Proposed labels, awaiting owner review.** 60 × port 80 opened to 0.0.0.0/0 by the EC2 console launch wizard (`console.ec2.amazonaws.com`) in `abnormally_high_cloud_instances_launched`: correct, benign (public web servers). 2 × in `T1562.007_aws_delete_acl`: the same events as `aws_create_acl` (same `eventID`s; one call opening 22, 3389, WinRM and others, one opening all traffic): attack simulation. |
 
 ## Limits of this review
 

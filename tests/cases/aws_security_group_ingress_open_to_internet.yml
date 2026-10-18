@@ -1,0 +1,19 @@
+rule: rules/aws/defense_impairment/aws_security_group_ingress_open_to_internet.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team): port 443 (rule list) and port 22 (old flat cidrIp) to 0.0.0.0/0
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_YMDRJwtmC82bUwAo.jsonl
+    min_hits: 2
+  # Real (Splunk attack_data T1562.007): one call opening 22, 3389, 5985/5986 and other ports
+  # to 0.0.0.0/0, and one opening all traffic; three calls with private ranges only don't match
+  - file: tests/data/external/aws/splunk-attack-data/T1562.007_aws_create_acl.jsonl
+    min_hits: 2
+  # Synthetic: ::/0 only, a second rule in the list opened to 0.0.0.0/0, and a refused flat-shape call
+  - file: tests/data/samples/aws_security_group_ingress_open_to_internet_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Invictus IR): egress to 0.0.0.0/0 and a RevokeSecurityGroupIngress closing 22 from 0.0.0.0/0
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_P0WZuP2zvLW2RcUo.jsonl
+  # Synthetic: private and documentation ranges, egress, revoke, a network ACL entry, a describe call
+  - file: tests/data/samples/aws_security_group_ingress_open_to_internet_benign.jsonl

@@ -20,3 +20,19 @@ transformations:
       - type: logsource
         product: aws
         service: cloudtrail
+
+  # A list of rules (security groups) is one field in the Sigma rules, written
+  # as the list's own path, because that's how Zircolite stores it (the whole
+  # list as text). Splunk extracts each list item's values as separate fields
+  # with {} in the name, so the list field maps to the item fields that hold
+  # the values the rules look for; a match in either counts.
+  - id: dryfire_splunk_cloudtrail_lists
+    type: field_name_mapping
+    mapping:
+      requestParameters.ipPermissions.items:   # aws_security_group_ingress_open_to_internet
+        - requestParameters.ipPermissions.items{}.ipRanges.items{}.cidrIp
+        - requestParameters.ipPermissions.items{}.ipv6Ranges.items{}.cidrIpv6
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail

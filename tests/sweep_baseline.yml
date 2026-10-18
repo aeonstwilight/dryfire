@@ -103,3 +103,7 @@ aws_iam_admin_policy_granted:
   aws-invictus: 2
   aws-splunk-attack-data: 7
   aws-otrf: 0
+aws_security_group_ingress_open_to_internet:
+  aws-invictus: 2
+  aws-splunk-attack-data: 64
+  aws-otrf: 0

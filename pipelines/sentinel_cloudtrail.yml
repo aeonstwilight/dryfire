@@ -73,6 +73,8 @@ transformations:
       # field value and that JSON text, checked by make validate.
       requestParameters.policyArn: RequestParameters        # aws_iam_admin_policy_granted
       requestParameters.policyDocument: RequestParameters   # aws_iam_admin_policy_granted
+      requestParameters.ipPermissions.items: RequestParameters  # aws_security_group_ingress_open_to_internet (contains)
+      requestParameters.cidrIp: RequestParameters               # aws_security_group_ingress_open_to_internet (contains)
     rule_conditions:
       - type: logsource
         product: aws
