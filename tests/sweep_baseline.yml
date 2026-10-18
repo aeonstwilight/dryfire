@@ -99,3 +99,7 @@ aws_iam_access_key_created_for_other_user:
   aws-invictus: 2
   aws-splunk-attack-data: 61
   aws-otrf: 0
+aws_iam_admin_policy_granted:
+  aws-invictus: 2
+  aws-splunk-attack-data: 7
+  aws-otrf: 0

@@ -257,3 +257,20 @@ datasets:
     path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.json
     jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
     sha256: 9e9b3b0466fbc58e1c4f63230a46227ff066693aa51dc555ae6122a832aa6aa1
+  # aws_iam_admin_policy_granted
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1078/aws_create_policy_version/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1078_aws_create_policy_version/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1078_aws_create_policy_version.jsonl
+    sha256: 66170b51f3819ac9db6fbd2864557bccb351ae31b948329b10c5ba2efb278110
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1078/aws_setdefaultpolicyversion/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1078_aws_setdefaultpolicyversion/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1078_aws_setdefaultpolicyversion.jsonl
+    sha256: 2efef04769c68629d65daedfb44d3776c76f5ef5007ad8ddced9ca89ca15672d
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1200Z_iLj9fb7yyUG9X4Bf.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1200Z_iLj9fb7yyUG9X4Bf.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_iLj9fb7yyUG9X4Bf.jsonl
+    sha256: 532219dbf2a5e25b6ce6cb5f0101d7163a44dfd7d68460c58614dd9337ff32cf
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1215Z_nBsuPO1qSTEVerMD.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1215Z_nBsuPO1qSTEVerMD.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_nBsuPO1qSTEVerMD.jsonl
+    sha256: c23afa21160ea63ce343ff4a5581b5dbf65edfb5fda19128074e680ceef03c93

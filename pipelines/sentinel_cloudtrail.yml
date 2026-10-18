@@ -68,6 +68,11 @@ transformations:
       userIdentity.sessionContext.sessionIssuer.principalId: SessionIssuerPrincipalId
       userIdentity.sessionContext.attributes.mfaAuthenticated: SessionMfaAuthenticated
       userIdentity.sessionContext.attributes.creationDate: SessionCreationDate
+      # Fields inside requestParameters (JSON text in RequestParameters). Each is
+      # mapped for rules that match it with a regex written to work on both the
+      # field value and that JSON text, checked by make validate.
+      requestParameters.policyArn: RequestParameters        # aws_iam_admin_policy_granted
+      requestParameters.policyDocument: RequestParameters   # aws_iam_admin_policy_granted
     rule_conditions:
       - type: logsource
         product: aws

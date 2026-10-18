@@ -1,0 +1,56 @@
+title: AWS IAM Administrator-Level Policy Granted
+id: 707cf754-3654-4dd6-bd26-03b1ac04a968
+status: experimental
+description: |
+    Detects IAM changes that grant administrator-level permissions to a user,
+    role or group: attaching the AWS managed AdministratorAccess or
+    IAMFullAccess policy, writing an inline policy or a new policy version
+    whose document allows every action ("*") or every IAM action ("iam:*"),
+    or switching a managed policy to another stored version
+    (SetDefaultPolicyVersion), a known way to roll back to a permissive
+    version. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1098/003/
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_AttachUserPolicy.html
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_PutRolePolicy.html
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreatePolicyVersion.html
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_SetDefaultPolicyVersion.html
+    - https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html
+tags:
+    - attack.privilege-escalation
+    - attack.persistence
+    - attack.t1098.003
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_source:
+        eventSource: iam.amazonaws.com
+    selection_managed:
+        eventName:
+            - AttachUserPolicy
+            - AttachRolePolicy
+            - AttachGroupPolicy
+        # The policy ARN ends at the name, written as ("|$) so the same pattern
+        # also works where the ARN sits inside JSON text (Sentinel's
+        # RequestParameters). AdministratorAccess-Amplify and similar don't match.
+        requestParameters.policyArn|re: ':policy/(AdministratorAccess|IAMFullAccess)("|$)'
+    selection_document:
+        eventName:
+            - PutUserPolicy
+            - PutRolePolicy
+            - PutGroupPolicy
+            - CreatePolicyVersion
+        # "Action": "*" or "iam:*", also as the first item of an Action list.
+        # \\? and [\s\\n\[]* allow the escaped quotes and literal \n of a policy
+        # document stored inside JSON text (Sentinel's RequestParameters).
+        requestParameters.policyDocument|re: '\\?"Action\\?"[\s\\n\[]*:[\s\\n\[]*\\?"(\*|iam:\*)\\?"'
+    selection_rollback:
+        eventName: SetDefaultPolicyVersion
+    condition: selection_source and (selection_managed or selection_document or selection_rollback)
+falsepositives:
+    - Cloud administrators granting admin rights through the console or infrastructure-as-code
+    - Break-glass or bootstrap roles set up with AdministratorAccess
+level: high

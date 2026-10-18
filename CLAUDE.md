@@ -186,4 +186,8 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
 - Validate: CloudTrail records go to Splunk as `aws:cloudtrail` (nested JSON) and to an `AWSCloudTrail` table in Kusto built from the Sentinel pipeline's mapping. The Splunk test app also lowers `minFreeSpace` (Splunk stops indexing below 5 GB free), and `engines.sh` waits for the Splunk image's health check.
 - Found with probe rules: list contents differ by engine. Zircolite keeps a list as one text column (`requestParameters.ipPermissions.items`), Splunk extracts list items as `...items{}.ipRanges.items{}.cidrIp`, Sentinel has them in `RequestParameters`. Rules matching inside lists (security group, S3 public) need a per-rule design.
 
+**Rule notes:**
+
+- Sentinel and `requestParameters.*` (owner decision for rule 4, 2026-10-18): map a nested request field to `RequestParameters` only when the rule matches it with a pattern written to give the same result on the field and on the JSON text (end anchors as `("|$)`, optional `\\` before quotes, literal `\n` allowed), and `make validate` proves it. Otherwise declare Sentinel unsupported, as for `aws_iam_access_key_created_for_other_user` (field-to-field comparison).
+
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
