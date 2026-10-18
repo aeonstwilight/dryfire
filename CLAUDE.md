@@ -90,7 +90,7 @@ Milestone 1 is done when pushing a rule makes CI report pass or fail on lint, co
 - Live SIEM validation
 - Any web UI
 
-## Milestone 2 (current)
+## Milestone 2 (done)
 
 Milestone 2 is done when CI enforces rule metadata, a noise sweep over a large corpus has a reviewed per-rule baseline that CI checks, and the follow-up rules below are added and passing.
 
