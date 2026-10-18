@@ -1,0 +1,34 @@
+title: AWS CloudTrail Trail Configuration or Event Selectors Changed
+id: 7ae0fb29-37b7-4845-837f-30282295bc84
+status: experimental
+description: |
+    Detects a change to what a CloudTrail trail records or where it sends it:
+    UpdateTrail (for example the S3 bucket, regions, global service events or
+    log file validation) or PutEventSelectors (which events are recorded). An
+    attacker can blind logging this way without stopping the trail, for example
+    by excluding management events or recording only read events. The rule
+    matches the call, not the new settings; the triage note says what to check.
+    Failed calls (an errorCode) are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1685/002/
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_UpdateTrail.html
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_PutEventSelectors.html
+tags:
+    - attack.defense-impairment
+    - attack.t1685.002
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: cloudtrail.amazonaws.com
+        eventName:
+            - UpdateTrail
+            - PutEventSelectors
+    condition: selection
+falsepositives:
+    - Administrators or infrastructure-as-code changing trail settings, data event logging or selectors
+    - Cost tuning that removes data events (S3 object or Lambda) from a trail
+level: medium

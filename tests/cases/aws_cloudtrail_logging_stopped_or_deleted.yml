@@ -1,0 +1,25 @@
+rule: rules/aws/defense_impairment/aws_cloudtrail_logging_stopped_or_deleted.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team): StopLogging on a trail that no longer exists (TrailNotFoundException)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_SjF3IkuNXJkoHyar.jsonl
+    min_hits: 1
+  # Real (Invictus IR): StopLogging twice, around the event-selector technique
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.jsonl
+    min_hits: 2
+  # Real (Splunk attack_data T1562.008): StopLogging and two DeleteTrail by Stratus Red Team / aws-cli
+  - file: tests/data/external/aws/splunk-attack-data/T1562.008_stop_delete_cloudtrail.jsonl
+    min_hits: 3
+  # Synthetic: CloudTrail Lake DeleteEventDataStore and StopEventDataStoreIngestion, and a
+  # denied StopLogging (errorCode AccessDenied)
+  - file: tests/data/samples/aws_cloudtrail_logging_stopped_or_deleted_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Invictus IR): StartLogging, DescribeTrails and LookupEvents only
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.jsonl
+  # Real (Invictus IR): GetEventSelectors only
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_1dM7GQM67kudSyGD.jsonl
+  # Synthetic: start/create/status calls, the config-change rule's calls (UpdateTrail,
+  # PutEventSelectors), CloudTrail Lake start/create, and DeleteTrail from another service
+  - file: tests/data/samples/aws_cloudtrail_logging_stopped_or_deleted_benign.jsonl

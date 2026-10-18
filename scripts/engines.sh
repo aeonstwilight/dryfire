@@ -24,8 +24,10 @@ KUSTO_IMAGE="mcr.microsoft.com/azuredataexplorer/kustainer-linux:2026.09.25.1529
 ENV_FILE="build/validate/engines.env"
 
 splunk_ready() {
-    # Management API and HTTP Event Collector both answer.
-    curl -sk -o /dev/null -w '%{http_code}' -u "admin:$password" https://localhost:8089/services/server/info | grep -q 200 \
+    # The image's own health check passes only once its start-up (app install and
+    # any restart that needs) has finished; then the API and HEC must answer.
+    [ "$(docker inspect -f '{{.State.Health.Status}}' dryfire-splunk 2>/dev/null)" = "healthy" ] \
+        && curl -sk -o /dev/null -w '%{http_code}' -u "admin:$password" https://localhost:8089/services/server/info | grep -q 200 \
         && curl -sk -o /dev/null -w '%{http_code}' https://localhost:8088/services/collector/health | grep -q 200
 }
 
@@ -52,7 +54,7 @@ up() {
     password="$(python3 -c 'import secrets; print(secrets.token_urlsafe(18))')"
     hec_token="$(python3 -c 'import uuid; print(uuid.uuid4())')"
 
-    docker rm -f dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
+    docker rm -f -v dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
 
     echo "Starting Splunk ($SPLUNK_IMAGE)"
     # Our small Splunk app (index and sourcetype settings for the test events) is
@@ -85,7 +87,9 @@ EOF
 }
 
 down() {
-    docker rm -f dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
+    # -v also deletes the containers' anonymous volumes (Splunk's data, several GB
+    # per run); without it every run leaves one behind and the disk fills up.
+    docker rm -f -v dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
     rm -f "$ENV_FILE"
     echo "Stopped both engines."
 }

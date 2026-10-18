@@ -1,0 +1,60 @@
+title: AWS S3 Bucket Made Public by Policy or ACL
+id: 14f6e31c-4a50-41b6-9fea-2af3f5e71216
+status: experimental
+description: |
+    Detects an S3 bucket opened to everyone: a bucket policy with an Allow
+    statement for Principal "*" (or {"AWS": "*"}), or a bucket ACL that
+    grants anything to the AllUsers or AuthenticatedUsers groups (any AWS
+    account counts as public), by grant or by canned ACL (public-read,
+    public-read-write, authenticated-read). Failed calls are included on
+    purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1530/
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketPolicy.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketAcl.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
+tags:
+    - attack.collection
+    - attack.t1530
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_source:
+        eventSource: s3.amazonaws.com
+    selection_policy_call:
+        eventName: PutBucketPolicy
+    selection_policy_public:
+        # An Allow statement whose Principal is "*" or {"AWS": "*"}, with Effect
+        # written before or after Principal. Quotes may be ' or ": the
+        # statement list is Python-style text in Zircolite and JSON text in
+        # Splunk (_raw) and Sentinel (RequestParameters); see pipelines/.
+        requestParameters.bucketPolicy.Statement|re:
+            - '[''"]Effect[''"]\s*:\s*[''"]Allow[''"]\s*,\s*[''"]Principal[''"]\s*:\s*(\{\s*[''"]AWS[''"]\s*:\s*)?\[?\s*[''"]\*[''"]'
+            - '[''"]Principal[''"]\s*:\s*(\{\s*[''"]AWS[''"]\s*:\s*)?\[?\s*[''"]\*[''"]\s*\]?\s*\}?\s*,\s*[''"]Effect[''"]\s*:\s*[''"]Allow[''"]'
+    selection_acl_call:
+        eventName: PutBucketAcl
+    selection_acl_public:
+        # Grant headers (x-amz-grant-*) or an XML access control policy (one
+        # grant or a list) naming the AllUsers or AuthenticatedUsers group.
+        - requestParameters.accessControlList.x-amz-grant-read|contains: &public_groups
+              - '/groups/global/AllUsers'
+              - '/groups/global/AuthenticatedUsers'
+        - requestParameters.accessControlList.x-amz-grant-write|contains: *public_groups
+        - requestParameters.accessControlList.x-amz-grant-read-acp|contains: *public_groups
+        - requestParameters.accessControlList.x-amz-grant-write-acp|contains: *public_groups
+        - requestParameters.accessControlList.x-amz-grant-full-control|contains: *public_groups
+        - requestParameters.AccessControlPolicy.AccessControlList.Grant|contains: *public_groups
+        - requestParameters.AccessControlPolicy.AccessControlList.Grant.Grantee.URI|contains: *public_groups
+        # Canned ACL. The value must stand on its own (start or end of the
+        # text, or next to a quote, bracket or colon), so a bucket named
+        # "public-read-assets" doesn't match where requestParameters is text.
+        - requestParameters.x-amz-acl|re: '(^|[\[''"\s:])(public-read|public-read-write|authenticated-read)([''"\]]|$)'
+    condition: selection_source and ((selection_policy_call and selection_policy_public) or (selection_acl_call and selection_acl_public))
+falsepositives:
+    - Buckets meant to be public (static websites, public datasets, CDN origins without origin access control)
+    - Legacy log delivery or website setups granting AllUsers read
+level: high

@@ -1,0 +1,18 @@
+rule: rules/aws/defense_impairment/aws_guardduty_disabled.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1562.008): two failed DeleteDetector calls
+  - file: tests/data/external/aws/splunk-attack-data/T1562.008_aws_delete_security_services.jsonl
+    min_hits: 2
+  # Synthetic: each detach/delete call (one denied), and UpdateDetector turning off the
+  # detector, a feature, an additional configuration, and each deprecated dataSources setting (also detector off with data sources on)
+  - file: tests/data/samples/aws_guardduty_disabled_synthetic_positive.jsonl
+    min_hits: 13
+negative:
+  # Real (Invictus IR): GuardDuty read calls (ListFindings, ListDetectors)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_9JM8uKEITHqwJKXr.jsonl
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_9SJSsrxJ0ChF5VFb.jsonl
+  # Synthetic: detector created, UpdateDetector with everything on, member onboarding,
+  # DeleteMembers on Security Hub, and "enable": false on another service
+  - file: tests/data/samples/aws_guardduty_disabled_benign.jsonl

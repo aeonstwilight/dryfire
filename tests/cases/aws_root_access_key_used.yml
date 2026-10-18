@@ -1,0 +1,18 @@
+rule: rules/aws/persistence/aws_root_access_key_used.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Synthetic: root API calls with a long-term AKIA key (sts GetCallerIdentity from the CLI,
+  # iam CreateUser, s3 ListBuckets from boto3). No public dataset in the corpus uses root keys.
+  - file: tests/data/samples/aws_root_access_key_used_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Splunk attack_data T1201): root password-policy calls from a console session (ASIA keys)
+  - file: tests/data/external/aws/splunk-attack-data/T1201_aws_password_policy.jsonl
+  # Real (Splunk attack_data T1621): root MFA device deactivated and deleted from a console session
+  - file: tests/data/external/aws/splunk-attack-data/T1621_aws_mfa_disabled.jsonl
+  # Real (Splunk attack_data T1078.004): root console sign-ins
+  - file: tests/data/external/aws/splunk-attack-data/T1078.004_aws_login_sfa.jsonl
+  # Synthetic: root console-session call (ASIA), root ConsoleLogin, IAM user with an AKIA key,
+  # assumed role
+  - file: tests/data/samples/aws_root_access_key_used_benign.jsonl

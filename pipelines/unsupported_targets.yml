@@ -14,3 +14,14 @@ win_renamed_shell_or_lolbin:
   sentinel: >-
     SecurityEvent (4688) does not record the PE original file name, and the rule
     depends on OriginalFileName; there is no field to map it to.
+aws_iam_access_key_created_for_other_user:
+  sentinel: >-
+    The rule compares the target user (requestParameters.userName) with the
+    caller (userIdentity.userName). AWSCloudTrail keeps requestParameters as
+    JSON text in one column, so the target user has no column of its own and
+    the comparison can't be expressed through the field mapping.
+aws_secretsmanager_many_secrets_read:
+  sentinel: >-
+    A Sigma correlation rule (value_count). pySigma-backend-kusto 1.0.1 doesn't
+    convert correlation rules ("Backend does not support correlation rules").
+    Owner decision, 2026-10-18.

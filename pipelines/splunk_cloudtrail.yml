@@ -1,0 +1,52 @@
+# Splunk: limit AWS CloudTrail rules to CloudTrail data.
+#
+# pySigma's Splunk pipelines only cover Windows. For rules with
+# `logsource: product: aws, service: cloudtrail` this adds
+# sourcetype="aws:cloudtrail", the sourcetype the Splunk Add-on for AWS gives
+# CloudTrail events. Field names stay as written in the rule: Splunk extracts
+# CloudTrail's JSON with the same dotted names (userIdentity.type), and list
+# items with {} (requestParameters.ipPermissions.items{}.ipRanges.items{}.cidrIp).
+#
+# Used by scripts/convert.py (the "splunk" target).
+
+name: dryfire Splunk CloudTrail sourcetype
+priority: 25
+transformations:
+  - id: dryfire_splunk_cloudtrail_sourcetype
+    type: add_condition
+    conditions:
+      sourcetype: "aws:cloudtrail"
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail
+
+  # A list of rules (security groups) is one field in the Sigma rules, written
+  # as the list's own path, because that's how Zircolite stores it (the whole
+  # list as text). Splunk extracts each list item's values as separate fields
+  # with {} in the name, so the list field maps to the item fields that hold
+  # the values the rules look for; a match in either counts.
+  - id: dryfire_splunk_cloudtrail_lists
+    type: field_name_mapping
+    mapping:
+      requestParameters.ipPermissions.items:   # aws_security_group_ingress_open_to_internet
+        - requestParameters.ipPermissions.items{}.ipRanges.items{}.cidrIp
+        - requestParameters.ipPermissions.items{}.ipv6Ranges.items{}.cidrIpv6
+      # aws_s3_bucket_made_public: the ACL grant list's Grantee URIs
+      requestParameters.AccessControlPolicy.AccessControlList.Grant:
+        - requestParameters.AccessControlPolicy.AccessControlList.Grant{}.Grantee.URI
+      # aws_s3_bucket_made_public: these two are matched with a regex against
+      # the raw event JSON. The policy pattern needs Effect and Principal side
+      # by side, which Splunk's per-item fields can't give; the canned ACL may
+      # be one value or a list (x-amz-acl{}), and the backend can't run a regex
+      # on a field name containing {}. Both patterns only match their own text.
+      requestParameters.bucketPolicy.Statement: _raw
+      # aws_guardduty_disabled: feature and additional-configuration statuses
+      requestParameters.features:
+        - requestParameters.features{}.status
+        - requestParameters.features{}.additionalConfiguration{}.status
+      requestParameters.x-amz-acl: _raw
+    rule_conditions:
+      - type: logsource
+        product: aws
+        service: cloudtrail

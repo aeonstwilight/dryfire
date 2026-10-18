@@ -1,0 +1,25 @@
+rule: rules/aws/defense_impairment/aws_cloudtrail_logging_config_changed.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team): PutEventSelectors restoring the selectors after the technique
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_vj0QE0Tf5ZmzMsCo.jsonl
+    min_hits: 1
+  # Real (Invictus IR): PutEventSelectors setting includeManagementEvents false and ReadOnly
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.jsonl
+    min_hits: 1
+  # Real (Splunk attack_data T1562.008): UpdateTrail by aws-cli
+  - file: tests/data/external/aws/splunk-attack-data/T1562.008_update_cloudtrail.jsonl
+    min_hits: 1
+  # Synthetic: PutEventSelectors excluding management events from an assumed role, and a
+  # denied UpdateTrail pointing logs at another bucket
+  - file: tests/data/samples/aws_cloudtrail_logging_config_changed_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Invictus IR): GetEventSelectors only
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_1dM7GQM67kudSyGD.jsonl
+  # Real (Invictus IR): StartLogging, DescribeTrails and LookupEvents only
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.jsonl
+  # Synthetic: read calls, StopLogging (the other rule), PutInsightSelectors, and UpdateTrail
+  # from another service
+  - file: tests/data/samples/aws_cloudtrail_logging_config_changed_benign.jsonl

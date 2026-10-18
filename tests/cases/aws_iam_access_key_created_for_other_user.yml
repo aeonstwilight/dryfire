@@ -1,0 +1,21 @@
+rule: rules/aws/persistence/aws_iam_access_key_created_for_other_user.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1078): 38 keys for a different named user (23 for AtomicRedTeam,
+  # 2 failed attempts on "root") and 23 created by an Okta admin role via the console
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createaccesskey.jsonl
+    min_hits: 61
+  # Real (Invictus IR, Stratus Red Team iam-backdoor-user / iam-create-admin-user)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
+    min_hits: 2
+  # Synthetic: a role creating a key for a service user, a user creating one for another user,
+  # and a denied attempt on a break-glass user
+  - file: tests/data/samples/aws_iam_access_key_created_for_other_user_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Splunk attack_data T1078): IAM-user and role sign-ins and login-profile changes, no CreateAccessKey
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createloginprofile.jsonl
+  # Synthetic: own key (no target, and named as self), CreateLoginProfile and UpdateAccessKey for
+  # another user, and CreateAccessKey from another service
+  - file: tests/data/samples/aws_iam_access_key_created_for_other_user_benign.jsonl

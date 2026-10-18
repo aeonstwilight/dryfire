@@ -19,11 +19,11 @@ import re
 import sys
 from pathlib import Path
 
-import yaml
 from sigma.data import mitre_attack
 
 # lint.py sits in the same folder and owns the pinned ATT&CK download.
 from lint import ATTACK_FILE, get_attack_data
+from rule_file import load_rule
 
 OUTPUT = Path("build/coverage/layer.json")
 
@@ -45,7 +45,7 @@ SKIP_STATUSES = {"deprecated", "unsupported"}
 
 def read_rule(path):
     """Return (title, status, techniques, tactics) for one rule file."""
-    rule = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    rule = load_rule(path)
     techniques, tactics = [], []
     for tag in rule.get("tags") or []:
         tag = str(tag).lower()

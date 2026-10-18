@@ -1,0 +1,46 @@
+title: AWS S3 Block Public Access Removed or Weakened
+id: c24e12aa-627b-478f-bf39-0f0ff162ea31
+status: experimental
+description: |
+    Detects S3 Block Public Access being removed or weakened for a bucket or
+    for the whole account: the configuration deleted
+    (DeleteBucketPublicAccessBlock, DeleteAccountPublicAccessBlock), or
+    written with any of its four protections set to false
+    (PutBucketPublicAccessBlock, PutAccountPublicAccessBlock). This is the
+    step needed before a public bucket policy or ACL can take effect. Failed
+    calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1685/
+    - https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutPublicAccessBlock.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_PutPublicAccessBlock.html
+tags:
+    - attack.defense-impairment
+    - attack.t1685
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_delete:
+        eventName:
+            - DeleteBucketPublicAccessBlock
+            - DeleteAccountPublicAccessBlock
+    selection_put:
+        eventName:
+            - PutBucketPublicAccessBlock
+            - PutAccountPublicAccessBlock
+    selection_off:
+        # Any of the four protections set to false. Written as a pattern that
+        # matches both the field value ("false") and JSON text ("...": false),
+        # because Sentinel keeps requestParameters as JSON text.
+        - requestParameters.PublicAccessBlockConfiguration.BlockPublicAcls|re: '(^|:\s*)false'
+        - requestParameters.PublicAccessBlockConfiguration.IgnorePublicAcls|re: '(^|:\s*)false'
+        - requestParameters.PublicAccessBlockConfiguration.BlockPublicPolicy|re: '(^|:\s*)false'
+        - requestParameters.PublicAccessBlockConfiguration.RestrictPublicBuckets|re: '(^|:\s*)false'
+    condition: selection_delete or (selection_put and selection_off)
+falsepositives:
+    - Buckets meant to be public (static websites, public datasets) set up by their owners
+    - Infrastructure-as-code applying a bucket's intended public-access settings
+level: medium

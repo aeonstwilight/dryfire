@@ -1,0 +1,25 @@
+rule: rules/aws/privilege_escalation/aws_iam_admin_policy_granted.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team): AdministratorAccess attached to a user and to a role
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
+    min_hits: 2
+  # Real (Splunk attack_data T1078): CreatePolicyVersion with "Action": "*" and "iam:*" (one failed)
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_create_policy_version.jsonl
+    min_hits: 3
+  # Real (Splunk attack_data T1078): SetDefaultPolicyVersion on VulnerablePolicy (one failed)
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_setdefaultpolicyversion.jsonl
+    min_hits: 4
+  # Synthetic: IAMFullAccess on a group, a multi-line inline policy with "Action": ["*"],
+  # an inline "iam:*" group policy, and a denied AdministratorAccess attach
+  - file: tests/data/samples/aws_iam_admin_policy_granted_synthetic_positive.jsonl
+    min_hits: 4
+negative:
+  # Real (Invictus IR): narrow inline role policy and AmazonSSMManagedInstanceCore attached
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_iLj9fb7yyUG9X4Bf.jsonl
+  # Real (Invictus IR): AmazonSSMManagedInstanceCore and a Stratus Red Team test policy attached
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_nBsuPO1qSTEVerMD.jsonl
+  # Synthetic: AdministratorAccess-Amplify, PowerUserAccess, "s3:*" and "iam:Get*" inline
+  # policies, an admin CreatePolicy that isn't attached, a detach, and another service
+  - file: tests/data/samples/aws_iam_admin_policy_granted_benign.jsonl

@@ -1,0 +1,38 @@
+title: AWS Security Group Ingress Opened to the Internet
+id: 2f141257-3d71-49f4-ba17-01178bff0f4c
+status: experimental
+description: |
+    Detects an inbound security group rule added for 0.0.0.0/0 or ::/0, on
+    any port. Handles both shapes of AuthorizeSecurityGroupIngress in
+    CloudTrail: rules listed under ipPermissions, and the older flat cidrIp
+    parameter. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1686/001/
+    - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupIngress.html
+    - https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
+tags:
+    - attack.defense-impairment
+    - attack.t1686.001
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: ec2.amazonaws.com
+        eventName: AuthorizeSecurityGroupIngress
+    selection_world_list:
+        # The list of rules. Each SIEM stores it differently; the pipelines in
+        # pipelines/ map this field per target (see their comments).
+        requestParameters.ipPermissions.items|contains:
+            - '0.0.0.0/0'
+            - '::/0'
+    selection_world_flat:
+        # Older request shape: one rule given as flat parameters.
+        requestParameters.cidrIp|contains: '0.0.0.0/0'
+    condition: selection and (selection_world_list or selection_world_flat)
+falsepositives:
+    - Public web servers or load balancers opened on 80 or 443 (for example by the EC2 launch wizard)
+    - Short-lived test or lab environments
+level: medium

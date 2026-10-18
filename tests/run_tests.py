@@ -18,7 +18,8 @@ Test case format (paths relative to the repo root):
 
 `pipelines` are the pySigma pipelines Zircolite applies before matching.
 The default suits Sysmon samples. For Security 4688 process-creation samples
-use [windows-audit, windows-logsources].
+use [windows-audit, windows-logsources]. AWS CloudTrail rules use
+`pipelines: []` and JSON Lines samples (.jsonl); see zircolite_cloudtrail.py.
 
 Exit code is 1 if anything fails. Results are also written to build/tests/results.md.
 """
@@ -32,6 +33,8 @@ import tempfile
 from pathlib import Path
 
 import yaml
+
+from zircolite_cloudtrail import write_config
 
 DEFAULT_PIPELINES = ["sysmon", "windows-logsources"]
 RESULTS_FILE = Path("build/tests/results.md")
@@ -51,15 +54,38 @@ def count_hits(zircolite, rule_path, sample_path, pipelines):
                "--outfile", str(out_file)]
         for pipeline in pipelines:
             cmd += ["--pipeline", pipeline]
+        # CloudTrail samples need a config that keeps nested field names (see zircolite_cloudtrail.py).
+        config = write_config(sample_path, zircolite, tmp)
+        if config:
+            cmd += ["--config", str(config)]
 
         result = subprocess.run(cmd, cwd=tmp, capture_output=True, text=True)
         if result.returncode != 0 or not out_file.exists():
             output = (result.stdout + result.stderr).strip().splitlines()
             raise RuntimeError("Zircolite failed: " + " | ".join(output[-5:]))
 
-        # Output is a list with one entry per rule that matched; each has a "count".
+        # Output is a list with one entry per rule that matched.
         detections = json.loads(out_file.read_text(encoding="utf-8"))
-        return sum(d.get("count", 0) for d in detections)
+        return sum(detection_hits(d) for d in detections)
+
+
+def group_key(match):
+    """A correlation alert's group (e.g. the identity), as text that can be compared."""
+    return json.dumps(match.get("group_keys"), sort_keys=True)
+
+
+def detection_hits(detection):
+    """The number of hits in one Zircolite result.
+
+    A plain rule: the matched events ("count"). A correlation rule: the number
+    of distinct groups (e.g. identities) that crossed the threshold. Zircolite
+    reports one alert for every moment a group is over the threshold, so one
+    burst gives several alerts; counting groups gives the same number on every
+    engine (see run_validate.py).
+    """
+    if detection.get("result_type") == "correlation":
+        return len({group_key(m) for m in detection.get("matches", [])})
+    return detection.get("count", 0)
 
 
 def check_rule(rule_path, args):
@@ -87,7 +113,7 @@ def check_rule(rule_path, args):
         results.append(("test case", False, f"{case_path} needs at least one positive and one negative sample"))
         return results
 
-    pipelines = case.get("pipelines") or DEFAULT_PIPELINES
+    pipelines = case.get("pipelines", DEFAULT_PIPELINES)
     samples = [(p["file"], int(p.get("min_hits", 1)), "positive") for p in positives]
     samples += [(n["file"] if isinstance(n, dict) else n, 0, "negative") for n in negatives]
 

@@ -1,0 +1,24 @@
+rule: rules/aws/collection/aws_s3_bucket_made_public.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1530): bucket ACLs granting AllUsers (2, console XML list and
+  # grant header) and AuthenticatedUsers (6, grant headers); one owner-only ACL doesn't match
+  - file: tests/data/external/aws/splunk-attack-data/T1530_aws_s3_public_bucket.jsonl
+    min_hits: 8
+  # Real (Splunk attack_data T1485): bucket policy allowing Principal "*" to s3:GetObject
+  - file: tests/data/external/aws/splunk-attack-data/T1485_decommissioned_buckets.jsonl
+    min_hits: 2
+  # Synthetic: Principal {"AWS": ["*"]}, Principal before Effect (refused call), a single XML
+  # grant to AllUsers, and canned ACLs public-read (string), public-read-write and
+  # authenticated-read (lists)
+  - file: tests/data/samples/aws_s3_bucket_made_public_synthetic_positive.jsonl
+    min_hits: 6
+negative:
+  # Real (Invictus IR, Stratus Red Team): bucket policy for another account (backdoor, not public)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
+  # Real (Invictus IR): CloudTrail log-bucket policies for the cloudtrail.amazonaws.com service
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.jsonl
+  # Synthetic: Deny-everyone TLS policy, allowed service plus deny-everyone, a private canned ACL
+  # on a bucket named public-read-assets, owner-only ACL, an object ACL, another service, a Get call
+  - file: tests/data/samples/aws_s3_bucket_made_public_benign.jsonl

@@ -1,0 +1,23 @@
+rule: rules/aws/initial_access/aws_root_console_login.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1078.004): two successful root sign-ins without MFA
+  - file: tests/data/external/aws/splunk-attack-data/T1078.004_aws_login_sfa.jsonl
+    min_hits: 2
+  # Real (Splunk attack_data T1586.003): root sign-ins from several IPs, 6 successful and 2 failed
+  - file: tests/data/external/aws/splunk-attack-data/T1586.003_aws_console_login_multiple_ips.jsonl
+    min_hits: 8
+  # Real (Splunk attack_data T1621): 14 failed root sign-ins (failed MFA)
+  - file: tests/data/external/aws/splunk-attack-data/T1621_aws_failed_mfa.jsonl
+    min_hits: 14
+  # Synthetic: a successful root sign-in with MFA and a failed one without
+  - file: tests/data/samples/aws_root_console_login_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Splunk attack_data T1110.001): 7 failed IAM-user sign-ins
+  - file: tests/data/external/aws/splunk-attack-data/T1110.001_aws_login_failure.jsonl
+  # Real (Splunk attack_data T1078): IAM-user and assumed-role sign-ins and API calls
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createloginprofile.jsonl
+  # Synthetic: IAM-user and assumed-role sign-ins, a root CheckMfa event, and a root API call
+  - file: tests/data/samples/aws_root_console_login_benign.jsonl

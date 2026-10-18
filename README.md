@@ -64,6 +64,18 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 | [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ |
 | [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ |
+| [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
+| [AWS CloudTrail Trail Configuration or Event Selectors Changed](docs/rules/aws_cloudtrail_logging_config_changed.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
+| [AWS Root Account Console Login](docs/rules/aws_root_console_login.md) | Initial Access, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
+| [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
+| [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | ✅ |
+| [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | ✅ |
+| [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ |
+| [AWS S3 Block Public Access Removed or Weakened](docs/rules/aws_s3_public_access_block_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
+| [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | ✅ |
+| [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
+| [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | ✅ |
+| [AWS Secrets Manager Many Distinct Secrets Read by One Identity](docs/rules/aws_secretsmanager_many_secrets_read.md) | Credential Access | T1555.006 | ✅ | — | ✅ |
 
 ## Adding a rule
 
@@ -89,12 +101,14 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
 - **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
-- **M4:** AWS CloudTrail detections
+- **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 
 ## Data sources
 
 - [EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES): Windows event logs mapped to ATT&CK
 - [OTRF Security Datasets](https://github.com/OTRF/Security-Datasets): recorded attack and benign telemetry
+- [Invictus IR Sigma-AWS](https://github.com/invictus-ir/Sigma-AWS) (MIT, Copyright (c) 2023 Invictus Incident Response): the `CloudTrail/` dataset, Stratus Red Team AWS techniques recorded in a test account. Only the data is used, not the repo's Sigma rules.
+- [Splunk Attack Data](https://github.com/splunk/attack_data) (Apache 2.0): per-technique AWS CloudTrail datasets
 
 ## How this was built
 

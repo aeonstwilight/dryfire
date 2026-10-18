@@ -79,3 +79,51 @@ win_rundll32_relative_path_dll:
   evtx-attack-samples: 22
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+aws_cloudtrail_logging_config_changed:
+  aws-invictus: 2
+  aws-splunk-attack-data: 1
+  aws-otrf: 0
+aws_cloudtrail_logging_stopped_or_deleted:
+  aws-invictus: 6
+  aws-splunk-attack-data: 7
+  aws-otrf: 0
+aws_root_console_login:
+  aws-invictus: 0
+  aws-splunk-attack-data: 24
+  aws-otrf: 0
+aws_root_access_key_used:
+  aws-invictus: 0
+  aws-splunk-attack-data: 0
+  aws-otrf: 0
+aws_iam_access_key_created_for_other_user:
+  aws-invictus: 2
+  aws-splunk-attack-data: 61
+  aws-otrf: 0
+aws_iam_admin_policy_granted:
+  aws-invictus: 2
+  aws-splunk-attack-data: 7
+  aws-otrf: 0
+aws_security_group_ingress_open_to_internet:
+  aws-invictus: 2
+  aws-splunk-attack-data: 64
+  aws-otrf: 0
+aws_s3_public_access_block_disabled:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0
+aws_s3_bucket_made_public:
+  aws-invictus: 0
+  aws-splunk-attack-data: 10
+  aws-otrf: 0
+aws_guardduty_disabled:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0
+aws_guardduty_findings_suppressed:
+  aws-invictus: 0
+  aws-splunk-attack-data: 1
+  aws-otrf: 0
+aws_secretsmanager_many_secrets_read:
+  aws-invictus: 1
+  aws-splunk-attack-data: 0
+  aws-otrf: 0

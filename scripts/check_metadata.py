@@ -11,6 +11,8 @@ this script checks the things CLAUDE.md requires on top of that:
   - at least one reference points at a tagged technique on attack.mitre.org
   - the triage note has every template section, no leftover template
     placeholders, and the same Rule ID as the rule
+  - a correlation rule file (see rule_file.py): the correlation rule is the
+    last document and every base rule it names is in the same file
 
 Exit code is 1 if any rule fails.
 """
@@ -22,14 +24,14 @@ import uuid
 from datetime import date
 from pathlib import Path
 
-import yaml
+from rule_file import load_documents, load_rule
 
 REQUIRED_FIELDS = ["id", "title", "status", "description", "author", "date", "tags",
                    "logsource", "detection", "falsepositives", "level", "references"]
 STATUSES = {"stable", "test", "experimental", "deprecated", "unsupported"}
 LEVELS = {"informational", "low", "medium", "high", "critical"}
 # Platform folder -> required filename prefix.
-PLATFORM_PREFIX = {"windows": "win"}
+PLATFORM_PREFIX = {"windows": "win", "aws": "aws"}
 
 TECHNIQUE_TAG = re.compile(r"^attack\.t(\d{4})(?:\.(\d{3}))?$")
 TACTIC_TAG = re.compile(r"^attack\.([a-z][a-z_-]+)$")
@@ -47,7 +49,7 @@ def template_sections_and_placeholders():
 def check_rule(path, rules_dir, docs_dir, sections, placeholders):
     """Return a list of problems for one rule (empty list = OK)."""
     problems = []
-    rule = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    rule = load_rule(path)
 
     # Required fields
     for field in REQUIRED_FIELDS:
@@ -101,6 +103,17 @@ def check_rule(path, rules_dir, docs_dir, sections, placeholders):
         technique_urls.append(f"attack.mitre.org/techniques/{tid}")
     if techniques and not any(u in r for r in refs for u in technique_urls):
         problems.append("no reference to a tagged technique on attack.mitre.org")
+
+    # Correlation rule file: the base rules it counts are in the same file
+    docs = load_documents(path)
+    if len(docs) > 1:
+        if not rule.get("correlation"):
+            problems.append("a file with several documents must end with the correlation rule")
+        else:
+            names = {d.get("name") for d in docs[:-1]}
+            for base in rule["correlation"].get("rules") or []:
+                if base not in names:
+                    problems.append(f"correlation names base rule '{base}', not defined in this file")
 
     # Triage note
     note = docs_dir / f"{path.stem}.md"

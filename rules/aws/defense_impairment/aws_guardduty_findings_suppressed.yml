@@ -1,0 +1,45 @@
+title: AWS GuardDuty Findings Suppressed or Trusted IP List Changed
+id: a0d77064-71b8-4858-80aa-420552dfd889
+status: experimental
+description: |
+    Detects changes that stop GuardDuty findings from reaching anyone while
+    GuardDuty keeps running: a filter created or updated with action ARCHIVE
+    (matching findings are archived automatically), a trusted IP list created
+    or updated (GuardDuty doesn't alert on those IPs), or a trusted IP list or
+    threat list deleted. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1685/
+    - https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateFilter.html
+    - https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateIPSet.html
+    - https://docs.aws.amazon.com/guardduty/latest/ug/findings_suppression-rule.html
+    - https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_upload-lists.html
+tags:
+    - attack.defense-impairment
+    - attack.t1685
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_source:
+        eventSource: guardduty.amazonaws.com
+    selection_filter:
+        eventName:
+            - CreateFilter
+            - UpdateFilter
+    selection_archive:
+        # action ARCHIVE, as the field value or inside JSON text (Sentinel),
+        # without matching a filter merely named "ARCHIVE".
+        requestParameters.action|re: '(^|"action\\?"\s*:\s*\\?")ARCHIVE'
+    selection_lists:
+        eventName:
+            - CreateIPSet           # trusted IP list
+            - UpdateIPSet
+            - DeleteIPSet
+            - DeleteThreatIntelSet
+    condition: selection_source and ((selection_filter and selection_archive) or selection_lists)
+falsepositives:
+    - Analysts adding suppression rules for known, accepted findings
+    - Security teams maintaining trusted IP lists for scanners or VPN egress
+level: medium

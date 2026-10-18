@@ -1,0 +1,52 @@
+title: AWS GuardDuty Detector Deleted, Disabled or Detached
+id: a7697b3c-9881-4736-a7d1-b7941065a969
+status: experimental
+description: |
+    Detects GuardDuty being turned off or cut off from central monitoring:
+    the detector deleted, disabled or one of its protection features turned
+    off (UpdateDetector), a member account leaving its GuardDuty
+    administrator, or the administrator dropping or no longer monitoring
+    member accounts. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1685/
+    - https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DeleteDetector.html
+    - https://docs.aws.amazon.com/guardduty/latest/APIReference/API_UpdateDetector.html
+    - https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DisassociateFromAdministratorAccount.html
+    - https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-features-activation-model.html
+tags:
+    - attack.defense-impairment
+    - attack.t1685
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_source:
+        eventSource: guardduty.amazonaws.com
+    selection_off:
+        eventName:
+            - DeleteDetector
+            - DisassociateFromAdministratorAccount
+            - DisassociateFromMasterAccount  # older name of the call above
+            - DisassociateMembers
+            - DeleteMembers
+            - StopMonitoringMembers
+    selection_update:
+        eventName: UpdateDetector
+    selection_update_off:
+        # The detector, or a feature, turned off. Booleans are written as a
+        # pattern that matches the field value ("false") and JSON text
+        # ("...": false), for Sentinel's RequestParameters.
+        - requestParameters.enable|re: '(^|:\s*)false'
+        - requestParameters.features|contains: 'DISABLED'
+        # Deprecated dataSources form of the same settings
+        - requestParameters.dataSources.s3Logs.enable|re: '(^|:\s*)false'
+        - requestParameters.dataSources.kubernetes.auditLogs.enable|re: '(^|:\s*)false'
+        - requestParameters.dataSources.malwareProtection.scanEc2InstanceWithFindings.ebsVolumes|re: '(^|:\s*)false'
+    condition: selection_source and (selection_off or (selection_update and selection_update_off))
+falsepositives:
+    - Planned decommissioning of an account or region
+    - Cost-driven decisions to turn off individual protection features
+    - Moving accounts between GuardDuty administrators during an organization change
+level: high

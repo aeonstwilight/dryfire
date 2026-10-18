@@ -4,7 +4,11 @@ The unit tests (tests/run_tests.py) prove each rule fires on its own attack
 samples and stays quiet on a few hand-picked benign events. The sweep asks the
 other question: what else does each rule fire on? It runs all rules over every
 source listed in tests/sweep_corpus.yml (the whole EVTX-ATTACK-SAMPLES set and
-the OTRF APT29 evaluation days) and reports every hit.
+the OTRF APT29 evaluation days for Windows; Invictus IR, Splunk attack_data and
+OTRF CloudTrail for AWS) and reports every hit.
+
+Each source has a platform (windows or aws), and each rule runs only on the
+sources of its own platform (its logsource `product`).
 
 Hits from a file that is one of the rule's own positive test samples are
 labelled "own sample" so the review can focus on the rest.
@@ -30,6 +34,13 @@ from pathlib import Path
 
 import yaml
 
+from zircolite_cloudtrail import write_config
+
+sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+from rule_file import load_rule  # noqa: E402
+from run_tests import group_key  # noqa: E402
+
 CORPUS_MANIFEST = Path("tests/sweep_corpus.yml")
 BASELINE = Path("tests/sweep_baseline.yml")
 EXTERNAL = Path("tests/data/external")
@@ -37,25 +48,29 @@ OUT_DIR = Path("build/sweep")
 DEFAULT_PIPELINES = ["sysmon", "windows-logsources"]
 
 # Fields shown for each hit in the report, in this order, when present.
-KEY_FIELDS = ["SystemTime", "UtcTime", "Computer", "Hostname", "EventID", "User",
+KEY_FIELDS = ["correlation", "evidence_files", "SystemTime", "UtcTime", "Computer", "Hostname", "EventID", "User",
               "ParentImage", "Image", "CommandLine",
               "SourceImage", "TargetImage", "GrantedAccess",
               "PipeName", "ServiceName", "ImagePath", "TaskName",
-              "TargetUserName", "TargetSid", "MemberSid", "SubjectUserName"]
+              "TargetUserName", "TargetSid", "MemberSid", "SubjectUserName",
+              # AWS CloudTrail
+              "eventTime", "awsRegion", "eventSource", "eventName", "errorCode",
+              "userIdentity.type", "userIdentity.arn", "sourceIPAddress", "userAgent"]
 
 
 def load_rules(rules_dir, cases_dir):
     """Return a list of dicts: path, id, title, pipelines, own sample file names."""
     rules = []
     for path in sorted(rules_dir.rglob("*.yml")):
-        rule = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        rule = load_rule(path)
         case_path = cases_dir / f"{path.stem}.yml"
         case = yaml.safe_load(case_path.read_text(encoding="utf-8")) if case_path.exists() else {}
         case = case or {}
         own = {Path(p["file"]).name for p in case.get("positive") or []}
         rules.append({"path": path, "name": path.stem, "id": str(rule.get("id")),
+                      "platform": (rule.get("logsource") or {}).get("product", "windows"),
                       "title": rule.get("title", path.stem),
-                      "pipelines": tuple(case.get("pipelines") or DEFAULT_PIPELINES),
+                      "pipelines": tuple(case.get("pipelines", DEFAULT_PIPELINES)),
                       "own": own})
     return rules
 
@@ -68,11 +83,41 @@ def run_zircolite(zircolite, source_path, rule_paths, pipelines):
                "--outfile", str(out_file), "--ruleset"] + [str(p.resolve()) for p in rule_paths]
         for pipeline in pipelines:
             cmd += ["--pipeline", pipeline]
+        # CloudTrail sources need a config that keeps nested field names.
+        config = write_config(source_path, zircolite, tmp)
+        if config:
+            cmd += ["--config", str(config)]
         result = subprocess.run(cmd, cwd=tmp, capture_output=True, text=True)
         if result.returncode != 0 or not out_file.exists():
             output = (result.stdout + result.stderr).strip().splitlines()
             raise RuntimeError(f"Zircolite failed on {source_path}: " + " | ".join(output[-5:]))
         return json.loads(out_file.read_text(encoding="utf-8"))
+
+
+def sweep_hits(detection):
+    """The hits in one Zircolite result, one dict per hit.
+
+    A plain rule: each matched event. A correlation rule: one hit per group
+    (e.g. identity) that crossed the threshold, the same count as run_tests.py.
+    The hit shows the group's first evidence event and the highest value it
+    reached; its file is the rule's own sample if any evidence came from one.
+    """
+    if detection.get("result_type") != "correlation":
+        return detection.get("matches", [])
+    groups = {}
+    for m in detection.get("matches", []):
+        groups.setdefault(group_key(m), []).append(m)
+    hits = []
+    for alerts in groups.values():
+        evidence = [e.get("event", {}) for a in alerts for e in a.get("evidence", [])]
+        hit = dict(evidence[0]) if evidence else {}
+        hit["correlation"] = (f"{alerts[0].get('metric_name')} up to "
+                              f"{max(a.get('metric_value', 0) for a in alerts)} for {alerts[0].get('group_keys')}")
+        files = {str(e.get("OriginalLogfile", "")) for e in evidence}
+        hit["OriginalLogfile"] = sorted(files)[0] if files else ""
+        hit["evidence_files"] = sorted(Path(f).name for f in files)
+        hits.append(hit)
+    return hits
 
 
 def describe(match):
@@ -103,19 +148,28 @@ def main():
     sources = (yaml.safe_load(CORPUS_MANIFEST.read_text(encoding="utf-8")) or {}).get("sources") or []
     by_id = {r["id"]: r for r in rules}
 
-    # Rules that need the same pipelines run together, one Zircolite run per source.
-    groups = defaultdict(list)
-    for r in rules:
-        groups[r["pipelines"]].append(r)
+    for s in sources:
+        s.setdefault("platform", "windows")
 
-    # counts[rule][source] = {"own": n, "other": n}; hits[rule] = [(source, file, match)]
-    counts = {r["name"]: {s["name"]: {"own": 0, "other": 0} for s in sources} for r in rules}
+    def applies(rule, source):
+        return rule["platform"] == source["platform"]
+
+    # counts[rule][source] = {"own": n, "other": n}, only for rule/source pairs of the
+    # same platform; hits[rule] = [(source, file, match)]
+    counts = {r["name"]: {s["name"]: {"own": 0, "other": 0} for s in sources if applies(r, s)}
+              for r in rules}
     hits = defaultdict(list)
     for source in sources:
         source_path = EXTERNAL / source["path"]
         if not source_path.exists():
             print(f"Sweep source missing: {source_path} (run `make sweep-datasets`)")
             return 1
+        # Rules for this source's platform that need the same pipelines run
+        # together, one Zircolite run per group.
+        groups = defaultdict(list)
+        for r in rules:
+            if applies(r, source):
+                groups[r["pipelines"]].append(r)
         for pipelines, group in groups.items():
             print(f"Sweeping {source['name']} with {len(group)} rule(s), pipelines {list(pipelines)}")
             detections = run_zircolite(args.zircolite, source_path, [r["path"] for r in group], pipelines)
@@ -123,9 +177,10 @@ def main():
                 rule = by_id.get(str(d.get("id")))
                 if rule is None:
                     continue
-                for m in d.get("matches", []):
+                for m in sweep_hits(d):
                     file = Path(str(m.get("OriginalLogfile", ""))).name
-                    kind = "own" if file in rule["own"] else "other"
+                    files = m.get("evidence_files") or [file]  # several for a correlation
+                    kind = "own" if any(f in rule["own"] for f in files) else "other"
                     counts[rule["name"]][source["name"]][kind] += 1
                     if kind == "other":
                         hits[rule["name"]].append((source["name"], file, m))
@@ -139,7 +194,10 @@ def main():
     for r in rules:
         cells = []
         for s in sources:
-            c = counts[r["name"]][s["name"]]
+            c = counts[r["name"]].get(s["name"])
+            if c is None:
+                cells.append("—")  # other platform
+                continue
             cells.append(f"{c['other']}" + (f" (+{c['own']} own)" if c["own"] else ""))
         lines.append(f"| [{r['name']}](hits/{r['name']}.md) | " + " | ".join(cells) + " |")
     (OUT_DIR / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -160,6 +218,8 @@ def main():
     failures = 0
     for r in rules:
         for s in sources:
+            if not applies(r, s):
+                continue
             got = counts[r["name"]][s["name"]]["own"] + counts[r["name"]][s["name"]]["other"]
             want = (baseline.get(r["name"]) or {}).get(s["name"])
             if want is None:
