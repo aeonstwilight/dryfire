@@ -105,7 +105,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
 - **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
-- **M5 (in progress):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
+- **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (planned):** More detections, including AWS follow-ups and Windows correlation rules
 
 ## Data sources

@@ -195,7 +195,7 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
 
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
 
-## Milestone 5 (current)
+## Milestone 5 (done)
 
 Milestone 5 is done when every rule converts to Elastic (or is declared unsupported with the owner's approval) and the Elastic queries return the same hits as Zircolite on a real Elasticsearch container in CI.
 
@@ -232,6 +232,13 @@ Milestone 5 is done when every rule converts to Elastic (or is declared unsuppor
 - Regex: a small translator wraps Sigma's search-style regex for Lucene's whole-value `rlike` (`.*(…).*`, the anchor forms our rules use, `(?i)` via `to_lower`); a rule it can't translate exactly is declared unsupported for Elastic with the owner's OK; `make validate` proves the rest.
 - CloudTrail `requestParameters`: map a request field to `aws.cloudtrail.request_parameters` (the integration's `Map.toString()` text) only where the rule's match gives the same result on that text (plain `contains`), proven by validate; otherwise declare Elastic unsupported for the rule.
 - Indexes: queries read the Elastic integrations' data streams (`logs-windows.sysmon_operational-*`, `logs-system.security-*`, `logs-system.system-*`, `logs-aws.cloudtrail-*`), and the loader writes to matching data streams.
+
+**Notes from the build (2026-10-18):**
+
+- `scripts/esql_backend.py` (`DryfireESQLBackend`): `to_lower()` string matches, Lucene regex translation, and `like` patterns written by us: the package's backend leaves literal backslashes single in `LIKE` (`*\users\*`), which Elasticsearch rejects.
+- Pipelines: `sysmon` + `ecs_windows` + `pipelines/elastic_windows.yml` (plain ECS fields, data streams, allowed fields), and `pipelines/elastic_cloudtrail.yml`. `convert.py` also fails an Elastic CloudTrail query that still holds a raw CloudTrail field name, which catches correlation fields (pipelines only check detection fields).
+- Limit: `ecs_windows` maps any unknown Windows field to `winlog.event_data.<name>`, so on Windows the allowed-fields check can't catch a misspelled field (the same as the Splunk target).
+- Result: 24 of 31 rules convert; the 7 AWS rules needing structured request fields (including the Secrets Manager correlation, step 5) are declared for Elastic. `make validate-elastic`: 115 checks, all match Zircolite. Loader: `tests/validate_elastic.py`; own CI job `validate-elastic`.
 
 **Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
 
