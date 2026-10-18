@@ -20,8 +20,52 @@ aws_iam_access_key_created_for_other_user:
     caller (userIdentity.userName). AWSCloudTrail keeps requestParameters as
     JSON text in one column, so the target user has no column of its own and
     the comparison can't be expressed through the field mapping.
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule compares the target user
+    (requestParameters.userName) with the caller, which needs the target user as
+    a field of its own. Owner decision, 2026-10-18.
 aws_secretsmanager_many_secrets_read:
   sentinel: >-
     A Sigma correlation rule (value_count). pySigma-backend-kusto 1.0.1 doesn't
     convert correlation rules ("Backend does not support correlation rules").
     Owner decision, 2026-10-18.
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The correlation counts distinct
+    requestParameters.secretId values, which needs the secret ID as a field of
+    its own. Owner decision, 2026-10-18.
+aws_s3_bucket_made_public:
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule's bucket-policy and ACL regexes are
+    written for JSON text and don't give the same result on that format. Owner
+    decision, 2026-10-18.
+aws_guardduty_disabled:
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule's (^|:\s*)false regexes are written for a
+    value or JSON text, not key=value text. Owner decision, 2026-10-18.
+aws_guardduty_findings_suppressed:
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule's action regex is written for a value or
+    JSON text, not key=value text. Owner decision, 2026-10-18.
+aws_s3_public_access_block_disabled:
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule's (^|:\s*)false regexes are written for a
+    value or JSON text, not key=value text. Owner decision, 2026-10-18.
+aws_iam_admin_policy_granted:
+  elastic: >-
+    The Elastic AWS integration keeps requestParameters as Map.toString() text
+    in aws.cloudtrail.request_parameters (its structured copy is a flattened
+    field ES|QL can't read). The rule's policyArn and policyDocument regexes are
+    written for a value or JSON text, not key=value text. Owner decision,
+    2026-10-18.

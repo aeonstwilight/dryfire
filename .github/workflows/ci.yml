@@ -8,6 +8,9 @@
 # A second job, `validate`, runs the converted queries on the Splunk and Kusto
 # emulator containers (M3). It uploads only its results table, never
 # build/validate/engines.env (the throwaway Splunk password and HEC token).
+# A third job, `validate-elastic`, does the same for the ES|QL queries on an
+# Elasticsearch container (M5), in its own job so the three engines don't
+# share one runner's memory.
 #
 # Actions are pinned to commit SHAs (version in the comment) so a moved tag
 # can't change what runs here.
@@ -150,3 +153,53 @@ jobs:
       - name: Stop the engines
         if: ${{ always() }}
         run: make engines-down
+
+  # M5: run the converted ES|QL on an Elasticsearch container and check it
+  # finds the same events as Zircolite. Starting the engine accepts the
+  # Elastic License 2.0 (default distribution, free basic licence; owner
+  # decision, 2026-10-18).
+  validate-elastic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Same dataset cache as the other jobs (see the build job).
+      - name: Cache datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tests/data/external
+          key: datasets-${{ github.job }}-${{ hashFiles('tests/datasets.yml', 'tests/sweep_corpus.yml', 'scripts/fetch_datasets.py') }}
+
+      - name: Start Elasticsearch
+        run: make elastic-up
+
+      - name: Validate converted ES|QL queries
+        run: make validate-elastic
+
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f build/validate/results_elastic.md ]; then
+            echo "### build/validate/results_elastic.md" >> "$GITHUB_STEP_SUMMARY"
+            cat build/validate/results_elastic.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload validation results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validate-elastic
+          path: build/validate/results_elastic.md
+          if-no-files-found: ignore
+
+      - name: Stop Elasticsearch
+        if: ${{ always() }}
+        run: make elastic-down

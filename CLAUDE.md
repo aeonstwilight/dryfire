@@ -20,7 +20,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 - **Public tools only.** Build the pipeline only from public tools (pySigma, sigma-cli, Zircolite, GitHub Actions, Make). Don't model the CI, repo structure or tooling on any employer's internal detection-as-code pipeline.
 - **ATT&CK is the only framework mapping.** Do not add NIST 800-53, FedRAMP or any other compliance-control mapping: no control tags in rules, no control fields in test cases or triage notes, no control columns in reports or coverage output.
 - **No document generation.** Don't add features that generate compliance, audit or customer-facing documents from the rules. The per-rule triage notes are hand-written Markdown, and `build/` holds only build reports (conversion summary, test results, Navigator layer).
-- **Check current versions.** Verify package names, CLI flags and backend/pipeline names (pySigma, sigma-cli, pySigma-backend-splunk, pySigma-backend-kusto, Zircolite) against their current docs before using them. Don't rely on memory.
+- **Check current versions.** Verify package names, CLI flags and backend/pipeline names (pySigma, sigma-cli, pySigma-backend-splunk, pySigma-backend-kusto, pySigma-backend-elasticsearch, Zircolite) against their current docs before using them. Don't rely on memory.
 
 ## Conventions
 
@@ -51,14 +51,15 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 The Makefile should expose these targets:
 
 - `make lint`: `sigma check` on all rules
-- `make convert`: SPL and KQL into `build/`
+- `make convert`: SPL, KQL and ES|QL into `build/`
 - `make test`: run `tests/run_tests.py`; non-zero exit on any failure
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
+- `make validate-elastic` (M5): run the converted ES|QL on the Elasticsearch container (`make elastic-up`); report in `build/validate/results_elastic.md`
 
-CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`.
+CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`.
 
 ## Milestone 1 (done, merged in PR #1)
 
@@ -193,3 +194,54 @@ Milestone 4 is done when the AWS CloudTrail starter rules below are added and pa
 - Correlation rules (rule 8, 2026-10-18): one file, base rule(s) first and the correlation rule last (it holds the detection's id, title, level and tags); `scripts/rule_file.py` reads it for the metadata, coverage and sweep scripts. A correlation's hit count is the number of distinct groups over the threshold (Zircolite reports one alert per qualifying moment). Splunk converts to fixed `bin _time` buckets, Zircolite slides; samples keep each burst inside one bucket. pySigma-backend-kusto 1.0.1 doesn't convert correlation rules, so Sentinel is declared unsupported (owner decision, 2026-10-18).
 
 **Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
+
+## Milestone 5 (done)
+
+Milestone 5 is done when every rule converts to Elastic (or is declared unsupported with the owner's approval) and the Elastic queries return the same hits as Zircolite on a real Elasticsearch container in CI.
+
+**Owner decisions (2026-10-18):**
+
+- Query language: ES|QL, if pySigma-backend-elasticsearch supports what the rules use (regex, correlations); confirm in step 1 and come back to the owner if not.
+- Field names: convert to ECS, the names Elastic's own integrations produce (Windows/Sysmon and AWS CloudTrail), not the raw field names.
+- The owner accepts the Elasticsearch container's licence for CI (exact terms named in step 1 and recorded in the CI settings, as for Splunk and Kusto).
+- If the runner can't hold Splunk, Kusto and Elasticsearch together, Elastic validation runs as its own CI job.
+- Same guardrails as the other targets: a rule field with no mapping fails the build; the only exception is `pipelines/unsupported_targets.yml` with the owner's approval.
+
+**Build order:**
+
+1. Check current docs and versions: pySigma-backend-elasticsearch (ES|QL support, regex, correlations), the ECS field-name pipelines for Windows and for CloudTrail, the Elasticsearch container image, its licence and settings; pin by digest.
+2. Conversion: `make convert` writes ES|QL to `build/elastic/`; ECS field mappings in `pipelines/` where the backend's own pipelines don't cover a field.
+3. Loader: put each rule's test events into Elasticsearch in the ECS layout the pipeline expects, one index per log source, mapping plain and documented (as for the M3 tables).
+4. `make validate`: run each ES|QL query on its own test events and compare the hit count with Zircolite's. CI runs it alongside (or next to) the M3 engines.
+5. Correlation rule: convert `aws_secretsmanager_many_secrets_read` if the backend supports it; otherwise ask the owner about declaring it.
+6. README: an Elastic column in the rule table, and the validation note extended to Elastic.
+
+**Step 1 findings (2026-10-18):**
+
+- pySigma-backend-elasticsearch 2.1.1 (needs pySigma >=1.4,<2; we have 1.5.1): `ESQLBackend`, with correlation support (`count_distinct` per `date_trunc` bucket, fixed buckets like Splunk). Every rule converts as is, but the output isn't right yet (below).
+- Pipelines: `ecs_windows` (Winlogbeat 7+ ECS names; Sysmon fields to `process.*`, `file.*`, others to `winlog.event_data.*`). No CloudTrail pipeline: ours to write from Elastic's AWS integration (aws package 8.11.0 ingest pipeline: `eventName` → `event.action`, `eventSource` → `event.provider`, `userIdentity.type` → `aws.cloudtrail.user_identity.type`, `userIdentity.userName` → `user.name`, ...).
+- Engine: official Docker Hub image `elasticsearch:9.5.5` (2026-10-13), digest `sha256:33cae13fc18ef105e960cdd32327d402fbd7c6d4376c0b879ad703ee289d45d8`, runs on the free basic licence (Elastic License 2.0 binary). `docker.elastic.co` is blocked from the dev sandbox. Needs `cluster.routing.allocation.disk.threshold_enabled=false` on a nearly full disk.
+- Probed on 9.5.5:
+  - `==`, `like`, `starts_with`, `ends_with` are case-sensitive; the backend doesn't lower-case anything. `ecs_windows` maps `Image` etc. to `.caseless` sub-fields, which ignore case only when the condition is pushed down to Lucene (inside an `or` with a non-pushable condition the same match returned 0). `to_lower(field)` works every time.
+  - `rlike` is Lucene regex on the whole value: no `^`/`$`, no `(?i)`; `\s` works. The backend passes Sigma regexes through unchanged, so unanchored Sigma regexes don't match.
+  - The AWS integration stores `requestParameters` as Java `Map.toString()` text in `aws.cloudtrail.request_parameters` (`{bucketName=x, enable=false}`), not JSON; its structured copy is a `flattened` field, which ES|QL can't query ("Unknown column").
+
+**Owner decisions after step 1 (2026-10-18):**
+
+- Case: our ES|QL backend (a small subclass of the package's) writes every string match as `to_lower(field)` against a lower-cased value, except `|cased` matches; no `.caseless` sub-fields.
+- Regex: a small translator wraps Sigma's search-style regex for Lucene's whole-value `rlike` (`.*(…).*`, the anchor forms our rules use, `(?i)` via `to_lower`); a rule it can't translate exactly is declared unsupported for Elastic with the owner's OK; `make validate` proves the rest.
+- CloudTrail `requestParameters`: map a request field to `aws.cloudtrail.request_parameters` (the integration's `Map.toString()` text) only where the rule's match gives the same result on that text (plain `contains`), proven by validate; otherwise declare Elastic unsupported for the rule.
+- Indexes: queries read the Elastic integrations' data streams (`logs-windows.sysmon_operational-*`, `logs-system.security-*`, `logs-system.system-*`, `logs-aws.cloudtrail-*`), and the loader writes to matching data streams.
+
+**Notes from the build (2026-10-18):**
+
+- `scripts/esql_backend.py` (`DryfireESQLBackend`): `to_lower()` string matches, Lucene regex translation, and `like` patterns written by us: the package's backend leaves literal backslashes single in `LIKE` (`*\users\*`), which Elasticsearch rejects.
+- Pipelines: `sysmon` + `ecs_windows` + `pipelines/elastic_windows.yml` (plain ECS fields, data streams, allowed fields), and `pipelines/elastic_cloudtrail.yml`. `convert.py` also fails an Elastic CloudTrail query that still holds a raw CloudTrail field name, which catches correlation fields (pipelines only check detection fields).
+- Limit: `ecs_windows` maps any unknown Windows field to `winlog.event_data.<name>`, so on Windows the allowed-fields check can't catch a misspelled field (the same as the Splunk target).
+- Result: 24 of 31 rules convert; the 7 AWS rules needing structured request fields (including the Secrets Manager correlation, step 5) are declared for Elastic. `make validate-elastic`: 115 checks, all match Zircolite. Loader: `tests/validate_elastic.py`; own CI job `validate-elastic`.
+
+**Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
+
+## Milestone 6 (planned)
+
+More detections on the current pipeline (owner decision, 2026-10-18): the AWS follow-ups (network ACL opened, cross-account S3 bucket policy) and Windows correlation rules (password spray, brute force followed by a successful logon). Each rule follows the usual process; the owner confirms the logic first.
