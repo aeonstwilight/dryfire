@@ -63,6 +63,15 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-17 | win_domain_admin_group_member_added | 0 | No hits anywhere: the corpus has no adds to these groups (positives are synthetic). The only 4728/4756 in the corpus, APT29's new account joining the local `None` group (RID 513) on SCRANTON by default, correctly doesn't match. |
 | 2026-10-17 | win_rundll32_relative_path_dll | 0 | Only its own EVTX samples match (22: the planted `windowscoredeviceinfo.dll` started by the Update Session Orchestrator, `conf3234.dll` and `DATAUS~1.DLL`, `AllTheThings.dll`). APT29's only bare-name rundll32, `AppXDeploymentExtensions.OneCore.dll,ShellRefresh`, is allow-listed. None of the 22 also fires the suspicious-usage rule. |
 
+## AWS CloudTrail
+
+**Corpus:** Invictus IR Sigma-AWS (`CloudTrail/` at commit `f0d5599`, 55 files, Stratus Red Team AWS techniques in one test account), Splunk attack_data (40 raw CloudTrail files at commit `aafa53e`) and OTRF's EC2 proxy S3 exfiltration dataset. 38,793 events, all from lab accounts: every hit is simulated attack activity or lab setup and teardown, so these sources say little about false-positive rates in a real account.
+
+| Date | Rule | Hits outside own samples | Notes |
+|---|---|---|---|
+| 2026-10-18 | aws_cloudtrail_logging_config_changed | 0 | Only its own samples: the Stratus Red Team `PutEventSelectors` that drops management events and the one restoring it 7 minutes later (Invictus), and `UpdateTrail` (Splunk). |
+| 2026-10-18 | aws_cloudtrail_logging_stopped_or_deleted | 7 | **Proposed labels, awaiting owner review.** Invictus: 2 × `DeleteTrail` by Terraform at 12:08:04 (two different trails, Stratus Red Team cleanup: correct, benign), 1 × failed `DeleteTrail` (`TrailNotFoundException`) by Stratus Red Team (attack simulation). Splunk: `DeleteTrail` by aws-cli in the `update_cloudtrail` dataset (attack simulation); 3 events in `delete_cloudwatch_log_group` are copies of the `stop_delete_cloudtrail` dataset's events (same `eventID`s; attack simulation). |
+
 ## Limits of this review
 
 A clean sweep shows the rules are precise on these datasets, not that they're free of false positives in a real fleet. The APT29 background traffic is the only sizeable stretch of normal activity in the corpus, and it comes from a small lab with few third-party tools. Software inventories, EDR agents and management tooling in a real environment will need their own tuning; each triage note lists the expected sources.

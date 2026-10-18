@@ -1,0 +1,36 @@
+title: AWS CloudTrail Logging Stopped or Trail Deleted
+id: 2f360a08-3e18-42f8-90bf-3252c52eaf1e
+status: experimental
+description: |
+    Detects a call that stops CloudTrail recording or deletes where it is
+    recorded: StopLogging or DeleteTrail on a trail, and for CloudTrail Lake,
+    StopEventDataStoreIngestion or DeleteEventDataStore. Failed calls
+    (an errorCode such as AccessDenied) are included on purpose: an attempt to
+    blind logging is worth a look even when it is refused.
+author: aeonstwilight
+date: 2026-10-18
+references:
+    - https://attack.mitre.org/techniques/T1685/002/
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopLogging.html
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DeleteTrail.html
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_StopEventDataStoreIngestion.html
+    - https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DeleteEventDataStore.html
+tags:
+    - attack.defense-impairment
+    - attack.t1685.002
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: cloudtrail.amazonaws.com
+        eventName:
+            - StopLogging
+            - DeleteTrail
+            - StopEventDataStoreIngestion  # CloudTrail Lake
+            - DeleteEventDataStore         # CloudTrail Lake
+    condition: selection
+falsepositives:
+    - Planned decommissioning or replacement of a trail or event data store
+    - Infrastructure-as-code (Terraform, CloudFormation) tearing down a test or sandbox trail
+level: high

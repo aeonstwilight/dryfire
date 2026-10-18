@@ -79,3 +79,11 @@ win_rundll32_relative_path_dll:
   evtx-attack-samples: 22
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+aws_cloudtrail_logging_config_changed:
+  aws-invictus: 2
+  aws-splunk-attack-data: 1
+  aws-otrf: 0
+aws_cloudtrail_logging_stopped_or_deleted:
+  aws-invictus: 6
+  aws-splunk-attack-data: 7
+  aws-otrf: 0

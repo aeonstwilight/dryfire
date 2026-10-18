@@ -186,3 +186,35 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Defense%20Evasion/Sysmon%207%20%20Update%20Session%20Orchestrator%20Dll%20Hijack.evtx
     path: "evtx-attack-samples/Sysmon 7  Update Session Orchestrator Dll Hijack.evtx"
     sha256: 7a0c541506770e6ef05e327f600c7fc1d328676058214a0e3a6a82c7d7e8fcdf
+
+  # --- AWS CloudTrail (raw file + one-event-per-line copy, see fetch_datasets.py)
+  # aws_cloudtrail_logging_stopped_or_deleted
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1205Z_SjF3IkuNXJkoHyar.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1205Z_SjF3IkuNXJkoHyar.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_SjF3IkuNXJkoHyar.jsonl
+    sha256: 00338bd79cddbbb3254008b586839013580a78c63c188462049df80e8bf238ca
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_UljXNp9xLp8nsAGc.jsonl
+    sha256: b80a0b30ed930378cabe224a74194ab0f287a87b351ffe89ee052d58a279bf5a
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1562.008/stop_delete_cloudtrail/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1562.008_stop_delete_cloudtrail/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1562.008_stop_delete_cloudtrail.jsonl
+    sha256: d5e6f187918ca7f668249c33e86a2dba91f37777bdb6195600512caa428d012b
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.jsonl
+    sha256: b8ddb7d1878f13143a23f8a84e32dee589f4d1deb72392a2b02e5541eb3651cb
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1205Z_1dM7GQM67kudSyGD.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1205Z_1dM7GQM67kudSyGD.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1205Z_1dM7GQM67kudSyGD.jsonl
+    sha256: 93c6883e797ca261a6604adfc9a36c4d652378c69b11a2c74a4a4be6e6dd3012
+  # aws_cloudtrail_logging_config_changed
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1210Z_vj0QE0Tf5ZmzMsCo.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1210Z_vj0QE0Tf5ZmzMsCo.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_vj0QE0Tf5ZmzMsCo.jsonl
+    sha256: 0e159eeb5f59143d926a220ea3a7c37b9a8dcbedbefc199f12aa7f49c00ea376
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1562.008/update_cloudtrail/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1562.008_update_cloudtrail/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1562.008_update_cloudtrail.jsonl
+    sha256: d64b4d7d12e633c94909b81ac22a603311c50923cc77a46c1b76e4e7d0dae19b
