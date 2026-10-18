@@ -54,7 +54,7 @@ up() {
     password="$(python3 -c 'import secrets; print(secrets.token_urlsafe(18))')"
     hec_token="$(python3 -c 'import uuid; print(uuid.uuid4())')"
 
-    docker rm -f dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
+    docker rm -f -v dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
 
     echo "Starting Splunk ($SPLUNK_IMAGE)"
     # Our small Splunk app (index and sourcetype settings for the test events) is
@@ -87,7 +87,9 @@ EOF
 }
 
 down() {
-    docker rm -f dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
+    # -v also deletes the containers' anonymous volumes (Splunk's data, several GB
+    # per run); without it every run leaves one behind and the disk fills up.
+    docker rm -f -v dryfire-splunk dryfire-kusto >/dev/null 2>&1 || true
     rm -f "$ENV_FILE"
     echo "Stopped both engines."
 }
