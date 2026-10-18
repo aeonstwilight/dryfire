@@ -64,9 +64,28 @@ def count_hits(zircolite, rule_path, sample_path, pipelines):
             output = (result.stdout + result.stderr).strip().splitlines()
             raise RuntimeError("Zircolite failed: " + " | ".join(output[-5:]))
 
-        # Output is a list with one entry per rule that matched; each has a "count".
+        # Output is a list with one entry per rule that matched.
         detections = json.loads(out_file.read_text(encoding="utf-8"))
-        return sum(d.get("count", 0) for d in detections)
+        return sum(detection_hits(d) for d in detections)
+
+
+def group_key(match):
+    """A correlation alert's group (e.g. the identity), as text that can be compared."""
+    return json.dumps(match.get("group_keys"), sort_keys=True)
+
+
+def detection_hits(detection):
+    """The number of hits in one Zircolite result.
+
+    A plain rule: the matched events ("count"). A correlation rule: the number
+    of distinct groups (e.g. identities) that crossed the threshold. Zircolite
+    reports one alert for every moment a group is over the threshold, so one
+    burst gives several alerts; counting groups gives the same number on every
+    engine (see run_validate.py).
+    """
+    if detection.get("result_type") == "correlation":
+        return len({group_key(m) for m in detection.get("matches", [])})
+    return detection.get("count", 0)
 
 
 def check_rule(rule_path, args):

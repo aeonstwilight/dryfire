@@ -36,6 +36,11 @@ import yaml
 
 from zircolite_cloudtrail import write_config
 
+sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+from rule_file import load_rule  # noqa: E402
+from run_tests import group_key  # noqa: E402
+
 CORPUS_MANIFEST = Path("tests/sweep_corpus.yml")
 BASELINE = Path("tests/sweep_baseline.yml")
 EXTERNAL = Path("tests/data/external")
@@ -43,7 +48,7 @@ OUT_DIR = Path("build/sweep")
 DEFAULT_PIPELINES = ["sysmon", "windows-logsources"]
 
 # Fields shown for each hit in the report, in this order, when present.
-KEY_FIELDS = ["SystemTime", "UtcTime", "Computer", "Hostname", "EventID", "User",
+KEY_FIELDS = ["correlation", "evidence_files", "SystemTime", "UtcTime", "Computer", "Hostname", "EventID", "User",
               "ParentImage", "Image", "CommandLine",
               "SourceImage", "TargetImage", "GrantedAccess",
               "PipeName", "ServiceName", "ImagePath", "TaskName",
@@ -57,7 +62,7 @@ def load_rules(rules_dir, cases_dir):
     """Return a list of dicts: path, id, title, pipelines, own sample file names."""
     rules = []
     for path in sorted(rules_dir.rglob("*.yml")):
-        rule = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        rule = load_rule(path)
         case_path = cases_dir / f"{path.stem}.yml"
         case = yaml.safe_load(case_path.read_text(encoding="utf-8")) if case_path.exists() else {}
         case = case or {}
@@ -87,6 +92,32 @@ def run_zircolite(zircolite, source_path, rule_paths, pipelines):
             output = (result.stdout + result.stderr).strip().splitlines()
             raise RuntimeError(f"Zircolite failed on {source_path}: " + " | ".join(output[-5:]))
         return json.loads(out_file.read_text(encoding="utf-8"))
+
+
+def sweep_hits(detection):
+    """The hits in one Zircolite result, one dict per hit.
+
+    A plain rule: each matched event. A correlation rule: one hit per group
+    (e.g. identity) that crossed the threshold, the same count as run_tests.py.
+    The hit shows the group's first evidence event and the highest value it
+    reached; its file is the rule's own sample if any evidence came from one.
+    """
+    if detection.get("result_type") != "correlation":
+        return detection.get("matches", [])
+    groups = {}
+    for m in detection.get("matches", []):
+        groups.setdefault(group_key(m), []).append(m)
+    hits = []
+    for alerts in groups.values():
+        evidence = [e.get("event", {}) for a in alerts for e in a.get("evidence", [])]
+        hit = dict(evidence[0]) if evidence else {}
+        hit["correlation"] = (f"{alerts[0].get('metric_name')} up to "
+                              f"{max(a.get('metric_value', 0) for a in alerts)} for {alerts[0].get('group_keys')}")
+        files = {str(e.get("OriginalLogfile", "")) for e in evidence}
+        hit["OriginalLogfile"] = sorted(files)[0] if files else ""
+        hit["evidence_files"] = sorted(Path(f).name for f in files)
+        hits.append(hit)
+    return hits
 
 
 def describe(match):
@@ -146,9 +177,10 @@ def main():
                 rule = by_id.get(str(d.get("id")))
                 if rule is None:
                     continue
-                for m in d.get("matches", []):
+                for m in sweep_hits(d):
                     file = Path(str(m.get("OriginalLogfile", ""))).name
-                    kind = "own" if file in rule["own"] else "other"
+                    files = m.get("evidence_files") or [file]  # several for a correlation
+                    kind = "own" if any(f in rule["own"] for f in files) else "other"
                     counts[rule["name"]][source["name"]][kind] += 1
                     if kind == "other":
                         hits[rule["name"]].append((source["name"], file, m))

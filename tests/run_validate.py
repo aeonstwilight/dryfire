@@ -44,6 +44,16 @@ How events are loaded:
     (pipelines/sentinel_cloudtrail.yml); requestParameters, responseElements
     and the other nested objects go in as JSON text, as Sentinel stores them.
 
+  - CloudTrail events get Splunk's _time from their eventTime (as with the AWS
+    add-on), so time-bucketed queries see the events' own times.
+
+Correlation rules (e.g. many distinct secrets read by one identity) are
+counted as the number of distinct groups over the threshold on every engine:
+Zircolite's alerts are grouped by their group-by values (run_tests.py), and
+the Splunk query's rows are counted by the rule's group-by fields. Splunk
+buckets time in fixed windows (`bin _time`) where Zircolite slides them, so
+the test samples keep each burst inside one clock-aligned bucket.
+
 The table schemas (column names and types) come from pySigma-backend-kusto, the
 same lists the build uses to reject fields that don't exist in a table.
 
@@ -66,6 +76,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -76,6 +87,8 @@ from sigma.pipelines.microsoftxdr.tables import MICROSOFT_XDR_TABLES
 sys.path.insert(0, str(Path(__file__).parent))
 from run_tests import DEFAULT_PIPELINES, count_hits  # noqa: E402
 from zircolite_cloudtrail import is_cloudtrail, jsonl_files  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+from rule_file import correlation_group_by  # noqa: E402
 
 RESULTS_FILE = Path("build/validate/results.md")
 ENV_FILE = Path("build/validate/engines.env")
@@ -177,6 +190,11 @@ def basename(path):
 
 
 # --- Event -> engine mappings --------------------------------------------------
+
+def cloudtrail_epoch(event_time):
+    """A CloudTrail eventTime (2026-10-18T17:00:01Z) as Unix seconds."""
+    return datetime.fromisoformat(event_time.replace("Z", "+00:00")).timestamp()
+
 
 def is_cloudtrail_event(event):
     return "eventVersion" in event and "eventSource" in event
@@ -343,8 +361,12 @@ class Splunk:
             if mapped:
                 source, sourcetype, data = mapped
                 data = {"dryfire_file": file_id, **data}
-                batch.append(json.dumps({"index": SPLUNK_INDEX, "source": source, "sourcetype": sourcetype,
-                                         "event": data}))
+                hec_event = {"index": SPLUNK_INDEX, "source": source, "sourcetype": sourcetype, "event": data}
+                if sourcetype == "aws:cloudtrail":
+                    # Splunk's _time is the record's eventTime, as with the AWS add-on;
+                    # correlation rules bucket events by _time.
+                    hec_event["time"] = cloudtrail_epoch(data["eventTime"])
+                batch.append(json.dumps(hec_event))
         for i in range(0, len(batch), 500):
             self._post(f"{SPLUNK_HEC}/services/collector/event", "".join(batch[i:i + 500]).encode(),
                        {"Authorization": f"Splunk {self.hec_token}"})
@@ -358,10 +380,18 @@ class Splunk:
         self.loaded[sample] = (file_id, len(batch))
         return self.loaded[sample]
 
-    def run(self, query, sample, events):
-        """Return (hit count, number of events loaded for this sample)."""
+    def run(self, query, sample, events, group_by=None):
+        """Return (hit count, number of events loaded for this sample).
+
+        For a correlation rule (group_by set) the query returns one row per
+        time bucket and group over the threshold; the hit count is the number
+        of distinct groups, the same as run_tests.py counts with Zircolite.
+        """
         file_id, loaded = self.load(sample, events)
-        return self.count(f'search index={SPLUNK_INDEX} dryfire_file="{file_id}" {query.strip()}'), loaded
+        search = f'search index={SPLUNK_INDEX} dryfire_file="{file_id}" {query.strip()}'
+        if group_by:
+            search += "\n| stats count by " + " ".join(group_by)
+        return self.count(search), loaded
 
 
 # --- Kusto --------------------------------------------------------------------
@@ -453,7 +483,7 @@ def main():
                         events_cache[sample] = read_events(args.zircolite, sample, rule_path)
                     events = events_cache[sample]
                     if target == "splunk":
-                        got, loaded = splunk.run(query, sample, events)
+                        got, loaded = splunk.run(query, sample, events, correlation_group_by(rule_path))
                     else:
                         table = query.split()[0]
                         mapper = TABLE_MAPPERS[table]
