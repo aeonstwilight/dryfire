@@ -215,6 +215,16 @@ Milestone 5 is done when every rule converts to Elastic (or is declared unsuppor
 5. Correlation rule: convert `aws_secretsmanager_many_secrets_read` if the backend supports it; otherwise ask the owner about declaring it.
 6. README: an Elastic column in the rule table, and the validation note extended to Elastic.
 
+**Step 1 findings (2026-10-18):**
+
+- pySigma-backend-elasticsearch 2.1.1 (needs pySigma >=1.4,<2; we have 1.5.1): `ESQLBackend`, with correlation support (`count_distinct` per `date_trunc` bucket, fixed buckets like Splunk). Every rule converts as is, but the output isn't right yet (below).
+- Pipelines: `ecs_windows` (Winlogbeat 7+ ECS names; Sysmon fields to `process.*`, `file.*`, others to `winlog.event_data.*`). No CloudTrail pipeline: ours to write from Elastic's AWS integration (aws package 8.11.0 ingest pipeline: `eventName` → `event.action`, `eventSource` → `event.provider`, `userIdentity.type` → `aws.cloudtrail.user_identity.type`, `userIdentity.userName` → `user.name`, ...).
+- Engine: official Docker Hub image `elasticsearch:9.5.5` (2026-10-13), digest `sha256:33cae13fc18ef105e960cdd32327d402fbd7c6d4376c0b879ad703ee289d45d8`, runs on the free basic licence (Elastic License 2.0 binary). `docker.elastic.co` is blocked from the dev sandbox. Needs `cluster.routing.allocation.disk.threshold_enabled=false` on a nearly full disk.
+- Probed on 9.5.5:
+  - `==`, `like`, `starts_with`, `ends_with` are case-sensitive; the backend doesn't lower-case anything. `ecs_windows` maps `Image` etc. to `.caseless` sub-fields, which ignore case only when the condition is pushed down to Lucene (inside an `or` with a non-pushable condition the same match returned 0). `to_lower(field)` works every time.
+  - `rlike` is Lucene regex on the whole value: no `^`/`$`, no `(?i)`; `\s` works. The backend passes Sigma regexes through unchanged, so unanchored Sigma regexes don't match.
+  - The AWS integration stores `requestParameters` as Java `Map.toString()` text in `aws.cloudtrail.request_parameters` (`{bucketName=x, enable=false}`), not JSON; its structured copy is a `flattened` field, which ES|QL can't query ("Unknown column").
+
 **Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
 
 ## Milestone 6 (planned)
