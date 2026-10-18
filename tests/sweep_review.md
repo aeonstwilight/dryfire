@@ -70,7 +70,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | Date | Rule | Hits outside own samples | Notes |
 |---|---|---|---|
 | 2026-10-18 | aws_cloudtrail_logging_config_changed | 0 | Only its own samples: the Stratus Red Team `PutEventSelectors` that drops management events and the one restoring it 7 minutes later (Invictus), and `UpdateTrail` (Splunk). |
-| 2026-10-18 | aws_cloudtrail_logging_stopped_or_deleted | 7 | **Proposed labels, awaiting owner review.** Invictus: 2 × `DeleteTrail` by Terraform at 12:08:04 (two different trails, Stratus Red Team cleanup: correct, benign), 1 × failed `DeleteTrail` (`TrailNotFoundException`) by Stratus Red Team (attack simulation). Splunk: `DeleteTrail` by aws-cli in the `update_cloudtrail` dataset (attack simulation); 3 events in `delete_cloudwatch_log_group` are copies of the `stop_delete_cloudtrail` dataset's events (same `eventID`s; attack simulation). |
+| 2026-10-18 | aws_cloudtrail_logging_stopped_or_deleted | 7 | Labels confirmed by the owner. Invictus: 2 × `DeleteTrail` by Terraform at 12:08:04 (two different trails, Stratus Red Team cleanup: correct, benign), 1 × failed `DeleteTrail` (`TrailNotFoundException`) by Stratus Red Team (attack simulation). Splunk: `DeleteTrail` by aws-cli in the `update_cloudtrail` dataset (attack simulation); 3 events in `delete_cloudwatch_log_group` are copies of the `stop_delete_cloudtrail` dataset's events (same `eventID`s; attack simulation). |
 
 ## Limits of this review
 
