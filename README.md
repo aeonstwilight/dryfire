@@ -101,7 +101,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
 - **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
-- **M4 (in progress):** AWS CloudTrail detections
+- **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 
 ## Data sources
 

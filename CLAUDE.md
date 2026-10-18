@@ -145,7 +145,7 @@ Milestone 3 is done when every converted query runs on a real query engine in CI
 
 **Out of scope for M3:** Elastic, cloud rules (M4), real Sentinel/Defender/Splunk tenants, web UI.
 
-## Milestone 4 (current)
+## Milestone 4 (done)
 
 Milestone 4 is done when the AWS CloudTrail starter rules below are added and passing through the same pipeline as the Windows rules: lint, convert, test, coverage, noise sweep and validate.
 
