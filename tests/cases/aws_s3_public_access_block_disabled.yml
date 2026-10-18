@@ -1,0 +1,18 @@
+rule: rules/aws/defense_impairment/aws_s3_public_access_block_disabled.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1485): PutBucketPublicAccessBlock with all four protections false,
+  # just before a public bucket policy
+  - file: tests/data/external/aws/splunk-attack-data/T1485_decommissioned_buckets.jsonl
+    min_hits: 2
+  # Synthetic: bucket and account configuration deleted, BlockPublicPolicy false on a bucket,
+  # and a denied account-level change with IgnorePublicAcls false
+  - file: tests/data/samples/aws_s3_public_access_block_disabled_synthetic_positive.jsonl
+    min_hits: 4
+negative:
+  # Real (Splunk attack_data T1530): bucket ACL changes only, no Block Public Access calls
+  - file: tests/data/external/aws/splunk-attack-data/T1530_aws_s3_public_bucket.jsonl
+  # Synthetic: all four protections on (bucket and account), a Get call, and another S3
+  # setting written as "false" (MfaDelete)
+  - file: tests/data/samples/aws_s3_public_access_block_disabled_benign.jsonl

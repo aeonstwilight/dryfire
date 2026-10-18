@@ -32,6 +32,16 @@ transformations:
       requestParameters.ipPermissions.items:   # aws_security_group_ingress_open_to_internet
         - requestParameters.ipPermissions.items{}.ipRanges.items{}.cidrIp
         - requestParameters.ipPermissions.items{}.ipv6Ranges.items{}.cidrIpv6
+      # aws_s3_bucket_made_public: the ACL grant list's Grantee URIs
+      requestParameters.AccessControlPolicy.AccessControlList.Grant:
+        - requestParameters.AccessControlPolicy.AccessControlList.Grant{}.Grantee.URI
+      # aws_s3_bucket_made_public: these two are matched with a regex against
+      # the raw event JSON. The policy pattern needs Effect and Principal side
+      # by side, which Splunk's per-item fields can't give; the canned ACL may
+      # be one value or a list (x-amz-acl{}), and the backend can't run a regex
+      # on a field name containing {}. Both patterns only match their own text.
+      requestParameters.bucketPolicy.Statement: _raw
+      requestParameters.x-amz-acl: _raw
     rule_conditions:
       - type: logsource
         product: aws

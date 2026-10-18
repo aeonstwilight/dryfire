@@ -75,6 +75,19 @@ transformations:
       requestParameters.policyDocument: RequestParameters   # aws_iam_admin_policy_granted
       requestParameters.ipPermissions.items: RequestParameters  # aws_security_group_ingress_open_to_internet (contains)
       requestParameters.cidrIp: RequestParameters               # aws_security_group_ingress_open_to_internet (contains)
+      requestParameters.PublicAccessBlockConfiguration.BlockPublicAcls: RequestParameters  # aws_s3_public_access_block_disabled (re)
+      requestParameters.PublicAccessBlockConfiguration.IgnorePublicAcls: RequestParameters  # aws_s3_public_access_block_disabled (re)
+      requestParameters.PublicAccessBlockConfiguration.BlockPublicPolicy: RequestParameters  # aws_s3_public_access_block_disabled (re)
+      requestParameters.PublicAccessBlockConfiguration.RestrictPublicBuckets: RequestParameters  # aws_s3_public_access_block_disabled (re)
+      requestParameters.bucketPolicy.Statement: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.accessControlList.x-amz-grant-read: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.accessControlList.x-amz-grant-write: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.accessControlList.x-amz-grant-read-acp: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.accessControlList.x-amz-grant-write-acp: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.accessControlList.x-amz-grant-full-control: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.AccessControlPolicy.AccessControlList.Grant: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.AccessControlPolicy.AccessControlList.Grant.Grantee.URI: RequestParameters  # aws_s3_bucket_made_public
+      requestParameters.x-amz-acl: RequestParameters  # aws_s3_bucket_made_public
     rule_conditions:
       - type: logsource
         product: aws
