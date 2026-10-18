@@ -18,8 +18,10 @@ rules/               Sigma rules, grouped by platform and ATT&CK tactic
 tests/cases/         One test case per rule (positive and negative samples, expected hits)
 tests/data/          Small checked-in log samples; larger datasets fetched by script
 tests/run_tests.py   Runs every rule against its test case
+tests/run_sweep.py   Noise sweep over a large corpus, checked against a reviewed baseline
+tests/run_validate.py  Runs the converted SPL and KQL on Splunk and Kusto containers
 pipelines/           Custom pySigma processing pipelines / field mappings
-scripts/             convert.py, coverage.py, fetch_datasets.py
+scripts/             convert.py, coverage.py, fetch_datasets.py, engines.sh
 docs/rules/          Per-rule triage notes
 build/               Generated output (gitignored; published as CI artifacts)
 ```
@@ -32,10 +34,12 @@ On every push and pull request:
 2. **Convert:** each rule is converted to SPL and KQL; a conversion failure fails the build.
 3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
 4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
+5. **Noise sweep:** every rule runs over EVTX-ATTACK-SAMPLES and OTRF APT29; any change from the reviewed per-rule counts in `tests/sweep_baseline.yml` fails the build.
+6. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
 
-Converted queries and the coverage layer are uploaded as build artifacts.
+Converted queries, test and sweep reports and the coverage layer are uploaded as build artifacts.
 
-> **Note:** step 3 tests the Sigma logic, not the converted queries. Validating SPL and KQL against live backends is on the roadmap.
+> **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent` and `DeviceProcessEvents` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
 
 ## Rule coverage
 
@@ -76,13 +80,15 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/fetch_datasets.py   # pull test datasets
 make lint convert test coverage
+make sweep                         # noise sweep (~110 MB download)
+make engines-up validate engines-down   # needs Docker; ~11 GB of images
 ```
 
 ## Roadmap
 
 - **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
 - **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
-- **M3:** Validate converted queries against live backends (Splunk container, Azure Data Explorer)
+- **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
 - **M4:** AWS CloudTrail detections
 
 ## Data sources

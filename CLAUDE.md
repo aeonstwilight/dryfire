@@ -58,7 +58,7 @@ The Makefile should expose these targets:
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
 
-CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact.
+CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`.
 
 ## Milestone 1 (done, merged in PR #1)
 
@@ -119,7 +119,7 @@ Milestone 2 is done when CI enforces rule metadata, a noise sweep over a large c
 
 **Out of scope for M2:** the same as M1 (Elastic, cloud rules, live SIEM validation, web UI).
 
-## Milestone 3 (current)
+## Milestone 3 (done)
 
 Milestone 3 is done when every converted query runs on a real query engine in CI and returns the same hits as the Zircolite tests.
 
@@ -136,5 +136,11 @@ Milestone 3 is done when every converted query runs on a real query engine in CI
 2. Loader: put each rule's positive and negative test events into the engines. Splunk gets the source and field names the `splunk_windows` pipeline expects; the Kusto emulator gets `SecurityEvent` and `DeviceProcessEvents` tables built from Microsoft's published column lists. Field-to-column mapping is plain and documented, one table per target.
 3. `make validate`: run each rule's converted query on its own test events and compare the hit count with Zircolite's. Fail if a query errors or a count differs.
 4. CI job, plus a README note: this proves the queries run and match the Sigma logic on our loaded events, not that real Sentinel or Defender data looks exactly like them.
+
+**Notes from the build:**
+
+- Images pinned by digest in `scripts/engines.sh`: Splunk 10.6.0, and the Kusto emulator weekly production build of 2026-09-25.
+- Splunk loads events through the HTTP Event Collector; `tests/validate/splunk_app/` adds the `dryfire` index and `TRUNCATE = 0` for `_json`, so long events aren't cut.
+- The Kusto emulator accepts `EventID in~ ("4728", "4756")` on the integer column, so the split selections in `win_domain_admin_group_member_added` weren't needed. Kept as is (harmless).
 
 **Out of scope for M3:** Elastic, cloud rules (M4), real Sentinel/Defender/Splunk tenants, web UI.
