@@ -51,14 +51,15 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 The Makefile should expose these targets:
 
 - `make lint`: `sigma check` on all rules
-- `make convert`: SPL and KQL into `build/`
+- `make convert`: SPL, KQL and ES|QL into `build/`
 - `make test`: run `tests/run_tests.py`; non-zero exit on any failure
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
+- `make validate-elastic` (M5): run the converted ES|QL on the Elasticsearch container (`make elastic-up`); report in `build/validate/results_elastic.md`
 
-CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`.
+CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`.
 
 ## Milestone 1 (done, merged in PR #1)
 

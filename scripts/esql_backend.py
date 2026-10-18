@@ -1,4 +1,4 @@
-"""ES|QL backend for dryfire: pySigma-backend-elasticsearch's ESQLBackend with two fixes.
+r"""ES|QL backend for dryfire: pySigma-backend-elasticsearch's ESQLBackend with two fixes.
 
 The package's backend writes Sigma matches straight into ES|QL, but two things
 behave differently on Elasticsearch (checked on 9.5.5, see CLAUDE.md, M5):
@@ -7,6 +7,12 @@ behave differently on Elasticsearch (checked on 9.5.5, see CLAUDE.md, M5):
    `ends_with` and `in` don't. This backend writes every string match as
    `to_lower(field)` against the lower-cased value. Matches marked `|cased`
    keep their case.
+
+   Also for `like`: in a LIKE pattern a backslash escapes the next character,
+   so a literal backslash (C:\Users\) must be doubled there. The package's
+   backend doesn't, and Elasticsearch rejects `*\users\*`. This backend
+   writes LIKE patterns itself, doubling literal backslashes and escaping
+   literal * and ?.
 
 2. Regex. Sigma regexes search anywhere in the value (like Python's
    re.search). ES|QL `rlike` uses Lucene regex, which must match the WHOLE
@@ -27,7 +33,7 @@ behave differently on Elasticsearch (checked on 9.5.5, see CLAUDE.md, M5):
 
 from sigma.backends.elasticsearch import ESQLBackend
 from sigma.conversion.state import ConversionState
-from sigma.types import SigmaRegularExpression, SigmaRegularExpressionFlag
+from sigma.types import SigmaRegularExpression, SigmaRegularExpressionFlag, SigmaString, SpecialChars
 
 # Characters that are operators in Lucene regex but plain characters in Sigma's.
 LUCENE_ESCAPE = set('"#@&<>~')
@@ -126,6 +132,33 @@ def esql_string(text):
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def uses_like(value: SigmaString):
+    """True when the package's backend would write this value as a `like` match:
+    it has wildcards and isn't a plain starts-with or ends-with."""
+    if not value.contains_special():
+        return False
+    if value.endswith(SpecialChars.WILDCARD_MULTI) and not value[:-1].contains_special():
+        return False  # starts_with(...)
+    if value.startswith(SpecialChars.WILDCARD_MULTI) and not value[1:].contains_special():
+        return False  # ends_with(...)
+    return True
+
+
+def like_pattern(value: SigmaString):
+    """The value as an ES|QL LIKE pattern: wildcards as * and ?, literal \\ * ? escaped."""
+    out = []
+    for part in value.s:
+        if part == SpecialChars.WILDCARD_MULTI:
+            out.append("*")
+        elif part == SpecialChars.WILDCARD_SINGLE:
+            out.append("?")
+        elif isinstance(part, str):
+            out.append(part.replace("\\", "\\\\").replace("*", "\\*").replace("?", "\\?"))
+        else:
+            raise NotImplementedError(f"placeholder in value isn't supported: {value}")
+    return "".join(out)
+
+
 class DryfireESQLBackend(ESQLBackend):
     name = "dryfire ES|QL backend (case-insensitive strings, Lucene regex)"
 
@@ -148,6 +181,9 @@ class DryfireESQLBackend(ESQLBackend):
             self._lowercase = False
 
     def convert_condition_field_eq_val_str(self, cond, state):
+        if uses_like(cond.value):
+            field = f"to_lower({super().escape_and_quote_field(cond.field)})"
+            return f"{field} like {esql_string(like_pattern(cond.value).lower())}"
         return self._lowercased(super().convert_condition_field_eq_val_str, cond, state)
 
     def convert_condition_as_in_expression(self, cond, state):

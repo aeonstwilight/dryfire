@@ -18,6 +18,9 @@ Engines (start them with `scripts/engines.sh up`):
   - Splunk Enterprise container: SPL from build/spl/
   - Kusto emulator container: KQL from build/kql/sentinel/ and build/kql/defender/
     (the table a query reads is the first word of the query)
+  - Elasticsearch container (M5, `--engines elastic`, started with
+    `scripts/engines.sh up-elastic`): ES|QL from build/elastic/. How events are
+    loaded there is described in tests/validate_elastic.py.
 
 How events are loaded:
   - Splunk: every event as JSON (sourcetype _json) through the HTTP Event
@@ -89,6 +92,7 @@ from run_tests import DEFAULT_PIPELINES, count_hits  # noqa: E402
 from zircolite_cloudtrail import is_cloudtrail, jsonl_files  # noqa: E402
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from rule_file import correlation_group_by  # noqa: E402
+import validate_elastic  # noqa: E402
 
 RESULTS_FILE = Path("build/validate/results.md")
 ENV_FILE = Path("build/validate/engines.env")
@@ -102,9 +106,10 @@ KUSTO_DB = "NetDefaultDB"
 # Where each target's converted queries are. For KQL, the table a query reads
 # is the first word of the query.
 TARGETS = {
-    "splunk": {"dir": Path("build/spl"), "ext": ".spl"},
-    "sentinel": {"dir": Path("build/kql/sentinel"), "ext": ".kql"},
-    "defender": {"dir": Path("build/kql/defender"), "ext": ".kql"},
+    "splunk": {"dir": Path("build/spl"), "ext": ".spl", "engine": "splunk"},
+    "sentinel": {"dir": Path("build/kql/sentinel"), "ext": ".kql", "engine": "kusto"},
+    "defender": {"dir": Path("build/kql/defender"), "ext": ".kql", "engine": "kusto"},
+    "elastic": {"dir": Path("build/elastic"), "ext": ".esql", "engine": "elastic"},
 }
 
 # Column name -> Kusto type, from the backend's copy of Microsoft's schema.
@@ -444,12 +449,28 @@ def main():
     parser.add_argument("--zircolite", type=Path,
                         default=Path(os.environ.get("ZIRCOLITE", "tools/zircolite/Zircolite")))
     parser.add_argument("--rule", help="only validate this rule (file name without .yml)")
+    parser.add_argument("--engines", default="splunk,kusto",
+                        help="comma-separated engines to run: splunk, kusto, elastic (default: splunk,kusto; "
+                             "Elastic runs in its own CI job)")
     args = parser.parse_args()
+    engines = set(args.engines.split(","))
+    unknown = engines - {"splunk", "kusto", "elastic"}
+    if unknown:
+        raise SystemExit(f"Unknown engine(s): {', '.join(sorted(unknown))}")
 
-    password, hec_token = read_env()
-    splunk, kusto = Splunk(password, hec_token), Kusto()
-    splunk.setup()
-    kusto.setup()
+    # Only the selected engines are set up; targets on other engines are left out.
+    splunk = kusto = elastic = None
+    if "splunk" in engines:
+        splunk = Splunk(*read_env())
+        splunk.setup()
+    if "kusto" in engines:
+        kusto = Kusto()
+        kusto.setup()
+    if "elastic" in engines:
+        elastic = validate_elastic.Elastic(validate_elastic.read_password())
+        elastic.setup()
+    results_file = RESULTS_FILE if engines == {"splunk", "kusto"} else \
+        RESULTS_FILE.with_name(f"results_{'_'.join(sorted(engines))}.md")
 
     failures = 0
     report = ["| Rule | Target | Sample | Events loaded | Zircolite | Engine | Result |", "|---|---|---|---|---|---|---|"]
@@ -467,6 +488,8 @@ def main():
         print(f"\n{rule_path}")
 
         for target, info in TARGETS.items():
+            if info["engine"] not in engines:
+                continue
             query_file = info["dir"] / f"{name}{info['ext']}"
             if not query_file.exists():
                 print(f"  SKIP  {target}: no converted query (unsupported)")
@@ -484,6 +507,8 @@ def main():
                     events = events_cache[sample]
                     if target == "splunk":
                         got, loaded = splunk.run(query, sample, events, correlation_group_by(rule_path))
+                    elif target == "elastic":
+                        got, loaded = elastic.run(query, sample, events, correlation_group_by(rule_path))
                     else:
                         table = query.split()[0]
                         mapper = TABLE_MAPPERS[table]
@@ -503,13 +528,13 @@ def main():
                 print(f"  {result:5} {target}: {sample.name}: {detail}")
                 report.append(f"| {name} | {target} | {sample.name} | {loaded} | {expected} | {got} | {result} |")
 
-    RESULTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS_FILE.write_text("\n".join(report) + "\n", encoding="utf-8")
+    results_file.parent.mkdir(parents=True, exist_ok=True)
+    results_file.write_text("\n".join(report) + "\n", encoding="utf-8")
     print()
     if failures:
-        print(f"{failures} check(s) failed. See {RESULTS_FILE}.")
+        print(f"{failures} check(s) failed. See {results_file}.")
         return 1
-    print(f"All converted queries match Zircolite. See {RESULTS_FILE}.")
+    print(f"All converted queries match Zircolite. See {results_file}.")
     return 0
 
 

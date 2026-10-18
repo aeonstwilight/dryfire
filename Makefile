@@ -25,7 +25,7 @@ endif
 ZIRCOLITE_ZIP := Zircolite-$(ZIRCOLITE_VERSION)-$(ZIRCOLITE_PLATFORM).zip
 ZIRCOLITE_URL := https://github.com/wagga40/Zircolite/releases/download/v$(ZIRCOLITE_VERSION)/$(ZIRCOLITE_ZIP)
 
-.PHONY: all lint convert test coverage datasets sweep sweep-datasets validate engines-up engines-down zircolite clean
+.PHONY: all lint convert test coverage datasets sweep sweep-datasets validate engines-up engines-down validate-elastic elastic-up elastic-down zircolite clean
 
 all: lint convert test coverage
 
@@ -73,6 +73,19 @@ engines-up:
 
 engines-down:
 	scripts/engines.sh down
+
+# M5: run the converted ES|QL on Elasticsearch and compare with Zircolite.
+# Needs Docker and Elasticsearch running (make elastic-up). Report in
+# build/validate/results_elastic.md.
+validate-elastic: convert datasets $(ZIRCOLITE)
+	$(PYTHON) tests/run_validate.py --rules-dir $(RULES) --zircolite $(ZIRCOLITE) --engines elastic
+
+# Start / stop the Elasticsearch container (scripts/engines.sh).
+elastic-up:
+	scripts/engines.sh up-elastic
+
+elastic-down:
+	scripts/engines.sh down-elastic
 
 zircolite: $(ZIRCOLITE)
 
