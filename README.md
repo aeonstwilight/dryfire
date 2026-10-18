@@ -89,12 +89,14 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M1 (done):** Ten tested Windows rules, SPL and KQL output, coverage layer, CI pipeline
 - **M2 (done):** Noise sweep over a larger corpus with a reviewed baseline that CI checks; stricter rule metadata checks; nine more rules
 - **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
-- **M4:** AWS CloudTrail detections
+- **M4 (in progress):** AWS CloudTrail detections
 
 ## Data sources
 
 - [EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES): Windows event logs mapped to ATT&CK
 - [OTRF Security Datasets](https://github.com/OTRF/Security-Datasets): recorded attack and benign telemetry
+- [Invictus IR Sigma-AWS](https://github.com/invictus-ir/Sigma-AWS) (MIT, Copyright (c) 2023 Invictus Incident Response): the `CloudTrail/` dataset, Stratus Red Team AWS techniques recorded in a test account. Only the data is used, not the repo's Sigma rules.
+- [Splunk Attack Data](https://github.com/splunk/attack_data) (Apache 2.0): per-technique AWS CloudTrail datasets
 
 ## How this was built
 

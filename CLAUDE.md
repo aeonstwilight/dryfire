@@ -16,7 +16,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 
 - **All rules are original.** Do not copy rules from SigmaHQ or anywhere else. If the owner explicitly chooses to adapt a SigmaHQ rule, credit it in `author` and `references` (Detection Rule License requires attribution).
 - **No employer material.** Never reproduce detections, queries, field names, hostnames, or anything else from the owner's former employers. If something looks like it came from a work environment, stop and ask.
-- **No secrets or real environment data** in the repo. Test data comes only from public datasets (EVTX-ATTACK-SAMPLES, OTRF Security Datasets) or is synthetic.
+- **No secrets or real environment data** in the repo. Test data comes only from public datasets (EVTX-ATTACK-SAMPLES, OTRF Security Datasets, and for AWS: the `CloudTrail/` data folder of Invictus IR Sigma-AWS and the AWS datasets in Splunk attack_data, owner decision 2026-10-18) or is synthetic. From Invictus IR Sigma-AWS use only the data, never its Sigma rules.
 - **Public tools only.** Build the pipeline only from public tools (pySigma, sigma-cli, Zircolite, GitHub Actions, Make). Don't model the CI, repo structure or tooling on any employer's internal detection-as-code pipeline.
 - **ATT&CK is the only framework mapping.** Do not add NIST 800-53, FedRAMP or any other compliance-control mapping: no control tags in rules, no control fields in test cases or triage notes, no control columns in reports or coverage output.
 - **No document generation.** Don't add features that generate compliance, audit or customer-facing documents from the rules. The per-rule triage notes are hand-written Markdown, and `build/` holds only build reports (conversion summary, test results, Navigator layer).
@@ -144,3 +144,29 @@ Milestone 3 is done when every converted query runs on a real query engine in CI
 - The Kusto emulator accepts `EventID in~ ("4728", "4756")` on the integer column, so the split selections in `win_domain_admin_group_member_added` weren't needed. Kept as is (harmless).
 
 **Out of scope for M3:** Elastic, cloud rules (M4), real Sentinel/Defender/Splunk tenants, web UI.
+
+## Milestone 4 (current)
+
+Milestone 4 is done when the AWS CloudTrail starter rules below are added and passing through the same pipeline as the Windows rules: lint, convert, test, coverage, noise sweep and validate.
+
+**Owner decisions (2026-10-18):**
+
+- Test data: Invictus IR Sigma-AWS (`CloudTrail/` folder only, MIT, pinned commit) and Splunk attack_data AWS datasets (Apache 2.0, pinned commit, files fetched from Git LFS and checked against their published SHA-256), plus OTRF's two AWS datasets. flaws.cloud logs left out (licence not confirmed).
+- Conversion targets: Splunk (CloudTrail sourcetype from the AWS add-on) and Sentinel (`AWSCloudTrail` table). Defender has no CloudTrail table, so it's declared unsupported.
+- Validation: the M3 `validate` job also loads CloudTrail events into Splunk and an `AWSCloudTrail` table in the Kusto emulator.
+
+**Build order:**
+
+1. Check current docs for: how Zircolite reads CloudTrail files (`{"Records": [...]}`) and flattens nested fields (`userIdentity.type`); the Splunk sourcetype and field names; the `AWSCloudTrail` columns and any pySigma pipeline for them.
+2. Pipeline: fetch and pin the datasets, CloudTrail support in conversion (custom pipelines in `pipelines/` where needed), tests, sweep corpus and validation loader.
+3. Starter rules, one at a time, same process as before (owner confirms logic; rule, test case and triage note; must pass sweep and validate):
+   1. CloudTrail logging stopped, deleted or its event selectors changed
+   2. Root account console login
+   3. IAM access key created for another user
+   4. Admin-level policy attached to a user or role
+   5. Security group opened to 0.0.0.0/0 or ::/0
+   6. S3 bucket made public (bucket policy or ACL)
+   7. GuardDuty detector deleted or disabled
+   8. Unusual volume of Secrets Manager `GetSecretValue` calls
+
+**Out of scope for M4:** Elastic, other clouds (Azure, GCP), real AWS accounts, web UI.
