@@ -67,6 +67,7 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
 | [AWS CloudTrail Trail Configuration or Event Selectors Changed](docs/rules/aws_cloudtrail_logging_config_changed.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ |
 | [AWS Root Account Console Login](docs/rules/aws_root_console_login.md) | Initial Access, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
+| [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ |
 
 ## Adding a rule
 

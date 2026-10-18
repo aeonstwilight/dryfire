@@ -91,3 +91,7 @@ aws_root_console_login:
   aws-invictus: 0
   aws-splunk-attack-data: 24
   aws-otrf: 0
+aws_root_access_key_used:
+  aws-invictus: 0
+  aws-splunk-attack-data: 0
+  aws-otrf: 0

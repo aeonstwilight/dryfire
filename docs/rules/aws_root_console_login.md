@@ -21,7 +21,7 @@ CloudTrail `ConsoleLogin` events where `userIdentity.type` is `Root`, whatever t
 
 Not covered:
 
-- **Root use without the console:** root access keys used with the API or CLI never create a `ConsoleLogin`. A separate rule for root API use is planned.
+- **Root use without the console:** root access keys used with the API or CLI never create a `ConsoleLogin`. See [AWS Root Account Access Key Used](aws_root_access_key_used.md).
 - **Organization member accounts with root access centralised** (no root credentials to sign in with): nothing to detect there.
 - **Sign-ins by IAM users or federated roles**, even highly privileged ones.
 

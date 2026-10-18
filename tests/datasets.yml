@@ -239,3 +239,12 @@ datasets:
     path: aws/splunk-attack-data-raw/T1078_aws_createloginprofile/aws_cloudtrail_events.json
     jsonl: aws/splunk-attack-data/T1078_aws_createloginprofile.jsonl
     sha256: 6825bd4e351d0bec876dd146dd0731c27b99b571c88cb6fea91dd0d447810d52
+  # aws_root_access_key_used
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1201/aws_password_policy/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1201_aws_password_policy/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1201_aws_password_policy.jsonl
+    sha256: cbd662c0a3a1f45d19c6bcc2d94dfde621111507bec87328aab8e6fdae3e10d6
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1621/aws_mfa_disabled/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1621_aws_mfa_disabled/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1621_aws_mfa_disabled.jsonl
+    sha256: e2c27d7f359285c133610b966062534315ca9dddd9aa383172ace47a5da3f34a
