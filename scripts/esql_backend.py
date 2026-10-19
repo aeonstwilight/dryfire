@@ -35,6 +35,10 @@ from sigma.backends.elasticsearch import ESQLBackend
 from sigma.conversion.state import ConversionState
 from sigma.types import SigmaRegularExpression, SigmaRegularExpressionFlag, SigmaString, SpecialChars
 
+# ECS fields of type ip (Elastic rejects to_lower() on them, and string
+# comparisons with values that aren't IPs, such as "-"; checked on 9.5.5).
+IP_FIELDS = {"source.ip", "destination.ip", "client.ip", "server.ip", "host.ip", "related.ip"}
+
 # Characters that are operators in Lucene regex but plain characters in Sigma's.
 LUCENE_ESCAPE = set('"#@&<>~')
 
@@ -167,7 +171,12 @@ class DryfireESQLBackend(ESQLBackend):
 
     def escape_and_quote_field(self, field_name):
         field = super().escape_and_quote_field(field_name)
-        return f"to_lower({field})" if self._lowercase else field
+        if not self._lowercase:
+            return field
+        # IP fields (ECS type ip) must become text first: to_lower() only takes strings.
+        if field_name in IP_FIELDS:
+            field = f"to_string({field})"
+        return f"to_lower({field})"
 
     def convert_value_str(self, s, state):
         value = super().convert_value_str(s, state)

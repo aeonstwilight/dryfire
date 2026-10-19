@@ -314,3 +314,13 @@ datasets:
     path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.json
     jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.jsonl
     sha256: 7db0ceb54599584f166a8413d5f17152c98bba275eaa3602f76b53b3255ad674
+  # win_password_spray_from_one_source (real negatives: 2 Kerberos failures, one local failure, network logons)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Command%20and%20Control/DE_RDP_Tunneling_4624.evtx
+    path: evtx-attack-samples/DE_RDP_Tunneling_4624.evtx
+    sha256: 2668d3d7f0505ad453affcb9e2b7206617cf1ec1e5a212bd8f191eb8523c0ab1
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/CA_4624_4625_LogonType2_LogonProc_chrome.evtx
+    path: evtx-attack-samples/CA_4624_4625_LogonType2_LogonProc_chrome.evtx
+    sha256: 75f199b68d473172705bf874720b01820317fdd7aa4843545c98720dd6de197f
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/kerberos_pwd_spray_4771.evtx
+    path: evtx-attack-samples/kerberos_pwd_spray_4771.evtx
+    sha256: 4a0a1c7132e216dbc704c806e9429df9ae3ac00485d5238e50c776e3099ae11d

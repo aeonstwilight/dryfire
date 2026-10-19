@@ -69,3 +69,11 @@ aws_iam_admin_policy_granted:
     field ES|QL can't read). The rule's policyArn and policyDocument regexes are
     written for a value or JSON text, not key=value text. Owner decision,
     2026-10-18.
+win_password_spray_from_one_source:
+  sentinel: >-
+    A Sigma correlation rule (value_count). pySigma-backend-kusto 1.0.1 doesn't
+    convert correlation rules. Owner decision, 2026-10-19.
+  defender: >-
+    A Sigma correlation rule (value_count). pySigma-backend-kusto 1.0.1 doesn't
+    convert correlation rules (the same backend as Sentinel). Owner decision,
+    2026-10-19.
