@@ -111,6 +111,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
+- **M7 (planned):** 6–8 rules for current coverage gaps (Windows impact and credential access, AWS), and a robustness check of every rule against attacker-style changes to its samples
 
 ## Data sources
 

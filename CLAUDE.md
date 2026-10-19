@@ -252,3 +252,48 @@ More detections on the current pipeline (owner decision, 2026-10-18): the AWS fo
 - `aws_s3_bucket_policy_cross_account_access` (2026-10-19): an Allow plus a whole-account principal (root ARN or bare 12-digit ID), not tied to the same statement; a grant to the bucket's own account root also matches (Sigma can't compare the ID in the policy with `recipientAccountId`); single roles/users in other accounts are not covered. Medium, T1537. Patterns accept `:`/`=` and optional quotes so they work on JSON, Zircolite's text and Elastic's `Map.toString()` text (owner decision); `"AWS"` must be a whole key so `AWS:SourceAccount` conditions don't match.
 - `win_password_spray_from_one_source` (2026-10-19): correlation over two base rules (4625 SubStatus 0xc000006a/0xc0000064, 4771 Status 0x18; local/loopback sources excluded), 10+ distinct `TargetUserName` per `IpAddress` in 30 minutes, medium, T1110.003. Synthetic positives only (no public spray above the threshold in the corpus). Sentinel and Defender declared (no correlation support). On Elastic `IpAddress` is `source.ip`, an ip field: our backend writes `to_lower(to_string(source.ip))`, the loader stores it as type ip, and Elastic stores `::ffff:a.b.c.d` as `a.b.c.d`, so NTLM and Kerberos failures from one host are counted together there but apart elsewhere (samples avoid that mix). Validate now gives Windows events their `SystemTime` as Splunk's `_time` (test index retention raised to 50 years), and puts the per-sample filter inside each `multisearch` search.
 - `win_brute_force_one_account_from_one_source` (2026-10-19): replaces "brute force followed by a successful logon". Sigma correlations that chain an `event_count` into a `temporal` sequence don't convert (Splunk puts `stats` inside `multisearch`; ES|QL nests a query in `eval case`), and neither backend has `temporal_ordered`. So: `event_count` of 10+ wrong-password failures (4625 0xc000006a, 4771 0x18) per `TargetUserName` and `IpAddress` in 30 minutes, medium, T1110.001; the success check is the first triage step (owner decision). Synthetic positives; Sentinel and Defender declared.
+
+## Milestone 7 (planned)
+
+Milestone 7 is done when 6–8 new rules covering current gaps pass the full pipeline, and a robustness check reports, for every rule, which attacker-style changes to its positive samples it still catches.
+
+**Owner decisions (2026-10-19):**
+
+- Two parts: coverage rules first, then robustness testing.
+- 6–8 rules, chosen from the step 1 shortlist below. Each one goes through the usual process (owner confirms logic; rule, test case and triage note; must pass sweep and validate).
+- Side task: a dependency drift check (below), independent of the rest.
+
+**Part A: coverage rules**
+
+1. Data check: which candidates have positives in the allowed datasets at the pinned commits (done, findings below).
+2. The owner picks the shortlist.
+3. Rules one at a time, same process as before.
+
+**Step 1 findings (2026-10-19):** counts are matching events found by a rough scan, not rule hits.
+
+- Windows, with public positives:
+  - Inhibit system recovery (`vssadmin delete shadows`, `wbadmin delete catalog`, `bcdedit ... recoveryenabled no` / `bootstatuspolicy`): EVTX `PanacheSysmon_vs_AtomicRedTeam01` (Sysmon 1). No other hits in the corpus. T1490, first `impact` rule.
+  - DCSync (4662 with the replication GUIDs `1131f6aa-…`, `1131f6ad-…`, `89e95b76-…`): EVTX `CA_DCSync_4662` (Administrator), OTRF `empire_dcsync_…` and `covenant_dcsync_…` (pgustavo). In the sweep only DC machine accounts (`DC1$`, `NEWYORK$`), which a `$` exclusion removes.
+  - SAM/SECURITY hive and NTDS.dit dumping (`reg save hklm\sam|security|system`, `ntdsutil ifm`, `esentutl /vss`, copy from a shadow copy): OTRF `cmd_dumping_ntds_dit_file_ntdsutil`, `cmd_dumping_ntds_dit_file_volume_shadow_copy`, `cmd_sam_copy_esentutl`, `empire_shell_reg_dump_sam`, plus Panache.
+  - WMI event subscription (Sysmon 19/20/21): EVTX `sysmon_20_21_1_CommandLineEventConsumer`, `wmighost_sysmon_20_21_1`, Panache; OTRF `empire_wmi_local_event_subscriptions_elevated_user`, `covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers`. Sentinel/Defender would be declared (Sysmon other than process creation).
+  - Run-key persistence (Sysmon 13): positives in OTRF `empire_persistence_registry_modification_run_keys_*` and Panache, but the sweep has benign writes (`MsMpEng.exe` `…\Run\WindowsDefender`, Teams), so it needs an allow-list or a value-content condition.
+- Windows, synthetic positives only:
+  - Kerberoasting (4769 RC4 `0x17`): no 0x17 ticket anywhere in the corpus or candidate files.
+  - Defender tampering (`Set-MpPreference`/`Add-MpPreference -Exclusion…`, `DisableRealtimeMonitoring`): no command-line hits; the only registry hits are `MsMpEng.exe` itself writing exclusions in APT29 (benign for this purpose).
+- AWS (event counts across the downloaded AWS corpus):
+  - KMS key disabled or scheduled for deletion: `ScheduleKeyDeletion` 1, `DisableKey` 1 (attack_data `T1486/aws_kms_key`).
+  - IAM user console login without MFA: `ConsoleLogin` by `IAMUser`, success, `MFAUsed=No`: 5; with MFA: 1. Uses `additionalEventData.MFAUsed`, which needs a Sentinel/Elastic mapping decision.
+  - MFA device deactivated or deleted: `DeactivateMFADevice` 2, `DeleteVirtualMFADevice` 2.
+  - EBS snapshot or AMI shared (public or another account): `ModifySnapshotAttribute` 11, `ModifyImageAttribute` 6. Matches inside `requestParameters`, so Sentinel/Elastic need the per-rule design used before.
+  - Also available: `SendCommand` 3 (SSM), `PutBucketVersioning` 2, `ModifyInstanceAttribute` 2 (EC2 user data), `CreateLoginProfile` 9 / `UpdateLoginProfile` 2.
+
+**Part B: robustness testing**
+
+1. A variants file (`tests/variants.yml`) lists the changes to try per field, each one valid for that field: case changes, `^` carets and extra quotes in `cmd` command lines, extra spaces, `/` vs `-` flags, PowerShell parameter abbreviations (`-enc`, `-EncodedCommand`, `-e`), renamed or moved binaries. The owner decides which changes apply to which rules.
+2. `make robustness`: takes each rule's positive events, writes the changed copies (synthetic, from public samples), runs Zircolite and reports per rule and change whether the rule still fires, in `build/robustness/`. Report-only at first.
+3. The owner reviews the report: a miss is either tuned (with sign-off on the logic change) or accepted and written in the triage note. Then the reviewed results become a baseline that CI checks, as for the sweep.
+
+**Side task: dependency drift check**
+
+- A scheduled GitHub Actions workflow (weekly, plus manual run) installs the newest pySigma, sigma-cli, backends and pipelines, and the newest Zircolite release, then runs `make all` and `make sweep`. Engine images are a second step.
+- Report-only: it never changes pins in the repo. A red run means a newer version changes results; pins are moved by hand after review.
