@@ -242,9 +242,9 @@ Milestone 5 is done when every rule converts to Elastic (or is declared unsuppor
 
 **Out of scope for M5:** new rules (M6, or slotted in between with the owner's say), other clouds, Elastic Cloud or any real tenant, Kibana detection-rule import, web UI.
 
-## Milestone 6 (current)
+## Milestone 6 (done)
 
-More detections on the current pipeline (owner decision, 2026-10-18): the AWS follow-ups (network ACL opened, cross-account S3 bucket policy) and Windows correlation rules (password spray, brute force followed by a successful logon). Each rule follows the usual process; the owner confirms the logic first.
+More detections on the current pipeline (owner decision, 2026-10-18): the AWS follow-ups (network ACL opened, cross-account S3 bucket policy) and Windows correlation rules (password spray, brute force followed by a successful logon). Each rule follows the usual process; the owner confirms the logic first. Done 2026-10-19: four rules (the brute-force rule without the "followed by success" part, see below); 35 rules in all.
 
 **Rule notes:**
 
