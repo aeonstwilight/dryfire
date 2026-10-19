@@ -1,0 +1,43 @@
+title: AWS Network ACL Inbound Rule Opened to the Internet
+id: adf32fdf-41db-42e3-a5ad-ebfd690496ff
+status: experimental
+description: |
+    Detects a network ACL entry that allows inbound traffic from anywhere
+    (0.0.0.0/0 or ::/0), created or replaced, on any port or protocol.
+    Network ACLs filter whole subnets, so this opens every instance in the
+    subnet as far as the ACL is concerned. Failed calls are included on
+    purpose.
+author: aeonstwilight
+date: 2026-10-19
+references:
+    - https://attack.mitre.org/techniques/T1686/001/
+    - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkAclEntry.html
+    - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ReplaceNetworkAclEntry.html
+    - https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html
+tags:
+    - attack.defense-impairment
+    - attack.t1686.001
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_call:
+        eventSource: ec2.amazonaws.com
+        eventName:
+            - CreateNetworkAclEntry
+            - ReplaceNetworkAclEntry
+    selection_allow:
+        requestParameters.ruleAction|contains: allow
+    selection_inbound:
+        # egress is a boolean: "false" as a field value, "egress": false in
+        # Sentinel's JSON text, egress=false in Elastic's Map.toString() text.
+        # It is the only boolean in these requests.
+        requestParameters.egress|re: '(^|[:=]\s*)false'
+    selection_anywhere:
+        - requestParameters.cidrBlock|contains: '0.0.0.0/0'
+        - requestParameters.ipv6CidrBlock|contains: '::/0'
+    condition: selection_call and selection_allow and selection_inbound and selection_anywhere
+falsepositives:
+    - Public subnets for internet-facing load balancers or web servers, where the ACL deliberately allows inbound traffic and security groups do the filtering
+    - Infrastructure-as-code recreating an ACL's intended entries
+level: medium

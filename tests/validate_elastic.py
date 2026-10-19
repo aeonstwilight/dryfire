@@ -28,7 +28,9 @@ build/validate/elastic.env (written by engines.sh).
 """
 
 import base64
+import ipaddress
 import json
+import re
 import urllib.error
 import urllib.request
 import uuid
@@ -48,7 +50,9 @@ WINDOWS_STREAMS = {
 }
 CLOUDTRAIL_STREAM = "logs-aws.cloudtrail-dryfire"
 
-WINDOWS_COMMON = {"EventID": "event.code", "Channel": "winlog.channel", "Provider_Name": "winlog.provider_name"}
+WINDOWS_COMMON = {"EventID": "event.code", "Channel": "winlog.channel", "Provider_Name": "winlog.provider_name",
+                  # Security logon events (4624, 4625, 4771): the source address, an ip field in ECS
+                  "IpAddress": "source.ip"}
 # Sysmon event ID -> fields that Elastic keeps in ECS fields (the same names the
 # ecs_windows pipeline converts rule fields to); other fields stay in winlog.event_data.
 SYSMON_ECS = {
@@ -82,7 +86,9 @@ INDEX_TEMPLATE = {
             "date_detection": False,
             "numeric_detection": False,
             "dynamic_templates": [{"strings": {"match_mapping_type": "string", "mapping": {"type": "keyword"}}}],
-            "properties": {"@timestamp": {"type": "date"}},
+            # source.ip is an ip field, as in the integrations (values that
+            # aren't IPs, such as "-", are left out when loading)
+            "properties": {"@timestamp": {"type": "date"}, "source": {"properties": {"ip": {"type": "ip"}}}},
         },
     },
 }
@@ -129,9 +135,20 @@ def to_document(event):
     for field, value in event.items():
         if value in (None, ""):
             continue
-        doc[ecs.get(field, f"winlog.event_data.{field}")] = str(value)
+        target = ecs.get(field, f"winlog.event_data.{field}")
+        if target == "source.ip" and not is_ip(value):
+            continue  # "-" for local logons: an ip field can't hold it
+        doc[target] = str(value)
     doc["@timestamp"] = iso_time(event.get("SystemTime") or event.get("UtcTime"))
     return stream, doc
+
+
+def is_ip(value):
+    try:
+        ipaddress.ip_address(str(value))
+        return True
+    except ValueError:
+        return False
 
 
 def iso_time(value):
@@ -203,12 +220,17 @@ class Elastic:
 
     def run(self, query, sample, events, group_by=None):
         """Return (hit count, number of documents loaded for this sample)."""
-        if group_by:
-            raise RuntimeError("correlation rules aren't loaded into Elasticsearch yet")
         file_id, loaded = self.load(sample, events)
         # Limit the query to this sample: the first part is `from <streams> metadata ...`.
         source, rest = query.strip().split(" | ", 1)
-        esql = f'{source} | where dryfire_file == "{file_id}" | {rest} | stats count = count()'
+        esql = f'{source} | where dryfire_file == "{file_id}" | {rest}'
+        if group_by:
+            # A correlation query returns one row per time bucket and group over
+            # the threshold; count the distinct groups (the converted field
+            # names are in its `stats ... by timebucket, <fields>` line).
+            fields = re.search(r"by timebucket, (.+)$", rest, flags=re.M).group(1)
+            esql += f" | stats rows = count() by {fields}"
+        esql += " | stats count = count()"
         result = self._call("POST", "/_query", {"query": esql})
         return int(result["values"][0][0]), loaded
 

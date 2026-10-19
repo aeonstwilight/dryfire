@@ -63,5 +63,5 @@ transformations:
         fields:
           - '^(event\.code|winlog\.channel|winlog\.provider_name)$'
           - '^(process\.executable|process\.command_line|process\.pe\.original_file_name)$'
-          - '^(process\.parent\.executable|file\.name)$'
+          - '^(process\.parent\.executable|file\.name|source\.ip)$'
           - '^winlog\.event_data\.[A-Za-z0-9_]+$'

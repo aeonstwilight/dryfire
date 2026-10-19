@@ -1,0 +1,20 @@
+rule: rules/aws/exfiltration/aws_s3_bucket_policy_cross_account_access.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team S3 backdoor bucket policy): GetObject and ListBucket
+  # granted to another account's root
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
+    min_hits: 1
+  # Synthetic: a bare account ID, another account's root in a list of principals (Principal
+  # before Effect), and a denied attempt
+  - file: tests/data/samples/aws_s3_bucket_policy_cross_account_access_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Splunk attack_data): a public Principal "*" policy (T1485) and CloudTrail log-bucket
+  # policies for the cloudtrail.amazonaws.com service (T1562.008)
+  - file: tests/data/external/aws/splunk-attack-data/T1485_decommissioned_buckets.jsonl
+  - file: tests/data/external/aws/splunk-attack-data/T1562.008_update_cloudtrail.jsonl
+  # Synthetic: a service principal with an AWS:SourceAccount condition, a single role in another
+  # account, a Deny with no Allow, a public policy, and Get/DeleteBucketPolicy
+  - file: tests/data/samples/aws_s3_bucket_policy_cross_account_access_benign.jsonl

@@ -201,6 +201,14 @@ def cloudtrail_epoch(event_time):
     return datetime.fromisoformat(event_time.replace("Z", "+00:00")).timestamp()
 
 
+def windows_epoch(system_time):
+    """A Windows event's SystemTime (2026-10-17T12:00:00.000Z) as Unix seconds, or None."""
+    try:
+        return datetime.fromisoformat(str(system_time).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
 def is_cloudtrail_event(event):
     return "eventVersion" in event and "eventSource" in event
 
@@ -367,10 +375,13 @@ class Splunk:
                 source, sourcetype, data = mapped
                 data = {"dryfire_file": file_id, **data}
                 hec_event = {"index": SPLUNK_INDEX, "source": source, "sourcetype": sourcetype, "event": data}
+                # Splunk's _time is the event's own time (CloudTrail eventTime, as with
+                # the AWS add-on; Windows SystemTime, as with the Windows add-on);
+                # correlation rules bucket events by _time.
                 if sourcetype == "aws:cloudtrail":
-                    # Splunk's _time is the record's eventTime, as with the AWS add-on;
-                    # correlation rules bucket events by _time.
                     hec_event["time"] = cloudtrail_epoch(data["eventTime"])
+                elif windows_epoch(data.get("SystemTime")) is not None:
+                    hec_event["time"] = windows_epoch(data.get("SystemTime"))
                 batch.append(json.dumps(hec_event))
         for i in range(0, len(batch), 500):
             self._post(f"{SPLUNK_HEC}/services/collector/event", "".join(batch[i:i + 500]).encode(),
@@ -393,7 +404,13 @@ class Splunk:
         of distinct groups, the same as run_tests.py counts with Zircolite.
         """
         file_id, loaded = self.load(sample, events)
-        search = f'search index={SPLUNK_INDEX} dryfire_file="{file_id}" {query.strip()}'
+        only_this_sample = f'index={SPLUNK_INDEX} dryfire_file="{file_id}"'
+        if query.lstrip().startswith("| multisearch"):
+            # A correlation over several rules: multisearch must come first, so
+            # the filter goes into each of its searches instead.
+            search = query.strip().replace("[ search ", f"[ search {only_this_sample} ")
+        else:
+            search = f"search {only_this_sample} {query.strip()}"
         if group_by:
             search += "\n| stats count by " + " ".join(group_by)
         return self.count(search), loaded

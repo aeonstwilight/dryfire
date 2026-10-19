@@ -49,6 +49,8 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | Rule | Tactic | Technique | SPL | KQL | ES\|QL | Tested |
 |------|--------|-----------|-----|-----|--------|--------|
 | [LSASS Process Opened With Memory Read Access](docs/rules/win_lsass_memory_access.md) | Credential Access | T1003.001 | ✅ | — | ✅ | ✅ |
+| [Windows Password Spray From One Source](docs/rules/win_password_spray_from_one_source.md) | Credential Access | T1110.003 | ✅ | — | ✅ | ✅ |
+| [Windows Brute Force Against One Account From One Source](docs/rules/win_brute_force_one_account_from_one_source.md) | Credential Access | T1110.001 | ✅ | — | ✅ | ✅ |
 | [PowerShell Launched With Encoded or Base64-Decoded Command](docs/rules/win_powershell_encoded_command.md) | Execution, Stealth | T1059.001, T1027.010 | ✅ | ✅ | ✅ | ✅ |
 | [Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action](docs/rules/win_scheduled_task_suspicious_action.md) | Persistence, Execution | T1053.005 | ✅ | Sentinel only | ✅ | ✅ |
 | [Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path](docs/rules/win_service_install_suspicious_image_path.md) | Persistence, Privilege Escalation, Execution | T1543.003, T1569.002 | ✅ | — | ✅ | ✅ |
@@ -74,8 +76,10 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | — | ✅ |
 | [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | — | ✅ |
 | [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS Network ACL Inbound Rule Opened to the Internet](docs/rules/aws_network_acl_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS S3 Block Public Access Removed or Weakened](docs/rules/aws_s3_public_access_block_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | — | ✅ |
+| [AWS S3 Bucket Policy Grants Access to a Whole AWS Account](docs/rules/aws_s3_bucket_policy_cross_account_access.md) | Exfiltration | T1537 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS Secrets Manager Many Distinct Secrets Read by One Identity](docs/rules/aws_secretsmanager_many_secrets_read.md) | Credential Access | T1555.006 | ✅ | — | — | ✅ |
@@ -106,7 +110,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M3 (done):** Validate converted queries on real query engines (Splunk container, Kusto emulator)
 - **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
-- **M6 (planned):** More detections, including AWS follow-ups and Windows correlation rules
+- **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
 
 ## Data sources
 

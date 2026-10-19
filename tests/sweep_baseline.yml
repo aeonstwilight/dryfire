@@ -127,3 +127,19 @@ aws_secretsmanager_many_secrets_read:
   aws-invictus: 1
   aws-splunk-attack-data: 0
   aws-otrf: 0
+aws_network_acl_ingress_open_to_internet:
+  aws-invictus: 0
+  aws-splunk-attack-data: 10
+  aws-otrf: 0
+aws_s3_bucket_policy_cross_account_access:
+  aws-invictus: 1
+  aws-splunk-attack-data: 0
+  aws-otrf: 0
+win_password_spray_from_one_source:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
+win_brute_force_one_account_from_one_source:
+  evtx-attack-samples: 0
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

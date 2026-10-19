@@ -1,0 +1,21 @@
+rule: rules/windows/credential_access/win_brute_force_one_account_from_one_source.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+# A correlation rule: hits are the (account, source address) pairs over the threshold
+# (see detection_hits in run_tests.py). No public dataset in the corpus has a burst above
+# the threshold, so the positives are synthetic (owner decision, 2026-10-19).
+pipelines: [windows-logsources]
+positive:
+  # Synthetic: 15 NTLM wrong passwords for administrator from one address (then a success),
+  # 12 Kerberos failures for jsmith from another; 9 failures for bob don't count
+  - file: tests/data/samples/win_brute_force_one_account_from_one_source_synthetic_positive.json
+    min_hits: 2
+negative:
+  # Real (EVTX-ATTACK-SAMPLES): two Kerberos failures for different accounts, a local logon
+  # failure, and network logons
+  - file: tests/data/external/evtx-attack-samples/kerberos_pwd_spray_4771.evtx
+  - file: tests/data/external/evtx-attack-samples/CA_4624_4625_LogonType2_LogonProc_chrome.evtx
+  - file: tests/data/external/evtx-attack-samples/DE_RDP_Tunneling_4624.evtx
+  # Synthetic: a spray (one failure per account), failures spread over 2 hours or over 12
+  # addresses, unknown-user and locked-out failures, local failures, a disabled account over
+  # Kerberos, and Kerberos failures from ::1
+  - file: tests/data/samples/win_brute_force_one_account_from_one_source_benign.json

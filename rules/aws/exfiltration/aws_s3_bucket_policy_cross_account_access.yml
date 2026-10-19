@@ -1,0 +1,45 @@
+title: AWS S3 Bucket Policy Grants Access to a Whole AWS Account
+id: aaea9f88-f95f-4727-b382-dc24e163f547
+status: experimental
+description: |
+    Detects a bucket policy that allows a whole AWS account (its root ARN,
+    arn:aws:iam::<account>:root, or the bare 12-digit account ID) to access
+    the bucket. This is how a bucket is backdoored for another account. The
+    rule can't compare the granted account with the bucket's own (the ID is
+    inside the policy text), so a grant to the bucket's own account root also
+    matches; that is unusual, because the account already owns the bucket.
+    Grants to individual roles or users in other accounts are not covered.
+    The Allow statement and the account principal are not required to be in
+    the same statement. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-19
+references:
+    - https://attack.mitre.org/techniques/T1537/
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketPolicy.html
+    - https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-walkthroughs-managing-access-example2.html
+tags:
+    - attack.exfiltration
+    - attack.t1537
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_call:
+        eventSource: s3.amazonaws.com
+        eventName: PutBucketPolicy
+    # The patterns match the policy as JSON (Splunk, Sentinel), as Zircolite's
+    # text of the statement list (single quotes) and as Elastic's Map.toString()
+    # text (key=value, no quotes): ':' or '=', quotes optional.
+    selection_allow:
+        requestParameters.bucketPolicy.Statement|re: '[''"]?Effect[''"]?\s*[:=]\s*[''"]?Allow'
+    selection_account_principal:
+        # "AWS": (or AWS= in Elastic's text) as a whole key, so condition keys
+        # such as "AWS:SourceAccount" don't match; then, inside the same
+        # principal value, an account root ARN or a bare 12-digit account ID.
+        requestParameters.bucketPolicy.Statement|re: '([''"]AWS[''"]\s*:|[{,]\s*AWS=)\s*\[?[^\]}]*(arn:aws:iam::[0-9]{12}:root|[''"]?[0-9]{12}[''"]?\s*[,\]}])'
+    condition: selection_call and selection_allow and selection_account_principal
+falsepositives:
+    - Cross-account sharing set up on purpose (central log archive, data sharing between accounts of the same organization, partner data exchange)
+    - Infrastructure-as-code applying a bucket's intended policy
+level: medium

@@ -11,9 +11,10 @@
 # ({groupId=sg-1, ipPermissions={items=[{cidrIp=0.0.0.0/0}]}}), not JSON. Its
 # structured copy is a `flattened` field, which ES|QL can't read. A request
 # field is mapped to that text only where the rule's match gives the same
-# result on it (a plain `contains`), proven by `make validate` (owner decision,
-# 2026-10-18). Rules with other matches on request fields fail conversion and
-# are declared in pipelines/unsupported_targets.yml.
+# result on it (a plain `contains`, or a pattern written for that text with the
+# owner's OK), proven by `make validate` (owner decisions, 2026-10-18/19).
+# Rules with other matches on request fields fail conversion and are declared
+# in pipelines/unsupported_targets.yml.
 #
 # Any field not mapped here fails the conversion (detection_item_failure at
 # the end), as for the other targets.
@@ -44,6 +45,16 @@ transformations:
       # aws_security_group_ingress_open_to_internet: contains 0.0.0.0/0 or ::/0
       requestParameters.ipPermissions.items: aws.cloudtrail.request_parameters
       requestParameters.cidrIp: aws.cloudtrail.request_parameters
+      # aws_network_acl_ingress_open_to_internet: contains allow, 0.0.0.0/0, ::/0,
+      # and egress matched with (^|[:=]\s*)false, which also matches the text's
+      # egress=false (owner decision, 2026-10-19; egress is the only boolean)
+      requestParameters.ruleAction: aws.cloudtrail.request_parameters
+      requestParameters.egress: aws.cloudtrail.request_parameters
+      requestParameters.cidrBlock: aws.cloudtrail.request_parameters
+      requestParameters.ipv6CidrBlock: aws.cloudtrail.request_parameters
+      # aws_s3_bucket_policy_cross_account_access: patterns written to accept
+      # Effect=Allow and AWS=... in the text (owner decision, 2026-10-19)
+      requestParameters.bucketPolicy.Statement: aws.cloudtrail.request_parameters
     rule_conditions:
       - type: logsource
         product: aws
