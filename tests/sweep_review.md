@@ -84,6 +84,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-19 | aws_network_acl_ingress_open_to_internet | 5 | Labels confirmed by the owner (2026-10-19). 5 own-sample hits in `T1562.007_aws_create_acl` and the same 5 events (same `eventID`s) in `T1562.007_aws_delete_acl`: attack simulation (all traffic, port 22 and wide port ranges allowed in from 0.0.0.0/0), the same events labelled for the security group rule. The Invictus `DescribeNetworkAcls` reads correctly don't match. |
 | 2026-10-19 | aws_s3_bucket_policy_cross_account_access | 0 | Only its own sample: the Stratus Red Team backdoor policy in Invictus (account 193672423079's root granted GetObject and ListBucket). The CloudTrail log-bucket policies (service principals) and the public `Principal: *` policy correctly don't match. |
 | 2026-10-19 | win_password_spray_from_one_source | 0 | No hits. The Windows corpus has almost no failed logons (one local 4625; two 4771s from one address in `kerberos_pwd_spray_4771`, below the threshold), so this sweep says little about noise in real environments. |
+| 2026-10-19 | win_brute_force_one_account_from_one_source | 0 | No hits. As for the spray rule, the Windows corpus has almost no failed logons, so this says little about noise in real environments. |
 
 ## Limits of this review
 

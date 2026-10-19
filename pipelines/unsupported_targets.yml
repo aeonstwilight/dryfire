@@ -77,3 +77,11 @@ win_password_spray_from_one_source:
     A Sigma correlation rule (value_count). pySigma-backend-kusto 1.0.1 doesn't
     convert correlation rules (the same backend as Sentinel). Owner decision,
     2026-10-19.
+win_brute_force_one_account_from_one_source:
+  sentinel: >-
+    A Sigma correlation rule (event_count). pySigma-backend-kusto 1.0.1 doesn't
+    convert correlation rules. Owner decision, 2026-10-19.
+  defender: >-
+    A Sigma correlation rule (event_count). pySigma-backend-kusto 1.0.1 doesn't
+    convert correlation rules (the same backend as Sentinel). Owner decision,
+    2026-10-19.
