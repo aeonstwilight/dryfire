@@ -85,6 +85,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-19 | aws_s3_bucket_policy_cross_account_access | 0 | Only its own sample: the Stratus Red Team backdoor policy in Invictus (account 193672423079's root granted GetObject and ListBucket). The CloudTrail log-bucket policies (service principals) and the public `Principal: *` policy correctly don't match. |
 | 2026-10-19 | win_password_spray_from_one_source | 0 | No hits. The Windows corpus has almost no failed logons (one local 4625; two 4771s from one address in `kerberos_pwd_spray_4771`, below the threshold), so this sweep says little about noise in real environments. |
 | 2026-10-19 | win_brute_force_one_account_from_one_source | 0 | No hits. As for the spray rule, the Windows corpus has almost no failed logons, so this says little about noise in real environments. |
+| 2026-10-19 | win_inhibit_system_recovery | 0 | Only its own sample: the four Atomic Red Team T1490 commands in `PanacheSysmon_vs_AtomicRedTeam01` (vssadmin delete shadows, wbadmin delete catalog, two bcdedit changes), each counted once although it runs under a `cmd /c` wrapper. `vssadmin list shadows` and `wmic shadowcopy call create` in `sysmon_exec_from_vss_persistence` and `vssadmin create shadow` in Panache correctly don't match. |
 
 ## Limits of this review
 

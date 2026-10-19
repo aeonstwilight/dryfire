@@ -277,6 +277,10 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
    8. EBS snapshot or AMI shared publicly or cross-account (AWS)
 3. Rules one at a time, same process as before.
 
+**Rule notes:**
+
+- `win_inhibit_system_recovery` (2026-10-19): binary plus action for vssadmin (`delete`+`shadows`, `resize`+`shadowstorage`), wmic (`shadowcopy`+`delete`), PowerShell (`win32_shadowcopy` + `.delete(` / `remove-ciminstance` / `remove-wmiobject`; synthetic positives only, added on Claude's recommendation when the owner asked for its view), wbadmin (`delete` + `catalog`/`backup`) and bcdedit (`recoveryenabled`+` no`, `bootstatuspolicy`+`ignoreallfailures`). High, T1490. No `OriginalFileName` (Sentinel has no such column), so the binary match keeps a `cmd /c` wrapper from counting twice. Sweep: only its 4 own Panache hits.
+
 **Step 1 findings (2026-10-19):** counts are matching events found by a rough scan, not rule hits.
 
 - Windows, with public positives:

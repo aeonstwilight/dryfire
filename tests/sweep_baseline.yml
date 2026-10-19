@@ -143,3 +143,7 @@ win_brute_force_one_account_from_one_source:
   evtx-attack-samples: 0
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_inhibit_system_recovery:
+  evtx-attack-samples: 4
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0
