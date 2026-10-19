@@ -52,6 +52,9 @@ transformations:
       requestParameters.egress: aws.cloudtrail.request_parameters
       requestParameters.cidrBlock: aws.cloudtrail.request_parameters
       requestParameters.ipv6CidrBlock: aws.cloudtrail.request_parameters
+      # aws_s3_bucket_policy_cross_account_access: patterns written to accept
+      # Effect=Allow and AWS=... in the text (owner decision, 2026-10-19)
+      requestParameters.bucketPolicy.Statement: aws.cloudtrail.request_parameters
     rule_conditions:
       - type: logsource
         product: aws

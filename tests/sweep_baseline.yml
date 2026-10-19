@@ -131,3 +131,7 @@ aws_network_acl_ingress_open_to_internet:
   aws-invictus: 0
   aws-splunk-attack-data: 10
   aws-otrf: 0
+aws_s3_bucket_policy_cross_account_access:
+  aws-invictus: 1
+  aws-splunk-attack-data: 0
+  aws-otrf: 0
