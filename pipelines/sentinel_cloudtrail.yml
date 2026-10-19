@@ -94,6 +94,10 @@ transformations:
       requestParameters.dataSources.kubernetes.auditLogs.enable: RequestParameters  # aws_guardduty_disabled
       requestParameters.dataSources.malwareProtection.scanEc2InstanceWithFindings.ebsVolumes: RequestParameters  # aws_guardduty_disabled
       requestParameters.action: RequestParameters  # aws_guardduty_findings_suppressed
+      requestParameters.ruleAction: RequestParameters  # aws_network_acl_ingress_open_to_internet
+      requestParameters.egress: RequestParameters  # aws_network_acl_ingress_open_to_internet
+      requestParameters.cidrBlock: RequestParameters  # aws_network_acl_ingress_open_to_internet
+      requestParameters.ipv6CidrBlock: RequestParameters  # aws_network_acl_ingress_open_to_internet
     rule_conditions:
       - type: logsource
         product: aws

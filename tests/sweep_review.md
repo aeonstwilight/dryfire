@@ -81,6 +81,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-18 | aws_guardduty_disabled | 0 | Only its own samples: the 2 failed `DeleteDetector` calls in Splunk's T1562.008 `aws_delete_security_services`. The Invictus GuardDuty read calls (`ListDetectors`, `ListFindings`) correctly don't match. |
 | 2026-10-18 | aws_guardduty_findings_suppressed | 0 | Only its own samples: the failed `DeleteIPSet` call in the same Splunk dataset. |
 | 2026-10-18 | aws_secretsmanager_many_secrets_read | 0 | Counted per identity over the threshold, not per event. Only its own sample: the Stratus Red Team retrieve-secrets run in Invictus (one user, 20 secrets in 4 seconds). The same user's other reads in the Invictus files (at most 7 distinct secrets per file) don't add a second hit. |
+| 2026-10-19 | aws_network_acl_ingress_open_to_internet | 5 | **Proposed labels, awaiting owner review.** 5 own-sample hits in `T1562.007_aws_create_acl` and the same 5 events (same `eventID`s) in `T1562.007_aws_delete_acl`: attack simulation (all traffic, port 22 and wide port ranges allowed in from 0.0.0.0/0), the same events labelled for the security group rule. The Invictus `DescribeNetworkAcls` reads correctly don't match. |
 
 ## Limits of this review
 

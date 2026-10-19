@@ -1,0 +1,17 @@
+rule: rules/aws/defense_impairment/aws_network_acl_ingress_open_to_internet.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1562.007): 4 CreateNetworkAclEntry and 1 ReplaceNetworkAclEntry
+  # allowing inbound traffic from 0.0.0.0/0 (all traffic, port 22, wide port ranges)
+  - file: tests/data/external/aws/splunk-attack-data/T1562.007_aws_create_acl.jsonl
+    min_hits: 5
+  # Synthetic: RDP from 0.0.0.0/0, all traffic from ::/0, SSH replaced to 0.0.0.0/0, a denied call
+  - file: tests/data/samples/aws_network_acl_ingress_open_to_internet_synthetic_positive.jsonl
+    min_hits: 4
+negative:
+  # Real (Invictus IR): DescribeNetworkAcls reads
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_vj0QE0Tf5ZmzMsCo.jsonl
+  # Synthetic: deny from anywhere, outbound allows to anywhere, inbound allows from specific
+  # ranges, entry deleted, ACL created, and a security group opened to 0.0.0.0/0
+  - file: tests/data/samples/aws_network_acl_ingress_open_to_internet_benign.jsonl
