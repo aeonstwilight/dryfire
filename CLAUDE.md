@@ -59,7 +59,7 @@ The Makefile should expose these targets:
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
 - `make validate-elastic` (M5): run the converted ES|QL on the Elasticsearch container (`make elastic-up`); report in `build/validate/results_elastic.md`
 
-CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`.
+CI (`.github/workflows/ci.yml`) runs `make all` and `make sweep` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`. A separate weekly workflow, `.github/workflows/drift.yml`, runs the same stages against the newest tool releases (report-only, M7).
 
 ## Milestone 1 (done, merged in PR #1)
 
@@ -266,7 +266,15 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 **Part A: coverage rules**
 
 1. Data check: which candidates have positives in the allowed datasets at the pinned commits (done, findings below).
-2. The owner picks the shortlist.
+2. The owner picks the shortlist (done, 2026-10-19): the recommended eight, in this order:
+   1. Inhibit system recovery (Windows)
+   2. DCSync (Windows)
+   3. SAM/SECURITY hive and NTDS.dit dumping (Windows)
+   4. WMI event subscription (Windows)
+   5. KMS key disabled or scheduled for deletion (AWS)
+   6. IAM user console login without MFA (AWS)
+   7. MFA device deactivated or deleted (AWS)
+   8. EBS snapshot or AMI shared publicly or cross-account (AWS)
 3. Rules one at a time, same process as before.
 
 **Step 1 findings (2026-10-19):** counts are matching events found by a rough scan, not rule hits.
@@ -293,7 +301,9 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 2. `make robustness`: takes each rule's positive events, writes the changed copies (synthetic, from public samples), runs Zircolite and reports per rule and change whether the rule still fires, in `build/robustness/`. Report-only at first.
 3. The owner reviews the report: a miss is either tuned (with sign-off on the logic change) or accepted and written in the triage note. Then the reviewed results become a baseline that CI checks, as for the sweep.
 
-**Side task: dependency drift check**
+**Side task: dependency drift check (done, 2026-10-19)**
 
-- A scheduled GitHub Actions workflow (weekly, plus manual run) installs the newest pySigma, sigma-cli, backends and pipelines, and the newest Zircolite release, then runs `make all` and `make sweep`. Engine images are a second step.
+- `.github/workflows/drift.yml` (Mondays 05:17 UTC, plus manual run) runs `scripts/drift.sh`, which installs the newest release of every package in `requirements.txt` and the newest Zircolite (into `tools/zircolite-latest/`, checked against the release's `SHA256SUMS`), then runs lint, convert, test, coverage and sweep with them. Engine images are a later step.
 - Report-only: it never changes pins in the repo. A red run means a newer version changes results; pins are moved by hand after review.
+- `build/drift/versions.md` lists pinned, tested and newest released versions. It also flags a package that pip held back because of another package's version limit.
+- First local run (2026-10-19): Zircolite 4.6.0 (pinned 4.5.0) passes test and sweep unchanged; pySigma 2.0.1 is out but held at 1.5.1 by the backends' version limits; everything else is current.

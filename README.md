@@ -40,6 +40,8 @@ On every push and pull request:
 
 Converted queries, test and sweep reports and the coverage layer are uploaded as build artifacts.
 
+Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint, convert, test, coverage and the sweep against the newest releases of pySigma, the backends, the pipelines and Zircolite instead of the pinned versions. It changes nothing in the repo; a red run means a newer release changes the results, and pins are moved by hand after review.
+
 > **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent` and `DeviceProcessEvents` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
 >
 > For Elastic, events are loaded with the field names and data streams Elastic's integrations use (ECS names such as `process.executable`, `winlog.event_data.*`, `aws.cloudtrail.*`), documented in `tests/validate_elastic.py`. Real integration data also types some fields differently (wildcard, text sub-fields); the queries compare whole values with `to_lower()` either way. AWS rules that match inside `requestParameters` mostly can't convert: the integration keeps it as `Map.toString()` text, so they're declared unsupported for Elastic in `pipelines/unsupported_targets.yml`.
