@@ -351,3 +351,16 @@ datasets:
   - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_shell_reg_dump_sam.zip
     path: otrf/empire_shell_reg_dump_sam.zip
     sha256: 5a8ee19860f35da6d4bcadf15178a085b469086c461d3d873d0f4adedba41f0a
+  # win_wmi_event_subscription_code_consumer (also uses PanacheSysmon_vs_AtomicRedTeam01 above)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/sysmon_20_21_1_CommandLineEventConsumer.evtx
+    path: evtx-attack-samples/sysmon_20_21_1_CommandLineEventConsumer.evtx
+    sha256: 136cd2549e4944e66c6f26aabafea84011ba011982ac1cf35cde7cb52d32b358
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/wmighost_sysmon_20_21_1.evtx
+    path: evtx-attack-samples/wmighost_sysmon_20_21_1.evtx
+    sha256: 687c5cbe9a912bd8688692489bd94bb91f0518e3008535469e4fc4e1adc59446
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/persistence/host/empire_wmi_local_event_subscriptions_elevated_user.zip
+    path: otrf/empire_wmi_local_event_subscriptions_elevated_user.zip
+    sha256: a507f2edd768b592e6b3157e974fd0468965eee00407387d88356ecb8fd20fea
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
+    path: otrf/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
+    sha256: 6167815b2f1901a267d965335251dc035b211f2b6e0d2063903d764305b80415

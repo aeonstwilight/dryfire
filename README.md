@@ -72,6 +72,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ | ✅ |
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
 | [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
+| [WMI Event Subscription Bound to a Command Line or Script Consumer](docs/rules/win_wmi_event_subscription_code_consumer.md) | Persistence, Privilege Escalation | T1546.003 | ✅ | — | ✅ | ✅ |
 | [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ | ✅ |
 | [Shadow Copies, Backup Catalog or Boot Recovery Deleted or Disabled](docs/rules/win_inhibit_system_recovery.md) | Impact | T1490 | ✅ | ✅ | ✅ | ✅ |
 | [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ | ✅ |
