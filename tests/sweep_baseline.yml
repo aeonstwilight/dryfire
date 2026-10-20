@@ -151,3 +151,7 @@ win_dcsync_replication_by_non_machine_account:
   evtx-attack-samples: 1
   otrf-apt29-day1: 0
   otrf-apt29-day2: 0
+win_sam_security_hive_or_ntds_dumped:
+  evtx-attack-samples: 9
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 0

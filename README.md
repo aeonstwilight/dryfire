@@ -54,6 +54,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [Windows Password Spray From One Source](docs/rules/win_password_spray_from_one_source.md) | Credential Access | T1110.003 | ✅ | — | ✅ | ✅ |
 | [Windows Brute Force Against One Account From One Source](docs/rules/win_brute_force_one_account_from_one_source.md) | Credential Access | T1110.001 | ✅ | — | ✅ | ✅ |
 | [Directory Secrets Replicated by a Non-Machine Account (DCSync)](docs/rules/win_dcsync_replication_by_non_machine_account.md) | Credential Access | T1003.006 | ✅ | Sentinel only | ✅ | ✅ |
+| [SAM or SECURITY Hive, or NTDS.dit, Copied for Offline Credential Extraction](docs/rules/win_sam_security_hive_or_ntds_dumped.md) | Credential Access | T1003.002, T1003.003, T1003.004 | ✅ | ✅ | ✅ | ✅ |
 | [PowerShell Launched With Encoded or Base64-Decoded Command](docs/rules/win_powershell_encoded_command.md) | Execution, Stealth | T1059.001, T1027.010 | ✅ | ✅ | ✅ | ✅ |
 | [Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action](docs/rules/win_scheduled_task_suspicious_action.md) | Persistence, Execution | T1053.005 | ✅ | Sentinel only | ✅ | ✅ |
 | [Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path](docs/rules/win_service_install_suspicious_image_path.md) | Persistence, Privilege Escalation, Execution | T1543.003, T1569.002 | ✅ | — | ✅ | ✅ |

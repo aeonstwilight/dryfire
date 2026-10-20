@@ -1,0 +1,34 @@
+rule: rules/windows/credential_access/win_sam_security_hive_or_ntds_dumped.yml
+positive:
+  # Real (Atomic Red Team T1003.002/.003): 7 x reg save of SAM, SECURITY and SYSTEM, and cmd
+  # "copy" of NTDS.dit and SYSTEM from HarddiskVolumeShadowCopy1. Its ntdsutil attempt never
+  # started a process, and its cmd wrapper isn't matched (only the reg.exe child is).
+  - file: tests/data/external/evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    min_hits: 9
+  # Real (OTRF): ntdsutil "ac i ntds" "ifm" "create full ..."
+  - file: tests/data/external/otrf/cmd_dumping_ntds_dit_file_ntdsutil.zip
+    min_hits: 1
+  # Real (OTRF): reg save HKLM\SYSTEM before copying ntds.dit from a shadow copy
+  - file: tests/data/external/otrf/cmd_dumping_ntds_dit_file_volume_shadow_copy.zip
+    min_hits: 1
+  # Real (OTRF): esentutl /y /vss C:\windows/system32/config/SAM
+  - file: tests/data/external/otrf/cmd_sam_copy_esentutl.zip
+    min_hits: 1
+  # Real (OTRF): Empire shell, reg.exe save HKLM\sam sam
+  - file: tests/data/external/otrf/empire_shell_reg_dump_sam.zip
+    min_hits: 1
+  # Real (OTRF): reg save HKLM\security\policy\secrets through PsExec -s
+  - file: tests/data/external/otrf/cmd_psexec_lsa_secrets_dump.zip
+    min_hits: 1
+  # Synthetic: HKEY_LOCAL_MACHINE spelling, reg export, quoted "HKLM\SYSTEM", esentutl of
+  # ntds.dit and of SYSTEM (dash style, at the end), PowerShell Copy-Item from a shadow
+  # copy, ntdsutil with the long command names
+  - file: tests/data/samples/win_sam_security_hive_or_ntds_dumped_synthetic_positive.json
+    min_hits: 7
+negative:
+  # Real: payload run from a shadow copy path (no credential file involved)
+  - file: tests/data/external/evtx-attack-samples/sysmon_exec_from_vss_persistence.evtx
+  # Synthetic: export of one service key under HKLM\SYSTEM, save of a SOFTWARE key, reg
+  # query of SAM and SYSTEM, ntdsutil files info, esentutl header dump of ntds.dit, esentutl
+  # /vss of a browser cache, listing config\systemprofile in a shadow copy
+  - file: tests/data/samples/win_sam_security_hive_or_ntds_dumped_benign.json
