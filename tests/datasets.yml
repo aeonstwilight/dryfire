@@ -324,3 +324,17 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/kerberos_pwd_spray_4771.evtx
     path: evtx-attack-samples/kerberos_pwd_spray_4771.evtx
     sha256: 4a0a1c7132e216dbc704c806e9429df9ae3ac00485d5238e50c776e3099ae11d
+  # win_dcsync_replication_by_non_machine_account
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/CA_DCSync_4662.evtx
+    path: evtx-attack-samples/CA_DCSync_4662.evtx
+    sha256: 679b2ff27af6c932c07bf3e81391e455fae98e69bf3aff0f524e31aadc418131
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    path: otrf/empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    sha256: fe1fcc96c0ff0cbae8fd4ffaadf85f51e28475441774f6fda3d963d4e2962800
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    path: otrf/covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    sha256: ccbb0e91c03fa1d575b3bfccba59f3bba62479860bd9ee8b571a907333eb9082
+  # (real negative: a DC machine account's own Get-Changes replication)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/ACL_ForcePwd_SPNAdd_User_Computer_Accounts.evtx
+    path: evtx-attack-samples/ACL_ForcePwd_SPNAdd_User_Computer_Accounts.evtx
+    sha256: f09f993909deb7acdae4c4f6f48e5a8447487e89437873fd8e653436a3dce36c

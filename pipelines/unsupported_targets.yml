@@ -85,3 +85,10 @@ win_brute_force_one_account_from_one_source:
     A Sigma correlation rule (event_count). pySigma-backend-kusto 1.0.1 doesn't
     convert correlation rules (the same backend as Sentinel). Owner decision,
     2026-10-19.
+win_dcsync_replication_by_non_machine_account:
+  defender: >-
+    Security 4662 has no Defender XDR advanced hunting table in the backend.
+    pySigma-backend-kusto 1.0.1 files EventID 4662 under its "registry"
+    category and picks DeviceRegistryEvents, which has no Properties or
+    SubjectUserName, so the conversion fails instead of reporting "no table"
+    like the other Security-log rules. Owner decision, 2026-10-20.

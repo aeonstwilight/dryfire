@@ -86,6 +86,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-19 | win_password_spray_from_one_source | 0 | No hits. The Windows corpus has almost no failed logons (one local 4625; two 4771s from one address in `kerberos_pwd_spray_4771`, below the threshold), so this sweep says little about noise in real environments. |
 | 2026-10-19 | win_brute_force_one_account_from_one_source | 0 | No hits. As for the spray rule, the Windows corpus has almost no failed logons, so this says little about noise in real environments. |
 | 2026-10-19 | win_inhibit_system_recovery | 0 | Only its own sample: the four Atomic Red Team T1490 commands in `PanacheSysmon_vs_AtomicRedTeam01` (vssadmin delete shadows, wbadmin delete catalog, two bcdedit changes), each counted once although it runs under a `cmd /c` wrapper. `vssadmin list shadows` and `wmic shadowcopy call create` in `sysmon_exec_from_vss_persistence` and `vssadmin create shadow` in Panache correctly don't match. |
+| 2026-10-20 | win_dcsync_replication_by_non_machine_account | 0 | Only its own sample: the Get-Changes-All event of the Mimikatz DCSync in `CA_DCSync_4662` (its two plain Get-Changes events don't count). The DC machine accounts' replication (`DC1$` in `ACL_ForcePwd_SPNAdd_User_Computer_Accounts`, `NEWYORK$` in APT29 day 1, Get-Changes only) correctly doesn't match. |
 
 ## Limits of this review
 
