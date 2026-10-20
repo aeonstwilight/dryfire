@@ -159,3 +159,7 @@ win_wmi_event_subscription_code_consumer:
   evtx-attack-samples: 3
   otrf-apt29-day1: 0
   otrf-apt29-day2: 1
+aws_kms_key_disabled_or_deletion_scheduled:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0

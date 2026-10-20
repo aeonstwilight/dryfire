@@ -364,3 +364,8 @@ datasets:
   - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
     path: otrf/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
     sha256: 6167815b2f1901a267d965335251dc035b211f2b6e0d2063903d764305b80415
+  # aws_kms_key_disabled_or_deletion_scheduled (real negative: T1078_aws_createaccesskey above, CreateKey only)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1486/aws_kms_key/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1486_aws_kms_key/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1486_aws_kms_key.jsonl
+    sha256: 8c6869476565588356d30a0c20d3767b2d64de8f871af2e97b2b0d57c4cc64b7
