@@ -22,7 +22,7 @@ Process creation where `Image` ends with `\powershell.exe` or `\pwsh.exe`, and e
 
 Not covered:
 
-- **Renamed PowerShell binaries.** Matching is on `Image` only. `OriginalFileName` was left out because Sentinel's `SecurityEvent` table has no equivalent column. Renamed PowerShell is a candidate for its own rule.
+- **Renamed PowerShell binaries.** Matching is on `Image` only. `OriginalFileName` was left out because Sentinel's `SecurityEvent` table has no equivalent column. The robustness check confirms it (`binary_renamed`: 0/5). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed powershell.exe and pwsh by `OriginalFileName` on Splunk, Defender and Elastic; Sentinel has no such column.
 - **Other obfuscation styles.** Backtick escapes, `[char]` arrays, string reversal, `-join`/`-replace` tricks and other Invoke-Obfuscation output aren't covered, because the test datasets don't contain them.
 - **PowerShell hosted in other processes.** Unmanaged PowerShell, PowerShell via .NET in another binary, and `System.Management.Automation.dll` loaded by non-PowerShell processes. These need image-load or script block (4104) telemetry.
 - **Encoded content in a parent process.** For example, a scheduled task or service whose definition holds the encoded string, where `Image` isn't PowerShell.

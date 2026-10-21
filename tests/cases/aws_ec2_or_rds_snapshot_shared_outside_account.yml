@@ -1,0 +1,32 @@
+rule: rules/aws/exfiltration/aws_ec2_or_rds_snapshot_shared_outside_account.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1537): EBS snapshot shared with accounts (one call rejected with
+  # an invalid account ID; failed calls count) and with "all"; its empty add and its remove
+  # of "all" don't count
+  - file: tests/data/external/aws/splunk-attack-data/T1537_aws_snapshot_exfil.jsonl
+    min_hits: 6
+  # Real (Splunk attack_data T1537): AMI shared with an account and made public
+  - file: tests/data/external/aws/splunk-attack-data/T1537_aws_ami_shared_public.jsonl
+    min_hits: 2
+  # Real (Invictus IR, Stratus Red Team): AMI shared with an account (its revoke, and the
+  # snapshot revoke in the same file, don't count)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_YMDRJwtmC82bUwAo.jsonl
+    min_hits: 1
+  # Real (Invictus IR, Stratus Red Team): EBS snapshot shared with an account
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1220Z_ovtmbuX3ENJ119uH.jsonl
+    min_hits: 1
+  # Real (Invictus IR, Stratus Red Team): RDS snapshot shared with an account
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1225Z_vMAR90Iiaqr6M5sR.jsonl
+    min_hits: 1
+  # Synthetic: AMI shared with an organization, RDS cluster snapshot made public ("all"),
+  # denied RDS snapshot share
+  - file: tests/data/samples/aws_ec2_or_rds_snapshot_shared_outside_account_synthetic_positive.jsonl
+    min_hits: 3
+negative:
+  # Real (Invictus IR): the RDS snapshot share revoked (valuesToRemove)
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_9SJSsrxJ0ChF5VFb.jsonl
+  # Synthetic: snapshot add with an empty list, AMI description change (text that looks like
+  # an add list), DescribeSnapshotAttribute, RDS valuesToRemove, RDS empty valuesToAdd
+  - file: tests/data/samples/aws_ec2_or_rds_snapshot_shared_outside_account_benign.jsonl

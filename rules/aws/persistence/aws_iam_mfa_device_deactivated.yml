@@ -1,0 +1,35 @@
+title: AWS IAM MFA Device Deactivated
+id: 45a54481-d14b-4ff9-8ef3-143924f93424
+status: experimental
+description: |
+    Detects an MFA device being deactivated for an IAM user or the root user
+    (DeactivateMFADevice). AWS requires an assigned device to be deactivated
+    before it can be deleted, so every removal of a working MFA device passes
+    through this call; the following DeleteVirtualMFADevice is left to triage
+    (on its own it is also used to clean up devices that were never assigned).
+    An attacker with a password, or with IAM rights over another user, removes
+    MFA to log in with the password alone or to register a device of their
+    own. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-21
+references:
+    - https://attack.mitre.org/techniques/T1556/006/
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_DeactivateMFADevice.html
+    - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_disable.html
+tags:
+    - attack.persistence
+    - attack.credential-access
+    - attack.t1556.006
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: iam.amazonaws.com
+        eventName: DeactivateMFADevice
+    condition: selection
+falsepositives:
+    - Users replacing a lost or new phone (usually followed by EnableMFADevice for the same user)
+    - Helpdesk or administrators resetting MFA for a locked-out user
+    - Offboarding automation removing a leaving user's devices
+level: medium

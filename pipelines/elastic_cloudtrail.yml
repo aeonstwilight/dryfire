@@ -55,6 +55,19 @@ transformations:
       # aws_s3_bucket_policy_cross_account_access: patterns written to accept
       # Effect=Allow and AWS=... in the text (owner decision, 2026-10-19)
       requestParameters.bucketPolicy.Statement: aws.cloudtrail.request_parameters
+      # aws_ec2_or_rds_snapshot_shared_outside_account: a non-empty add list,
+      # matched with patterns that also accept the text's add={items=[{...
+      # and valuesToAdd=[...] (owner decision, 2026-10-21)
+      requestParameters.createVolumePermission.add.items: aws.cloudtrail.request_parameters
+      requestParameters.launchPermission.add.items: aws.cloudtrail.request_parameters
+      requestParameters.valuesToAdd: aws.cloudtrail.request_parameters
+      # aws_iam_user_console_login_without_mfa: the integration sets event.outcome
+      # from responseElements.ConsoleLogin (lower-cased) and keeps
+      # additionalEventData as Map.toString() text ({LoginTo=..., MFAUsed=No});
+      # MFAUsed is matched with a regex keyed on "MFAUsed" that also matches
+      # that text (owner decision, 2026-10-21).
+      responseElements.ConsoleLogin: event.outcome
+      additionalEventData.MFAUsed: aws.cloudtrail.additional_eventdata
     rule_conditions:
       - type: logsource
         product: aws
@@ -71,6 +84,6 @@ transformations:
       - type: exclude_fields
         mode: re
         fields:
-          - '^(event\.action|event\.provider|source\.address)$'
-          - '^aws\.cloudtrail\.(event_type|error_code|request_parameters)$'
+          - '^(event\.action|event\.provider|event\.outcome|source\.address)$'
+          - '^aws\.cloudtrail\.(event_type|error_code|request_parameters|additional_eventdata)$'
           - '^aws\.cloudtrail\.user_identity\.(type|arn|access_key_id)$'

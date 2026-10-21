@@ -28,7 +28,7 @@ Not covered:
 
 - **Relative DLLs with no path,** for example `rundll32 AllTheThings.dll,EntryPoint` or `rundll32 .\Outflank-Dumpert-DLL.dll, Dump`. Legitimate calls look the same (`shell32.dll,Control_RunDLL`). Catching them needs an allow-list of system DLLs and exports, or a Sysmon 7 image-load check for unsigned DLLs.
 - **Malicious DLLs loaded from clean system paths** (`C:\Windows\System32\…`) with ordinary-looking exports.
-- **Renamed `rundll32.exe`.** Matching is on `Image`, as in the other rules, because Sentinel's `SecurityEvent` has no `OriginalFileName` column.
+- **Renamed `rundll32.exe`.** Matching is on `Image`, as in the other rules, because Sentinel's `SecurityEvent` has no `OriginalFileName` column. The robustness check confirms it (`binary_renamed`: 0/12). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed rundll32 by `OriginalFileName` on Splunk, Defender and Elastic; Sentinel has no such column.
 - **Other proxy binaries:** `regsvr32`, `mshta`, `msiexec`, `odbcconf` and so on.
 
 ## Triage steps

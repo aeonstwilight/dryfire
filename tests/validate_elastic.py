@@ -14,8 +14,10 @@ How events are loaded (the field names Elastic's own integrations write):
     SYSMON_ECS); every other event field goes to winlog.event_data.<name>.
   - CloudTrail records go to logs-aws.cloudtrail-dryfire with the field
     names of pipelines/elastic_cloudtrail.yml (the conversion's own mapping),
-    and requestParameters as Map.toString() text in
-    aws.cloudtrail.request_parameters, as the AWS integration writes it.
+    and requestParameters / additionalEventData as Map.toString() text in
+    aws.cloudtrail.request_parameters / additional_eventdata, as the AWS
+    integration writes them (ConsoleLogin's result goes to event.outcome,
+    lower-cased).
   - Every string is stored as a keyword (whole value, no length limit), so
     ES|QL compares the full value. Real integrations type some of these
     fields differently (wildcard, text sub-fields); the ES|QL string functions
@@ -64,14 +66,15 @@ SYSMON_ECS = {
 }
 
 # CloudTrail field -> Elastic field, from the conversion pipeline, so loaded
-# documents and converted queries agree. Request fields are left out: the whole
-# requestParameters object goes into aws.cloudtrail.request_parameters below.
+# documents and converted queries agree. Request and additional-data fields are
+# left out: the whole requestParameters and additionalEventData objects go into
+# aws.cloudtrail.request_parameters / additional_eventdata below, as text.
 CLOUDTRAIL_PIPELINE = Path("pipelines/elastic_cloudtrail.yml")
 CLOUDTRAIL_FIELDS = {
     field: target for field, target in next(
         t["mapping"] for t in yaml.safe_load(CLOUDTRAIL_PIPELINE.read_text(encoding="utf-8"))["transformations"]
         if t["type"] == "field_name_mapping").items()
-    if not field.startswith("requestParameters.")
+    if not field.startswith(("requestParameters.", "additionalEventData."))
 }
 
 # Our own index template for the test data streams (logs-*-dryfire): every
@@ -122,6 +125,11 @@ def to_document(event):
         doc = {target: nested_value(event, field) for field, target in CLOUDTRAIL_FIELDS.items()}
         if event.get("requestParameters") is not None:
             doc["aws.cloudtrail.request_parameters"] = java_text(event["requestParameters"])
+        if event.get("additionalEventData") is not None:
+            doc["aws.cloudtrail.additional_eventdata"] = java_text(event["additionalEventData"])
+        if doc.get("event.outcome"):
+            # The integration lower-cases ConsoleLogin's Success/Failure into event.outcome.
+            doc["event.outcome"] = str(doc["event.outcome"]).lower()
         doc["@timestamp"] = event.get("eventTime")
         return CLOUDTRAIL_STREAM, {k: v for k, v in doc.items() if v is not None}
     channel = str(event.get("Channel", "")).lower()

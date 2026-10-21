@@ -1,0 +1,57 @@
+title: AWS EBS Snapshot, AMI or RDS Snapshot Shared With Another Account or Made Public
+id: 7777bf04-d54f-4b7e-b3c8-38cc2b47a26b
+status: experimental
+description: |
+    Detects a storage image being shared outside the account: an EBS snapshot
+    (ModifySnapshotAttribute, createVolumePermission), an AMI
+    (ModifyImageAttribute, launchPermission) or an RDS DB or cluster snapshot
+    (ModifyDBSnapshotAttribute / ModifyDBClusterSnapshotAttribute,
+    valuesToAdd) given to another account ID, an organization or OU, or to
+    everyone ("all"). A snapshot can't be shared with its own account, so any
+    added entry means data leaving it; the receiving account can copy the
+    disk or database and read everything on it. Removing permissions, or an
+    empty add list, doesn't match. Failed calls are included on purpose.
+    The add lists are matched with patterns that give the same result on the
+    list's own text (Zircolite), the raw JSON (Splunk), Sentinel's
+    RequestParameters JSON and Elastic's Map.toString() text.
+author: aeonstwilight
+date: 2026-10-21
+references:
+    - https://attack.mitre.org/techniques/T1537/
+    - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySnapshotAttribute.html
+    - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyImageAttribute.html
+    - https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_ModifyDBSnapshotAttribute.html
+    - https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_ModifyDBClusterSnapshotAttribute.html
+tags:
+    - attack.exfiltration
+    - attack.t1537
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_ec2:
+        eventSource: ec2.amazonaws.com
+        eventName:
+            - ModifySnapshotAttribute
+            - ModifyImageAttribute
+    ec2_add_list_not_empty:
+        # The list's own text starts with [{ ; in the whole request, "add"
+        # holds a non-empty items list (JSON "add": {"items": [{ or Map text
+        # add={items=[{ ). A "remove" list or "add": {} doesn't match.
+        - requestParameters.createVolumePermission.add.items|re: '(^|\\?"?add\\?"?\s*[:=]\s*\{\s*\\?"?items\\?"?\s*[:=]\s*)\[\s*\{'
+        - requestParameters.launchPermission.add.items|re: '(^|\\?"?add\\?"?\s*[:=]\s*\{\s*\\?"?items\\?"?\s*[:=]\s*)\[\s*\{'
+    selection_rds:
+        eventSource: rds.amazonaws.com
+        eventName:
+            - ModifyDBSnapshotAttribute
+            - ModifyDBClusterSnapshotAttribute
+    rds_values_to_add_not_empty:
+        # valuesToAdd is a list of account IDs or "all"; it must hold at least one.
+        # The first value may be quoted with " (JSON) or ' (Zircolite writes a
+        # list of plain strings as Python-style text, ['193672423079']).
+        requestParameters.valuesToAdd|re: '(^|valuesToAdd\\?"?\s*[:=]\s*)\[\s*\\?["'']?[0-9A-Za-z]'
+    condition: (selection_ec2 and ec2_add_list_not_empty) or (selection_rds and rds_values_to_add_not_empty)
+falsepositives:
+    - AMI or snapshot sharing with the organization's own other accounts (build, backup or disaster-recovery accounts), or with a vendor
+    - Publishing public AMIs on purpose (software vendors)
+level: medium

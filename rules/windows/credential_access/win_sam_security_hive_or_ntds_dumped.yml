@@ -1,0 +1,97 @@
+title: SAM or SECURITY Hive, or NTDS.dit, Copied for Offline Credential Extraction
+id: f15cf7d7-0c1a-4350-84e4-acf1ff5223ea
+status: experimental
+description: |
+    Detects the built-in ways of copying the credential stores for offline
+    extraction: reg.exe saving or exporting the SAM or SECURITY hive (any
+    subkey, e.g. HKLM\security\policy\secrets) or the whole SYSTEM hive (which
+    holds the boot key), ntdsutil creating an IFM copy of the AD database,
+    esentutl copying SAM, SECURITY, SYSTEM or ntds.dit through a shadow copy
+    (/vss), and any command line copying those files out of a
+    HarddiskVolumeShadowCopy path. SYSTEM is matched only as the whole hive or
+    file, so exports of single service keys under HKLM\SYSTEM stay quiet. The
+    shadow copy selection has no binary condition, because "copy" is a cmd
+    built-in that only shows on cmd's own command line.
+author: aeonstwilight
+date: 2026-10-20
+references:
+    - https://attack.mitre.org/techniques/T1003/002/
+    - https://attack.mitre.org/techniques/T1003/003/
+    - https://attack.mitre.org/techniques/T1003/004/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/reg-save
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc753343(v=ws.11)
+tags:
+    - attack.credential-access
+    - attack.t1003.002
+    - attack.t1003.003
+    - attack.t1003.004
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    reg_img:
+        Image|endswith: '\reg.exe'
+    reg_verb:
+        CommandLine|contains:
+            - ' save '
+            - ' export '
+    reg_sam_security:
+        CommandLine|contains:
+            - 'hklm\sam'
+            - 'hklm\security'
+            - 'hkey_local_machine\sam'
+            - 'hkey_local_machine\security'
+    reg_system_hive:
+        # The whole hive only: followed by a space or quote, or at the end.
+        CommandLine|contains:
+            - 'hklm\system '
+            - 'hklm\system"'
+            - 'hkey_local_machine\system '
+            - 'hkey_local_machine\system"'
+    reg_system_hive_end:
+        CommandLine|endswith:
+            - 'hklm\system'
+            - 'hkey_local_machine\system'
+    ntdsutil:
+        Image|endswith: '\ntdsutil.exe'
+        CommandLine|contains: 'ifm'
+    esentutl_img:
+        Image|endswith: '\esentutl.exe'
+    esentutl_vss:
+        CommandLine|windash|contains: ' /vss'
+    esentutl_file:
+        CommandLine|contains:
+            - 'config\sam'
+            - 'config/sam'
+            - 'config\security'
+            - 'config/security'
+            - 'config\system '
+            - 'config/system '
+            - 'config\system"'
+            - 'config/system"'
+            - 'ntds.dit'
+    esentutl_file_end:
+        CommandLine|endswith:
+            - 'config\system'
+            - 'config/system'
+    shadow_path:
+        CommandLine|contains: 'HarddiskVolumeShadowCopy'
+    shadow_file:
+        CommandLine|contains:
+            - '\ntds.dit'
+            - '\config\sam'
+            - '\config\security'
+            - '\config\system '
+            - '\config\system"'
+    shadow_file_end:
+        CommandLine|endswith: '\config\system'
+    condition: >-
+        (reg_img and reg_verb and (reg_sam_security or reg_system_hive or reg_system_hive_end))
+        or ntdsutil
+        or (esentutl_img and esentutl_vss and (esentutl_file or esentutl_file_end))
+        or (shadow_path and (shadow_file or shadow_file_end))
+falsepositives:
+    - Backup or imaging tools copying registry hives or the AD database (a known product and service account)
+    - Administrators creating an IFM copy with ntdsutil to promote a new domain controller from media
+    - Forensic or incident response collection of registry hives
+level: high

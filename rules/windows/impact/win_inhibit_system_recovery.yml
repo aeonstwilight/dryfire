@@ -1,0 +1,81 @@
+title: Shadow Copies, Backup Catalog or Boot Recovery Deleted or Disabled
+id: 7f9450cf-5f57-4f8c-8ee9-8e28c88d5077
+status: experimental
+description: |
+    Detects the built-in Windows tools that remove local recovery options, a
+    standard ransomware step before encryption: vssadmin deleting shadow copies
+    or resizing shadow storage (which purges them), wmic or PowerShell deleting
+    Win32_ShadowCopy objects, wbadmin deleting the backup catalog or backups,
+    and bcdedit turning off Windows recovery or boot failure handling. Each
+    selection requires both the binary and the action, so a "cmd /c" wrapper
+    around the command doesn't count twice.
+author: aeonstwilight
+date: 2026-10-19
+references:
+    - https://attack.mitre.org/techniques/T1490/
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/vssadmin
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/wbadmin
+    - https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/bcdedit-command-line-options
+tags:
+    - attack.impact
+    - attack.t1490
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    vssadmin_img:
+        Image|endswith: '\vssadmin.exe'
+    vssadmin_delete:
+        CommandLine|contains|all:
+            - 'delete'
+            - 'shadows'
+    vssadmin_resize:
+        CommandLine|contains|all:
+            - 'resize'
+            - 'shadowstorage'
+    wmic:
+        Image|endswith: '\wmic.exe'
+        CommandLine|contains|all:
+            - 'shadowcopy'
+            - 'delete'
+    powershell_img:
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    powershell_delete:
+        CommandLine|contains: 'win32_shadowcopy'
+    powershell_verb:
+        # $_.Delete() on each object, or piping to Remove-CimInstance / Remove-WmiObject.
+        CommandLine|contains:
+            - '.delete('
+            - 'remove-ciminstance'
+            - 'remove-wmiobject'
+    wbadmin_img:
+        Image|endswith: '\wbadmin.exe'
+    wbadmin_delete:
+        CommandLine|contains: 'delete'
+    wbadmin_target:
+        # "backup" also matches "systemstatebackup".
+        CommandLine|contains:
+            - 'catalog'
+            - 'backup'
+    bcdedit_img:
+        Image|endswith: '\bcdedit.exe'
+    bcdedit_recovery_off:
+        CommandLine|contains|all:
+            - 'recoveryenabled'
+            - ' no'
+    bcdedit_ignore_failures:
+        CommandLine|contains|all:
+            - 'bootstatuspolicy'
+            - 'ignoreallfailures'
+    condition: >-
+        (vssadmin_img and (vssadmin_delete or vssadmin_resize))
+        or wmic
+        or (powershell_img and powershell_delete and powershell_verb)
+        or (wbadmin_img and wbadmin_delete and wbadmin_target)
+        or (bcdedit_img and (bcdedit_recovery_off or bcdedit_ignore_failures))
+falsepositives:
+    - Administrators resizing shadow storage, or cleaning up old shadow copies or backups to free disk space
+    - Backup or imaging software and OS deployment scripts changing boot recovery settings (kiosks, VDI images)
+level: high

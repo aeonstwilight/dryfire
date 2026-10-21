@@ -28,7 +28,7 @@ Not covered:
 - **Relative paths with a folder part** (`.\evil.dll`, `..\x.dll`, `sub\x.dll`). The backslash makes them look like a path. Candidate for a follow-up branch.
 - **A planted DLL with an allow-listed name** placed earlier in the search order, for example `shell32.dll` dropped in the current folder. Rundll32 checks its own folder (System32) first, so this only works for names missing from System32.
 - **Full or UNC paths:** covered by the suspicious-usage rule when they're in a user or data folder, otherwise not covered.
-- **Renamed rundll32:** see the renamed-binary rule.
+- **Renamed rundll32.** Matching is on `Image`; the robustness check confirms it (`binary_renamed`: 0/26). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed rundll32 by `OriginalFileName` on Splunk, Defender and Elastic; Sentinel has no such column.
 
 ## Triage steps
 

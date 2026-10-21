@@ -1,0 +1,26 @@
+# Elastic (ES|QL): Windows fields kept under their raw winlog.event_data name.
+# Runs BEFORE the Elastic backend's `ecs_windows` pipeline (scripts/convert.py,
+# "elastic" target), so `ecs_windows` leaves these fields alone (it skips any
+# field name that already contains a dot).
+#
+# Why: `ecs_windows` renames some Security-log fields to ECS fields that
+# Elastic's System integration only fills under conditions, or that several
+# source fields share. The integration always keeps the raw field in
+# winlog.event_data, and tests/validate_elastic.py loads it there.
+#
+# - SubjectUserName: ecs_windows makes it user.name, which AccountName and
+#   User also map to, and which the integration may overwrite with the target
+#   user for some events. winlog.event_data.SubjectUserName is always the
+#   subject. Added for win_dcsync_replication_by_non_machine_account (M7).
+
+name: dryfire Elastic Windows raw fields
+priority: 10
+transformations:
+  - id: dryfire_elastic_security_raw_fields
+    type: field_name_mapping
+    mapping:
+      SubjectUserName: winlog.event_data.SubjectUserName
+    rule_conditions:
+      - type: logsource
+        product: windows
+        service: security

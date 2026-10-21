@@ -1,0 +1,16 @@
+rule: rules/aws/impact/aws_kms_key_disabled_or_deletion_scheduled.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1486): ScheduleKeyDeletion (7 days) and DisableKey in one console
+  # session; its CreateKey, PutKeyPolicy, CancelKeyDeletion and EnableKey don't count
+  - file: tests/data/external/aws/splunk-attack-data/T1486_aws_kms_key.jsonl
+    min_hits: 2
+  # Synthetic: DeleteImportedKeyMaterial, and a denied ScheduleKeyDeletion (failed calls count)
+  - file: tests/data/samples/aws_kms_key_disabled_or_deletion_scheduled_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Splunk attack_data T1078): KMS CreateKey calls only
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createaccesskey.jsonl
+  # Synthetic: CancelKeyDeletion, EnableKey, CreateKey, DescribeKey, ImportKeyMaterial
+  - file: tests/data/samples/aws_kms_key_disabled_or_deletion_scheduled_benign.jsonl

@@ -27,6 +27,7 @@ Not covered:
 - **Payloads that never start a child process.** VBA that injects shellcode, calls APIs directly, uses WMI (`Win32_Process.Create` makes the child a `WmiPrvSE.exe` child; see the WMI rule) or drops a file for later execution.
 - **Office started over DCOM** (`/automation -Embedding`) running Excel 4.0 macros that don't spawn a shell, as in the OTRF Covenant dataset.
 - **Other Office-adjacent hosts:** Visio, Project, Teams, and third-party PDF or Office suites.
+- **Renamed children** (a copy of `cmd.exe` or `powershell.exe` under another name). The child is matched on `Image`; the robustness check confirms it (`binary_renamed`: 0/7). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed cmd, PowerShell, wscript, cscript and mshta by `OriginalFileName` on Splunk, Defender and Elastic; Sentinel has no such column.
 
 ## Triage steps
 

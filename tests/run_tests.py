@@ -45,6 +45,16 @@ def count_hits(zircolite, rule_path, sample_path, pipelines):
 
     Raises RuntimeError if Zircolite fails (bad sample, rule it can't convert, ...).
     """
+    detections = run_zircolite(zircolite, rule_path, sample_path, pipelines)
+    return sum(detection_hits(d) for d in detections)
+
+
+def run_zircolite(zircolite, rule_path, sample_path, pipelines):
+    """Run Zircolite on one sample with one rule and return its results.
+
+    The results are a list with one entry per rule that matched; each entry's
+    "matches" holds the matched events. Raises RuntimeError if Zircolite fails.
+    """
     # Run in a temp folder: Zircolite writes its log file to the current directory.
     with tempfile.TemporaryDirectory() as tmp:
         out_file = Path(tmp) / "detections.json"
@@ -65,8 +75,7 @@ def count_hits(zircolite, rule_path, sample_path, pipelines):
             raise RuntimeError("Zircolite failed: " + " | ".join(output[-5:]))
 
         # Output is a list with one entry per rule that matched.
-        detections = json.loads(out_file.read_text(encoding="utf-8"))
-        return sum(detection_hits(d) for d in detections)
+        return json.loads(out_file.read_text(encoding="utf-8"))
 
 
 def group_key(match):

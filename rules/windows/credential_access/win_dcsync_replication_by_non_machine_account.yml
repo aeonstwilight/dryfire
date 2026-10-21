@@ -1,0 +1,39 @@
+title: Directory Secrets Replicated by a Non-Machine Account (DCSync)
+id: e9dd1d82-d0b0-48b3-bac2-831dfe3c3d32
+status: experimental
+description: |
+    Detects a directory object access (Security 4662) that uses the
+    "Replicating Directory Changes All" or "Replicating Directory Changes In
+    Filtered Set" extended right by an account whose name doesn't end in $.
+    These rights let the caller pull password hashes from a domain controller
+    (Mimikatz lsadump::dcsync, Impacket secretsdump, Empire, Covenant). Domain
+    controllers replicate with their own machine accounts, which are excluded.
+    Plain "Replicating Directory Changes" (1131f6aa) is not matched: it doesn't
+    return secrets, and some directory-sync tools use it on its own. Needs the
+    "Audit Directory Service Access" subcategory with a SACL on the domain object.
+author: aeonstwilight
+date: 2026-10-20
+references:
+    - https://attack.mitre.org/techniques/T1003/006/
+    - https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4662
+    - https://learn.microsoft.com/en-us/windows/win32/adschema/r-ds-replication-get-changes-all
+    - https://learn.microsoft.com/en-us/windows/win32/adschema/r-ds-replication-get-changes-in-filtered-set
+tags:
+    - attack.credential-access
+    - attack.t1003.006
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4662
+        Properties|contains:
+            - '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'  # DS-Replication-Get-Changes-All
+            - '89e95b76-444d-4c62-991a-0facbeda640c'  # DS-Replication-Get-Changes-In-Filtered-Set
+    filter_machine_account:
+        SubjectUserName|endswith: '$'
+    condition: selection and not filter_machine_account
+falsepositives:
+    - Microsoft Entra Connect (Azure AD Connect) password hash sync account (MSOL_...) or other identity sync tools granted replication rights
+    - Backup, migration or AD auditing tools that replicate the directory with a service account
+level: high

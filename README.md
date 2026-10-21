@@ -35,10 +35,13 @@ On every push and pull request:
 3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
 4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
 5. **Noise sweep:** every rule runs over EVTX-ATTACK-SAMPLES and OTRF APT29; any change from the reviewed per-rule counts in `tests/sweep_baseline.yml` fails the build.
-6. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
-7. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
+6. **Robustness check:** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again. Any change from the reviewed results in `tests/robustness_baseline.yml` fails the build. Every change is caught except renamed binaries, a gap each triage note states.
+7. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
+8. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
 
 Converted queries, test and sweep reports and the coverage layer are uploaded as build artifacts.
+
+Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint, convert, test, coverage and the sweep against the newest releases of pySigma, the backends, the pipelines and Zircolite instead of the pinned versions. It changes nothing in the repo; a red run means a newer release changes the results, and pins are moved by hand after review.
 
 > **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent` and `DeviceProcessEvents` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
 >
@@ -51,6 +54,8 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [LSASS Process Opened With Memory Read Access](docs/rules/win_lsass_memory_access.md) | Credential Access | T1003.001 | ✅ | — | ✅ | ✅ |
 | [Windows Password Spray From One Source](docs/rules/win_password_spray_from_one_source.md) | Credential Access | T1110.003 | ✅ | — | ✅ | ✅ |
 | [Windows Brute Force Against One Account From One Source](docs/rules/win_brute_force_one_account_from_one_source.md) | Credential Access | T1110.001 | ✅ | — | ✅ | ✅ |
+| [Directory Secrets Replicated by a Non-Machine Account (DCSync)](docs/rules/win_dcsync_replication_by_non_machine_account.md) | Credential Access | T1003.006 | ✅ | Sentinel only | ✅ | ✅ |
+| [SAM or SECURITY Hive, or NTDS.dit, Copied for Offline Credential Extraction](docs/rules/win_sam_security_hive_or_ntds_dumped.md) | Credential Access | T1003.002, T1003.003, T1003.004 | ✅ | ✅ | ✅ | ✅ |
 | [PowerShell Launched With Encoded or Base64-Decoded Command](docs/rules/win_powershell_encoded_command.md) | Execution, Stealth | T1059.001, T1027.010 | ✅ | ✅ | ✅ | ✅ |
 | [Scheduled Task Created With Script Host, LOLBin or User-Writable Path Action](docs/rules/win_scheduled_task_suspicious_action.md) | Persistence, Execution | T1053.005 | ✅ | Sentinel only | ✅ | ✅ |
 | [Service Installed With Shell, Named Pipe, User-Folder or Path-Less Image Path](docs/rules/win_service_install_suspicious_image_path.md) | Persistence, Privilege Escalation, Execution | T1543.003, T1569.002 | ✅ | — | ✅ | ✅ |
@@ -68,20 +73,26 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 | [LSASS Opened by a Process From a User or Network Path](docs/rules/win_lsass_access_from_user_path.md) | Credential Access | T1003.001 | ✅ | — | ✅ | ✅ |
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
 | [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
+| [WMI Event Subscription Bound to a Command Line or Script Consumer](docs/rules/win_wmi_event_subscription_code_consumer.md) | Persistence, Privilege Escalation | T1546.003 | ✅ | — | ✅ | ✅ |
 | [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ | ✅ |
+| [Shadow Copies, Backup Catalog or Boot Recovery Deleted or Disabled](docs/rules/win_inhibit_system_recovery.md) | Impact | T1490 | ✅ | ✅ | ✅ | ✅ |
 | [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS CloudTrail Trail Configuration or Event Selectors Changed](docs/rules/aws_cloudtrail_logging_config_changed.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Root Account Console Login](docs/rules/aws_root_console_login.md) | Initial Access, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS IAM User Console Login Without MFA](docs/rules/aws_iam_user_console_login_without_mfa.md) | Initial Access | T1078.004 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | — | ✅ |
+| [AWS IAM MFA Device Deactivated](docs/rules/aws_iam_mfa_device_deactivated.md) | Persistence, Credential Access | T1556.006 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | — | ✅ |
 | [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Network ACL Inbound Rule Opened to the Internet](docs/rules/aws_network_acl_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS S3 Block Public Access Removed or Weakened](docs/rules/aws_s3_public_access_block_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | — | ✅ |
 | [AWS S3 Bucket Policy Grants Access to a Whole AWS Account](docs/rules/aws_s3_bucket_policy_cross_account_access.md) | Exfiltration | T1537 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS EBS Snapshot, AMI or RDS Snapshot Shared With Another Account or Made Public](docs/rules/aws_ec2_or_rds_snapshot_shared_outside_account.md) | Exfiltration | T1537 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
+| [AWS KMS Key Disabled, Scheduled for Deletion or Key Material Deleted](docs/rules/aws_kms_key_disabled_or_deletion_scheduled.md) | Impact | T1485 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Secrets Manager Many Distinct Secrets Read by One Identity](docs/rules/aws_secretsmanager_many_secrets_read.md) | Credential Access | T1555.006 | ✅ | — | — | ✅ |
 
 ## Adding a rule
@@ -100,6 +111,7 @@ pip install -r requirements.txt
 python scripts/fetch_datasets.py   # pull test datasets
 make lint convert test coverage
 make sweep                         # noise sweep (~110 MB download)
+make robustness                    # attacker-style changes to positive events
 make engines-up validate engines-down   # needs Docker; ~11 GB of images
 ```
 
@@ -111,6 +123,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
+- **M7 (done):** Eight rules for coverage gaps (Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check, and a robustness check of every process-creation rule against attacker-style changes to its samples, with a reviewed baseline that CI checks
 
 ## Data sources
 

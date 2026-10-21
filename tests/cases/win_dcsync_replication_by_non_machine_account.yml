@@ -1,0 +1,23 @@
+rule: rules/windows/credential_access/win_dcsync_replication_by_non_machine_account.yml
+# Security-log rule: windows-logsources adds the Channel=Security condition.
+pipelines: [windows-logsources]
+positive:
+  # Real: Mimikatz DCSync as Administrator (2 x Get-Changes, 1 x Get-Changes-All); only the
+  # Get-Changes-All event counts, so 1 hit per DCSync.
+  - file: tests/data/external/evtx-attack-samples/CA_DCSync_4662.evtx
+    min_hits: 1
+  # Real: Empire and Covenant DCSync as domain user pgustavo (OTRF), same event pattern
+  - file: tests/data/external/otrf/empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    min_hits: 1
+  - file: tests/data/external/otrf/covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    min_hits: 1
+  # Synthetic: Get-Changes-In-Filtered-Set by a service account; Get-Changes-All with an
+  # upper-case GUID by an Entra Connect-style MSOL_ account (left to triage, owner decision)
+  - file: tests/data/samples/win_dcsync_replication_by_non_machine_account_synthetic_positive.json
+    min_hits: 2
+negative:
+  # Real: DC1$ replicating with Get-Changes during an ACL attack (machine account, no secrets right)
+  - file: tests/data/external/evtx-attack-samples/ACL_ForcePwd_SPNAdd_User_Computer_Accounts.evtx
+  # Synthetic: DC and RODC machine accounts replicating secrets, Get-Changes only by a sync
+  # account, and an ordinary property read
+  - file: tests/data/samples/win_dcsync_replication_by_non_machine_account_benign.json

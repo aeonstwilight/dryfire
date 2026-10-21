@@ -324,3 +324,84 @@ datasets:
   - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/kerberos_pwd_spray_4771.evtx
     path: evtx-attack-samples/kerberos_pwd_spray_4771.evtx
     sha256: 4a0a1c7132e216dbc704c806e9429df9ae3ac00485d5238e50c776e3099ae11d
+  # win_dcsync_replication_by_non_machine_account
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/CA_DCSync_4662.evtx
+    path: evtx-attack-samples/CA_DCSync_4662.evtx
+    sha256: 679b2ff27af6c932c07bf3e81391e455fae98e69bf3aff0f524e31aadc418131
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    path: otrf/empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    sha256: fe1fcc96c0ff0cbae8fd4ffaadf85f51e28475441774f6fda3d963d4e2962800
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    path: otrf/covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip
+    sha256: ccbb0e91c03fa1d575b3bfccba59f3bba62479860bd9ee8b571a907333eb9082
+  # (real negative: a DC machine account's own Get-Changes replication)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Credential%20Access/ACL_ForcePwd_SPNAdd_User_Computer_Accounts.evtx
+    path: evtx-attack-samples/ACL_ForcePwd_SPNAdd_User_Computer_Accounts.evtx
+    sha256: f09f993909deb7acdae4c4f6f48e5a8447487e89437873fd8e653436a3dce36c
+  # win_sam_security_hive_or_ntds_dumped (also uses PanacheSysmon_vs_AtomicRedTeam01 and cmd_psexec_lsa_secrets_dump above)
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/cmd_dumping_ntds_dit_file_ntdsutil.zip
+    path: otrf/cmd_dumping_ntds_dit_file_ntdsutil.zip
+    sha256: 4633882ab1e9eadd156b29a89a5a6e24b680ead1b11ee259fdbe0d19ddbf77cf
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/cmd_dumping_ntds_dit_file_volume_shadow_copy.zip
+    path: otrf/cmd_dumping_ntds_dit_file_volume_shadow_copy.zip
+    sha256: aed847c1571ec3ef906f2b844d343bb3897eec4cf856b8f0939e934646348378
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/cmd_sam_copy_esentutl.zip
+    path: otrf/cmd_sam_copy_esentutl.zip
+    sha256: f7a71135778aeff605abcb88a14a076f0814ab5cb136d07103bdf13c45551b64
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/credential_access/host/empire_shell_reg_dump_sam.zip
+    path: otrf/empire_shell_reg_dump_sam.zip
+    sha256: 5a8ee19860f35da6d4bcadf15178a085b469086c461d3d873d0f4adedba41f0a
+  # win_wmi_event_subscription_code_consumer (also uses PanacheSysmon_vs_AtomicRedTeam01 and
+  # sysmon_20_21_1_CommandLineEventConsumer above)
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/wmighost_sysmon_20_21_1.evtx
+    path: evtx-attack-samples/wmighost_sysmon_20_21_1.evtx
+    sha256: 687c5cbe9a912bd8688692489bd94bb91f0518e3008535469e4fc4e1adc59446
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/persistence/host/empire_wmi_local_event_subscriptions_elevated_user.zip
+    path: otrf/empire_wmi_local_event_subscriptions_elevated_user.zip
+    sha256: a507f2edd768b592e6b3157e974fd0468965eee00407387d88356ecb8fd20fea
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/lateral_movement/host/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
+    path: otrf/covenant_wmi_remote_event_subscription_ActiveScriptEventConsumers.zip
+    sha256: 6167815b2f1901a267d965335251dc035b211f2b6e0d2063903d764305b80415
+  # aws_kms_key_disabled_or_deletion_scheduled (real negative: T1078_aws_createaccesskey above, CreateKey only)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1486/aws_kms_key/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1486_aws_kms_key/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1486_aws_kms_key.jsonl
+    sha256: 8c6869476565588356d30a0c20d3767b2d64de8f871af2e97b2b0d57c4cc64b7
+  # aws_iam_user_console_login_without_mfa (also uses T1078_aws_createloginprofile and,
+  # as a negative, T1078.004_aws_login_sfa above)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.jsonl
+    sha256: 33f297a364e033a63e3735f53a1f9f93e5c3621ecc26b5087fe64e4694d28867
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.jsonl
+    sha256: 1948ad96edbd3818ecb484d4bb6af6a4c6c7ae3829da511548ab225b31188f8a
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1110.003/aws_multiple_login_fail_per_user/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1110.003_aws_multiple_login_fail_per_user/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1110.003_aws_multiple_login_fail_per_user.jsonl
+    sha256: c0a030b82103f8065913a3dd0285d0534ef421b807e06febbe73537f4f11b2e7
+  # aws_iam_mfa_device_deactivated (positive: T1621_aws_mfa_disabled above; real negative here:
+  # new virtual MFA devices created)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1556.006/aws_new_mfa_method_registered_for_user/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1556.006_aws_new_mfa_method_registered_for_user/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1556.006_aws_new_mfa_method_registered_for_user.jsonl
+    sha256: 3947a363443b869c10b890febe58c27a75bd1208b729a35b02e05eb328d97617
+  # aws_ec2_or_rds_snapshot_shared_outside_account (also uses Invictus YMDRJwtmC82bUwAo, the AMI
+  # share and both revokes, and 9SJSsrxJ0ChF5VFb, the RDS revoke, above)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1220Z_ovtmbuX3ENJ119uH.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1220Z_ovtmbuX3ENJ119uH.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1220Z_ovtmbuX3ENJ119uH.jsonl
+    sha256: 05e8b61e760c59ae5bc6774cf8f6c114ca0a75635da0a1170bf6b2cef25d782e
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1225Z_vMAR90Iiaqr6M5sR.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1225Z_vMAR90Iiaqr6M5sR.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1225Z_vMAR90Iiaqr6M5sR.jsonl
+    sha256: fc357f02f47d9dcd486842a1ee1aae7eaf7ff30e8e5b163e51139e54475115c8
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1537/aws_snapshot_exfil/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1537_aws_snapshot_exfil/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1537_aws_snapshot_exfil.jsonl
+    sha256: ac343623bd299b4cbd29b1d718e91b51f00da71fee4fe3de26dca83205676cca
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1537/aws_ami_shared_public/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1537_aws_ami_shared_public/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1537_aws_ami_shared_public.jsonl
+    sha256: f2402c34740a6c324cf61a7523bc8f19abb5a60e3a3426f8b17df620593866cf

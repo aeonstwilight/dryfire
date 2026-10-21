@@ -1,0 +1,39 @@
+title: WMI Event Subscription Bound to a Command Line or Script Consumer
+id: 10c9b53b-a93a-4c6d-8c7c-aa8dd7801719
+status: experimental
+description: |
+    Detects a WMI filter-to-consumer binding (Sysmon 21) being created or
+    modified where the consumer is a CommandLineEventConsumer or
+    ActiveScriptEventConsumer, the two consumer classes that run code. This is
+    the moment a WMI persistence subscription goes live: from then on WMI runs
+    the command or script whenever the filter's event fires (a timer, logon,
+    uptime threshold). The binding doesn't carry the command; the consumer
+    creation (Sysmon 20) with the same name holds it. Other consumer classes
+    (event log, log file, SMTP) can't run code and are not matched.
+author: aeonstwilight
+date: 2026-10-20
+references:
+    - https://attack.mitre.org/techniques/T1546/003/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
+    - https://learn.microsoft.com/en-us/windows/win32/wmisdk/receiving-events-at-all-times
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1546.003
+logsource:
+    product: windows
+    category: wmi_event
+detection:
+    selection:
+        EventID: 21
+        Operation:
+            - 'Created'
+            - 'Modified'
+        Consumer|contains:
+            - 'CommandLineEventConsumer'
+            - 'ActiveScriptEventConsumer'
+    condition: selection
+falsepositives:
+    - Management, monitoring or vendor agents that register their own command-line or script consumers (check the consumer name and command against the product)
+    - Administrators using WMI subscriptions for scheduled maintenance
+level: high

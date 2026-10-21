@@ -1,0 +1,19 @@
+rule: rules/windows/impact/win_inhibit_system_recovery.yml
+positive:
+  # Real: vssadmin delete shadows /all /quiet, wbadmin delete catalog -quiet, and bcdedit
+  # recoveryenabled no / bootstatuspolicy ignoreallfailures (Atomic Red Team T1490). Each runs
+  # under a "cmd /c" wrapper that the rule must not count, so exactly 4 hits.
+  - file: tests/data/external/evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    min_hits: 4
+  # Synthetic: mixed-case vssadmin delete, resize shadowstorage, wmic shadowcopy delete,
+  # PowerShell Win32_ShadowCopy .Delete() and Remove-CimInstance, wbadmin delete systemstatebackup
+  - file: tests/data/samples/win_inhibit_system_recovery_synthetic_positive.json
+    min_hits: 6
+negative:
+  # Real: malware listing shadows (vssadmin list shadows) and creating one (wmic shadowcopy call
+  # create) to run a payload from it; the rule looks for removal, not use.
+  - file: tests/data/external/evtx-attack-samples/sysmon_exec_from_vss_persistence.evtx
+  # Synthetic admin look-alikes: list/create shadows, wmic shadowcopy list, PowerShell listing
+  # Win32_ShadowCopy, wbadmin get versions / start backup / restore catalog, bcdedit /enum and
+  # recovery settings turned on
+  - file: tests/data/samples/win_inhibit_system_recovery_benign.json

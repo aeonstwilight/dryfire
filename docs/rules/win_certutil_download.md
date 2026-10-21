@@ -24,7 +24,7 @@ Requiring a URL keeps cache administration out: `certutil -urlcache` (list) and 
 
 Not covered:
 
-- **Renamed certutil** (for example, copied to `%TEMP%\tcm.tmp`). Matching is on `Image` only, because Sentinel's `SecurityEvent` has no `OriginalFileName` column. Renamed system utilities are a candidate for their own rule.
+- **Renamed certutil** (for example, copied to `%TEMP%\tcm.tmp`). Matching is on `Image` only, because Sentinel's `SecurityEvent` has no `OriginalFileName` column. The robustness check confirms it (`binary_renamed`: 0/5). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed certutil by `OriginalFileName` on Splunk, Defender and Elastic; Sentinel has no such column.
 - **Encode and decode** (`-encode`, `-decode`, `-decodehex`; T1140). These often follow a download but are a separate behaviour with their own false positives (certificate admin). They're a candidate for a follow-up rule.
 - **Downloads via a UNC path** or other schemes without a URL, and other download LOLBins (`bitsadmin`, `curl.exe`, PowerShell cradles).
 

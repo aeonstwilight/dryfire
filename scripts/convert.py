@@ -63,6 +63,11 @@ def splunk_cloudtrail_pipeline():
     return load_pipeline("pipelines/splunk_cloudtrail.yml")
 
 
+def elastic_windows_raw_fields_pipeline():
+    """Windows Security fields kept as winlog.event_data.<name> (runs before ecs_windows)."""
+    return load_pipeline("pipelines/elastic_windows_raw_fields.yml")
+
+
 def elastic_windows_pipeline():
     """Windows rules -> plain ECS fields, Elastic integration data streams, allowed fields only."""
     return load_pipeline("pipelines/elastic_windows.yml")
@@ -100,8 +105,9 @@ def elastic_unmapped_fields(rule_path, query):
 #   CloudTrail rules -> AWSCloudTrail), then `azure_monitor`, which maps process
 #   creation to SecurityEvent and checks every field against the table.
 # Defender: `microsoft_xdr` maps to DeviceProcessEvents and friends.
-# Elastic: `sysmon` as for Splunk, then the Elastic package's `ecs_windows` (ECS
-#   field names), then ours: pipelines/elastic_windows.yml and
+# Elastic: `sysmon` as for Splunk, pipelines/elastic_windows_raw_fields.yml
+#   (fields that stay under winlog.event_data), then the Elastic package's
+#   `ecs_windows` (ECS field names), then ours: pipelines/elastic_windows.yml and
 #   pipelines/elastic_cloudtrail.yml (data streams, field names, allowed fields).
 TARGETS = {
     "splunk": {
@@ -124,7 +130,8 @@ TARGETS = {
     },
     "elastic": {
         "backend": DryfireESQLBackend,
-        "pipelines": [sysmon_pipeline, ecs_windows, elastic_windows_pipeline, elastic_cloudtrail_pipeline],
+        "pipelines": [sysmon_pipeline, elastic_windows_raw_fields_pipeline, ecs_windows,
+                      elastic_windows_pipeline, elastic_cloudtrail_pipeline],
         "out_dir": Path("build/elastic"),
         "ext": ".esql",
         "check": elastic_unmapped_fields,

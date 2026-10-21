@@ -1,0 +1,36 @@
+title: AWS KMS Key Disabled, Scheduled for Deletion or Key Material Deleted
+id: 265210b7-378d-4537-a514-926621c5bca3
+status: experimental
+description: |
+    Detects a KMS key being made unusable: disabled (DisableKey), scheduled
+    for deletion (ScheduleKeyDeletion, 7 to 30 days before the key and every
+    piece of data encrypted under it are lost), or its imported key material
+    deleted (DeleteImportedKeyMaterial, unusable at once). An attacker with
+    KMS rights can destroy or hold to ransom everything encrypted with the
+    key: S3 objects, EBS volumes and snapshots, RDS databases, secrets.
+    Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-20
+references:
+    - https://attack.mitre.org/techniques/T1485/
+    - https://docs.aws.amazon.com/kms/latest/APIReference/API_ScheduleKeyDeletion.html
+    - https://docs.aws.amazon.com/kms/latest/APIReference/API_DisableKey.html
+    - https://docs.aws.amazon.com/kms/latest/APIReference/API_DeleteImportedKeyMaterial.html
+tags:
+    - attack.impact
+    - attack.t1485
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: kms.amazonaws.com
+        eventName:
+            - ScheduleKeyDeletion
+            - DisableKey
+            - DeleteImportedKeyMaterial
+    condition: selection
+falsepositives:
+    - Planned key retirement or clean-up of unused keys by the key owners
+    - Infrastructure-as-code (Terraform, CloudFormation) destroying a stack that owns a key
+level: medium

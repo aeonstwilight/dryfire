@@ -1,0 +1,113 @@
+# Robustness baseline: the reviewed results of `make robustness` (tests/run_robustness.py).
+# Each value is "caught/changed" for one rule and change (see tests/variants.yml), or "-"
+# when the change didn't apply to any of the rule's events.
+#
+# Reviewed by the owner on 2026-10-21. Every change is caught except binary_renamed: rules
+# matching on Image miss a renamed copy, which is accepted and written in each rule's triage
+# note (Sentinel's SecurityEvent has no OriginalFileName column; the renamed-binary rule
+# covers the shells, script hosts and common LOLBins on the other targets).
+#
+# `make robustness` fails if any value changes or a process-creation rule has no entry. If a
+# change is intended (a rule was tuned, samples or variants changed, a rule was added),
+# review build/robustness/ and update this file to match.
+
+win_certutil_download:
+  upper_case: "5/5"
+  program_quoted: "5/5"
+  extra_spaces: "5/5"
+  cmd_carets: "-"
+  switch_dash_slash: "4/4"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "5/5"
+  binary_renamed: "0/5"
+win_sam_security_hive_or_ntds_dumped:
+  upper_case: "21/21"
+  program_quoted: "17/17"
+  extra_spaces: "21/21"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "21/21"
+  binary_renamed: "3/21"
+win_office_spawning_shell_or_script_host:
+  upper_case: "7/7"
+  program_quoted: "7/7"
+  extra_spaces: "7/7"
+  cmd_carets: "3/3"
+  switch_dash_slash: "-"
+  ps_enc_short: "1/1"
+  ps_enc_long: "1/1"
+  binary_moved: "7/7"
+  binary_renamed: "0/7"
+win_powershell_encoded_command:
+  upper_case: "5/5"
+  program_quoted: "2/2"
+  extra_spaces: "5/5"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "3/3"
+  ps_enc_long: "3/3"
+  binary_moved: "5/5"
+  binary_renamed: "0/5"
+win_wmiprvse_suspicious_child:
+  upper_case: "8/8"
+  program_quoted: "8/8"
+  extra_spaces: "6/6"
+  cmd_carets: "4/4"
+  switch_dash_slash: "-"
+  ps_enc_short: "1/1"
+  ps_enc_long: "1/1"
+  binary_moved: "8/8"
+  binary_renamed: "8/8"
+win_inhibit_system_recovery:
+  upper_case: "10/10"
+  program_quoted: "10/10"
+  extra_spaces: "10/10"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "10/10"
+  binary_renamed: "0/10"
+win_certutil_encode_decode:
+  upper_case: "6/6"
+  program_quoted: "6/6"
+  extra_spaces: "6/6"
+  cmd_carets: "-"
+  switch_dash_slash: "6/6"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "6/6"
+  binary_renamed: "0/6"
+win_renamed_shell_or_lolbin:
+  upper_case: "14/14"
+  program_quoted: "13/13"
+  extra_spaces: "14/14"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "14/14"
+  binary_renamed: "14/14"
+win_rundll32_relative_path_dll:
+  upper_case: "26/26"
+  program_quoted: "23/23"
+  extra_spaces: "26/26"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "26/26"
+  binary_renamed: "0/26"
+win_rundll32_suspicious_usage:
+  upper_case: "12/12"
+  program_quoted: "6/6"
+  extra_spaces: "11/11"
+  cmd_carets: "-"
+  switch_dash_slash: "-"
+  ps_enc_short: "-"
+  ps_enc_long: "-"
+  binary_moved: "12/12"
+  binary_renamed: "0/12"
