@@ -369,3 +369,17 @@ datasets:
     path: aws/splunk-attack-data-raw/T1486_aws_kms_key/aws_cloudtrail_events.json
     jsonl: aws/splunk-attack-data/T1486_aws_kms_key.jsonl
     sha256: 8c6869476565588356d30a0c20d3767b2d64de8f871af2e97b2b0d57c4cc64b7
+  # aws_iam_user_console_login_without_mfa (also uses T1078_aws_createloginprofile and,
+  # as a negative, T1078.004_aws_login_sfa above)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.jsonl
+    sha256: 33f297a364e033a63e3735f53a1f9f93e5c3621ecc26b5087fe64e4694d28867
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.jsonl
+    sha256: 1948ad96edbd3818ecb484d4bb6af6a4c6c7ae3829da511548ab225b31188f8a
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1110.003/aws_multiple_login_fail_per_user/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1110.003_aws_multiple_login_fail_per_user/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1110.003_aws_multiple_login_fail_per_user.jsonl
+    sha256: c0a030b82103f8065913a3dd0285d0534ef421b807e06febbe73537f4f11b2e7

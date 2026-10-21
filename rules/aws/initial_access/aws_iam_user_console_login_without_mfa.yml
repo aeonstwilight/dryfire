@@ -1,0 +1,38 @@
+title: AWS IAM User Console Login Without MFA
+id: 69be0b46-0d31-4465-a7d2-d3763fb0a508
+status: experimental
+description: |
+    Detects a successful AWS Management Console sign-in by an IAM user that
+    didn't use MFA (ConsoleLogin, userIdentity.type IAMUser, ConsoleLogin
+    Success, additionalEventData.MFAUsed No). A password alone is enough for
+    an attacker holding stolen or newly created console credentials (for
+    example a login profile they added to an existing user). Root logins are
+    left to the root-login rule, and federated (SSO) sessions show up as
+    AssumedRole, with MFA handled by the identity provider, so neither is
+    matched. MFAUsed is matched with a pattern keyed on "MFAUsed", so it gives
+    the same result on the field value and on the JSON or Map text that
+    Sentinel and Elastic keep (where MobileVersion is also "No").
+author: aeonstwilight
+date: 2026-10-21
+references:
+    - https://attack.mitre.org/techniques/T1078/004/
+    - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-aws-console-sign-in-events.html
+    - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html
+tags:
+    - attack.initial-access
+    - attack.t1078.004
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventName: ConsoleLogin
+        userIdentity.type: IAMUser
+        responseElements.ConsoleLogin|contains: 'Success'
+        additionalEventData.MFAUsed|re: '(^|MFAUsed\\?"?\s*[:=]\s*\\?"?)No'
+    condition: selection
+falsepositives:
+    - IAM users without an MFA device in accounts that don't enforce MFA (fix the gap rather than tune it out)
+    - Break-glass IAM users whose MFA device is deliberately kept offline
+    - Shared lab or training accounts
+level: medium

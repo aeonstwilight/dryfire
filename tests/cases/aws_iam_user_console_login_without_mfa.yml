@@ -1,0 +1,23 @@
+rule: rules/aws/initial_access/aws_iam_user_console_login_without_mfa.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1078): IAM user AtomicRedTeam signs in twice without MFA after
+  # a login profile was created for it; its two failed attempts don't count
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createloginprofile.jsonl
+    min_hits: 2
+  # Real (Invictus IR): Stratus Red Team user signs in to the console without MFA
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1225Z_4iD2boYSOwmb6sWd.jsonl
+    min_hits: 1
+  # Synthetic: no-MFA sign-in from the mobile console (MobileVersion Yes)
+  - file: tests/data/samples/aws_iam_user_console_login_without_mfa_synthetic_positive.jsonl
+    min_hits: 1
+negative:
+  # Real (Invictus IR): IAM user bert-jan signs in with MFA
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_AvIajGd5rkz6vTy4.jsonl
+  # Real (Splunk attack_data T1110.003): failed IAM user logins (MFAUsed No, ConsoleLogin Failure)
+  - file: tests/data/external/aws/splunk-attack-data/T1110.003_aws_multiple_login_fail_per_user.jsonl
+  # Real (Splunk attack_data T1078.004): root console logins without MFA (the root rule's job)
+  - file: tests/data/external/aws/splunk-attack-data/T1078.004_aws_login_sfa.jsonl
+  # Synthetic: IAM user with MFA, failed IAM user login, SSO (AssumedRole) and root logins
+  - file: tests/data/samples/aws_iam_user_console_login_without_mfa_benign.jsonl

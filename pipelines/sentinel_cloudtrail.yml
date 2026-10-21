@@ -9,11 +9,12 @@
 # the same value, per the column descriptions in Microsoft's table schema
 # (as shipped in pySigma-backend-kusto).
 #
-# Not mapped on purpose: requestParameters.*, responseElements.* and
+# Not mapped by default: requestParameters.*, responseElements.* and
 # additionalEventData.*. Sentinel keeps those as JSON text in one column
 # (RequestParameters, ...), so a field inside them can only be matched with
-# `contains` on that column. Add such a mapping per field, only for rules
-# that match it with `contains`, after checking it gives the same result.
+# `contains`, or a regex written for both the value and the JSON text, on that
+# column. Such a mapping is added per field (listed below with the rule that
+# needs it), after checking it gives the same result; make validate proves it.
 # Until then a rule using one fails conversion for Sentinel.
 #
 # Used by scripts/convert.py (the "sentinel" target).
@@ -98,6 +99,10 @@ transformations:
       requestParameters.egress: RequestParameters  # aws_network_acl_ingress_open_to_internet
       requestParameters.cidrBlock: RequestParameters  # aws_network_acl_ingress_open_to_internet
       requestParameters.ipv6CidrBlock: RequestParameters  # aws_network_acl_ingress_open_to_internet
+      # Fields inside responseElements / additionalEventData (JSON text in their
+      # columns), on the same terms as the request fields above.
+      responseElements.ConsoleLogin: ResponseElements      # aws_iam_user_console_login_without_mfa (contains; the only key)
+      additionalEventData.MFAUsed: AdditionalEventData     # aws_iam_user_console_login_without_mfa (re keyed on MFAUsed)
     rule_conditions:
       - type: logsource
         product: aws

@@ -163,3 +163,7 @@ aws_kms_key_disabled_or_deletion_scheduled:
   aws-invictus: 0
   aws-splunk-attack-data: 2
   aws-otrf: 0
+aws_iam_user_console_login_without_mfa:
+  aws-invictus: 1
+  aws-splunk-attack-data: 2
+  aws-otrf: 0
