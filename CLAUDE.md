@@ -56,11 +56,11 @@ The Makefile should expose these targets:
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
-- `make robustness` (M7): attacker-style changes to each process-creation rule's matched positive events (`tests/variants.yml`); report-only, in `build/robustness/`
+- `make robustness` (M7): attacker-style changes to each process-creation rule's matched positive events (`tests/variants.yml`); report in `build/robustness/`, checked against `tests/robustness_baseline.yml`
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
 - `make validate-elastic` (M5): run the converted ES|QL on the Elasticsearch container (`make elastic-up`); report in `build/validate/results_elastic.md`
 
-CI (`.github/workflows/ci.yml`) runs `make all`, `make sweep` and `make robustness` (report-only) on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`. A separate weekly workflow, `.github/workflows/drift.yml`, runs the same stages against the newest tool releases (report-only, M7).
+CI (`.github/workflows/ci.yml`) runs `make all`, `make sweep` and `make robustness` on push and pull request and uploads `build/` as an artifact. A second job, `validate`, starts both engines (`make engines-up`) and runs `make validate`; a third, `validate-elastic`, starts Elasticsearch (`make elastic-up`) and runs `make validate-elastic`. A separate weekly workflow, `.github/workflows/drift.yml`, runs the same stages against the newest tool releases (report-only, M7).
 
 ## Milestone 1 (done, merged in PR #1)
 
@@ -317,6 +317,7 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 
 - Steps 1–2 built: `tests/variants.yml` (nine changes: `upper_case`, `program_quoted`, `extra_spaces`, `cmd_carets` (cmd.exe only, outside quotes after `/c`/`/k`, since cmd strips carets before the child runs), `switch_dash_slash` (certutil only, documented to accept both), `ps_enc_short`/`ps_enc_long` (`-e`, `-EnCoDeDcOmMaNd`), `binary_moved`, `binary_renamed`), and `tests/run_robustness.py`, which takes the events each process-creation rule matches in its own positive samples, applies each change where it's valid, reruns Zircolite and reports caught/changed per rule and change. `make robustness`; a report-only CI step in the build job (about 2.5 minutes). `run_tests.py`'s Zircolite call is split into `run_zircolite()` (returns the matches) and `count_hits()`.
 - First run (2026-10-21), 10 process-creation rules: every change is caught except `binary_renamed`, which every rule matching on `Image` misses (0/n), as expected; caught by `win_renamed_shell_or_lolbin` (14/14, uses `OriginalFileName`), `win_wmiprvse_suspicious_child` (8/8, a user-folder child) and partly `win_sam_security_hive_or_ntds_dumped` (3/21, its shadow-copy selection has no binary condition). `cmd_carets` applied only to the Office and WMI rules, which key on the parent, so no rule's own cmd.exe match is tested by it yet. Step 3 (owner review, then a baseline) is next.
+- Step 3 done (2026-10-21): the owner accepted the `binary_renamed` misses (no `OriginalFileName` in the rules, as Sentinel's `SecurityEvent` lacks it). Each affected triage note now states the result. The renamed-binary rule covers cmd, PowerShell, pwsh, certutil, rundll32, regsvr32, mshta, wscript, cscript, msbuild, net/net1 and bitsadmin, but not vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil or esentutl, so renamed copies of those are a gap on every target (the inhibit-recovery and hive-dump notes said otherwise; fixed). The reviewed results are `tests/robustness_baseline.yml`; `make robustness` (and CI) fail if a value changes or a process-creation rule has no entry.
 
 **Side task: dependency drift check (done, 2026-10-19)**
 

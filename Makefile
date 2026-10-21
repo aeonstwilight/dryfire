@@ -64,8 +64,8 @@ sweep-datasets:
 
 # M7: robustness check. Each process-creation rule's matched positive events are
 # changed the ways listed in tests/variants.yml (upper case, quoting, carets,
-# switch spellings, moved or renamed binary) and run again. Report-only:
-# build/robustness/summary.md and misses.md.
+# switch spellings, moved or renamed binary) and run again. Report in
+# build/robustness/; fails if a result differs from tests/robustness_baseline.yml.
 robustness: datasets $(ZIRCOLITE)
 	$(PYTHON) tests/run_robustness.py --rules-dir $(RULES) --zircolite $(ZIRCOLITE)
 

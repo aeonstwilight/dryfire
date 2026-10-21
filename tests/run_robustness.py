@@ -13,10 +13,12 @@ The result for each rule and variant is "caught / changed events": 3/3 means
 the rule still catches every changed event, 0/3 that it misses them all, and
 "-" that the variant didn't apply to any of the rule's events.
 
-Report-only for now: it writes build/robustness/summary.md (the table),
-build/robustness/misses.md (the command lines a rule missed, for review) and
-build/robustness/results.json, and exits 0 unless Zircolite itself fails.
-The changed events are written to a temp folder and thrown away.
+It writes build/robustness/summary.md (the table), build/robustness/misses.md
+(the command lines a rule missed, for review) and build/robustness/results.json.
+Then it compares every cell with tests/robustness_baseline.yml, the reviewed
+results (owner decision, 2026-10-21), and exits 1 if any differs or a rule has
+no baseline entry, as the noise sweep does. Without a baseline file it only
+reports. The changed events are written to a temp folder and thrown away.
 """
 
 import argparse
@@ -31,6 +33,7 @@ import yaml
 from run_tests import DEFAULT_PIPELINES, detection_hits, run_zircolite
 
 VARIANTS_FILE = Path("tests/variants.yml")
+BASELINE_FILE = Path("tests/robustness_baseline.yml")
 OUT_DIR = Path("build/robustness")
 
 
@@ -216,23 +219,44 @@ def check_rule(zircolite, rule, case, variants):
     return len(events), results
 
 
+def cell(result):
+    """One result as the report and the baseline write it: "caught/changed", or "-" if it didn't apply."""
+    return "-" if result["changed"] == 0 else f"{result['caught']}/{result['changed']}"
+
+
+def compare_with_baseline(all_results):
+    """Return a list of differences from the baseline (empty if it matches)."""
+    baseline = yaml.safe_load(BASELINE_FILE.read_text(encoding="utf-8")) or {}
+    problems = []
+    for rule, (_, results) in all_results.items():
+        if rule not in baseline:
+            problems.append(f"{rule}: no baseline entry")
+            continue
+        for vid, result in results.items():
+            expected = str(baseline[rule].get(vid, "missing"))
+            if cell(result) != expected:
+                problems.append(f"{rule} / {vid}: got {cell(result)}, baseline {expected}")
+    for rule in baseline:
+        if rule not in all_results:
+            problems.append(f"{rule}: in the baseline but not a process-creation rule any more")
+    return problems
+
+
 def write_reports(all_results, variants):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ids = [v["id"] for v in variants]
     lines = ["# Robustness check", "",
              "Each cell: events still caught / events the change applied to (`-`: didn't apply).",
-             "Changes are described in [tests/variants.yml](../../tests/variants.yml). Report-only.", "",
+             "Changes are described in [tests/variants.yml](../../tests/variants.yml); reviewed results are",
+             "in [tests/robustness_baseline.yml](../../tests/robustness_baseline.yml).", "",
              "| Rule | Events | " + " | ".join(ids) + " |",
              "|---|---|" + "---|" * len(ids)]
     for rule, (n_events, results) in all_results.items():
         cells = []
         for vid in ids:
             r = results[vid]
-            if r["changed"] == 0:
-                cells.append("-")
-            else:
-                cell = f"{r['caught']}/{r['changed']}"
-                cells.append(cell if r["caught"] == r["changed"] else f"**{cell}**")
+            text = cell(r)
+            cells.append(f"**{text}**" if r["caught"] < r["changed"] else text)
         lines.append(f"| {rule} | {n_events} | " + " | ".join(cells) + " |")
     (OUT_DIR / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -274,7 +298,17 @@ def main():
         print(f"{rule.stem}: {n_events} event(s); {short}")
 
     write_reports(all_results, variants)
-    print(f"\nReports written to {OUT_DIR}/ (report-only).")
+    print(f"\nReports written to {OUT_DIR}/")
+    if not BASELINE_FILE.exists():
+        print(f"No {BASELINE_FILE}: report only.")
+        return
+    problems = compare_with_baseline(all_results)
+    for problem in problems:
+        print(f"FAIL  {problem}")
+    if problems:
+        sys.exit(f"{len(problems)} robustness result(s) differ from {BASELINE_FILE}. "
+                 "Review build/robustness/ and update the baseline only if the change is intended.")
+    print(f"Robustness results match {BASELINE_FILE}.")
 
 
 if __name__ == "__main__":

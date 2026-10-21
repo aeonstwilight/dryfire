@@ -22,7 +22,7 @@ Not covered:
 
 - **`-decode <cert-named file> <name>.exe`.** `.exe` can't be in the override list, because every certutil command line contains `certutil.exe` itself. So a certificate-looking input decoded to an `.exe` is missed. A `.exe` payload without a certificate name (for example `-decode file.txt c:\file.exe`) is still caught.
 - **Cert-named input decoded to a non-script extension** (for example `-decode payload.crt payload.lock`).
-- **Renamed certutil** (see the renamed-binary rule) and other decoders (PowerShell `FromBase64String`, see the encoded-PowerShell rule).
+- **Renamed certutil** (`binary_renamed` in the robustness check: 0/6; the renamed-binary rule catches it by `OriginalFileName`, except on Sentinel) and other decoders (PowerShell `FromBase64String`, see the encoded-PowerShell rule).
 
 ## Triage steps
 
