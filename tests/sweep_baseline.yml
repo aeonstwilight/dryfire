@@ -171,3 +171,7 @@ aws_iam_mfa_device_deactivated:
   aws-invictus: 0
   aws-splunk-attack-data: 1
   aws-otrf: 0
+aws_ec2_or_rds_snapshot_shared_outside_account:
+  aws-invictus: 3
+  aws-splunk-attack-data: 8
+  aws-otrf: 0

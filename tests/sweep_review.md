@@ -92,6 +92,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-20 | aws_kms_key_disabled_or_deletion_scheduled | 0 | Only its own sample: `ScheduleKeyDeletion` (7 days) and `DisableKey` in Splunk's T1486 `aws_kms_key` console session. The same session's `CreateKey`, `PutKeyPolicy`, `CancelKeyDeletion` and `EnableKey`, and the `CreateKey` calls in other datasets, correctly don't match. |
 | 2026-10-21 | aws_iam_user_console_login_without_mfa | 0 | Only its own samples: the 2 Atomic Red Team console logins after `CreateLoginProfile` (Splunk T1078) and the Stratus Red Team user's login (Invictus). bert-jan's login with MFA, the failed IAM user logins (MFAUsed No), root logins and the 122 federated `AssumedRole` logins correctly don't match. |
 | 2026-10-21 | aws_iam_mfa_device_deactivated | 0 | Only its own sample: root deactivating its own MFA device in Splunk's T1621 `aws_mfa_disabled` (the `DeleteVirtualMFADevice` right after correctly doesn't count). The `CreateVirtualMFADevice` calls in the T1556.006 dataset correctly don't match. |
+| 2026-10-21 | aws_ec2_or_rds_snapshot_shared_outside_account | 0 | Only its own samples: Splunk's T1537 snapshot shares (6, including a call rejected for an invalid account ID and a share with `all`) and AMI shares (2, one public), and the Stratus Red Team AMI, EBS snapshot and RDS snapshot shares in Invictus (3). Their revokes (`remove`, `valuesToRemove`) and the empty `add` correctly don't match. |
 
 ## Limits of this review
 

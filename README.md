@@ -88,6 +88,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [AWS S3 Block Public Access Removed or Weakened](docs/rules/aws_s3_public_access_block_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS S3 Bucket Made Public by Policy or ACL](docs/rules/aws_s3_bucket_made_public.md) | Collection | T1530 | ✅ | Sentinel only | — | ✅ |
 | [AWS S3 Bucket Policy Grants Access to a Whole AWS Account](docs/rules/aws_s3_bucket_policy_cross_account_access.md) | Exfiltration | T1537 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS EBS Snapshot, AMI or RDS Snapshot Shared With Another Account or Made Public](docs/rules/aws_ec2_or_rds_snapshot_shared_outside_account.md) | Exfiltration | T1537 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS KMS Key Disabled, Scheduled for Deletion or Key Material Deleted](docs/rules/aws_kms_key_disabled_or_deletion_scheduled.md) | Impact | T1485 | ✅ | Sentinel only | ✅ | ✅ |
@@ -120,7 +121,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M4 (done):** Twelve AWS CloudTrail rules through the same pipeline (lint, convert, test, coverage, sweep, validate), including the first Sigma correlation rule
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
-- **M7 (planned):** 6–8 rules for current coverage gaps (Windows impact and credential access, AWS), and a robustness check of every rule against attacker-style changes to its samples
+- **M7 (in progress):** eight rules for coverage gaps (done: Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check (done), and a robustness check of every rule against attacker-style changes to its samples (next)
 
 ## Data sources
 

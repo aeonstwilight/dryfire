@@ -46,6 +46,13 @@ transformations:
         - requestParameters.features{}.status
         - requestParameters.features{}.additionalConfiguration{}.status
       requestParameters.x-amz-acl: _raw
+      # aws_ec2_or_rds_snapshot_shared_outside_account: "the add list isn't empty"
+      # is matched with a regex on the raw JSON (Splunk splits list items into
+      # {} fields, and the backend can't run a regex on those); the patterns
+      # only match the add list's own text.
+      requestParameters.createVolumePermission.add.items: _raw
+      requestParameters.launchPermission.add.items: _raw
+      requestParameters.valuesToAdd: _raw
     rule_conditions:
       - type: logsource
         product: aws

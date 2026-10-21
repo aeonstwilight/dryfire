@@ -253,7 +253,7 @@ More detections on the current pipeline (owner decision, 2026-10-18): the AWS fo
 - `win_password_spray_from_one_source` (2026-10-19): correlation over two base rules (4625 SubStatus 0xc000006a/0xc0000064, 4771 Status 0x18; local/loopback sources excluded), 10+ distinct `TargetUserName` per `IpAddress` in 30 minutes, medium, T1110.003. Synthetic positives only (no public spray above the threshold in the corpus). Sentinel and Defender declared (no correlation support). On Elastic `IpAddress` is `source.ip`, an ip field: our backend writes `to_lower(to_string(source.ip))`, the loader stores it as type ip, and Elastic stores `::ffff:a.b.c.d` as `a.b.c.d`, so NTLM and Kerberos failures from one host are counted together there but apart elsewhere (samples avoid that mix). Validate now gives Windows events their `SystemTime` as Splunk's `_time` (test index retention raised to 50 years), and puts the per-sample filter inside each `multisearch` search.
 - `win_brute_force_one_account_from_one_source` (2026-10-19): replaces "brute force followed by a successful logon". Sigma correlations that chain an `event_count` into a `temporal` sequence don't convert (Splunk puts `stats` inside `multisearch`; ES|QL nests a query in `eval case`), and neither backend has `temporal_ordered`. So: `event_count` of 10+ wrong-password failures (4625 0xc000006a, 4771 0x18) per `TargetUserName` and `IpAddress` in 30 minutes, medium, T1110.001; the success check is the first triage step (owner decision). Synthetic positives; Sentinel and Defender declared.
 
-## Milestone 7 (planned)
+## Milestone 7 (in progress)
 
 Milestone 7 is done when 6–8 new rules covering current gaps pass the full pipeline, and a robustness check reports, for every rule, which attacker-style changes to its positive samples it still catches.
 
@@ -275,7 +275,7 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
    6. IAM user console login without MFA (AWS)
    7. MFA device deactivated or deleted (AWS)
    8. EBS snapshot or AMI shared publicly or cross-account (AWS)
-3. Rules one at a time, same process as before.
+3. Rules one at a time, same process as before (done, 2026-10-21: all eight rules added, 43 rules in all).
 
 **Rule notes:**
 
@@ -286,6 +286,7 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 - `aws_kms_key_disabled_or_deletion_scheduled` (2026-10-20): `kms.amazonaws.com` `ScheduleKeyDeletion`, `DisableKey` or `DeleteImportedKeyMaterial`, failed calls included. Medium, T1485 Data Destruction (not T1486, which the Splunk dataset uses; owner decisions). `DeleteImportedKeyMaterial` has synthetic positives only. Splunk, Sentinel and Elastic convert. Sweep: only its 2 own hits.
 - `aws_iam_user_console_login_without_mfa` (2026-10-21): `ConsoleLogin`, `userIdentity.type` `IAMUser`, `responseElements.ConsoleLogin` contains `Success`, `additionalEventData.MFAUsed` matched with `(^|MFAUsed\\?"?\s*[:=]\s*\\?"?)No` (keyed on `MFAUsed` because the same text holds `MobileVersion`, usually `No`). Root and federated (`AssumedRole`) logins out of scope. Medium, initial access, T1078.004. Sentinel: `responseElements.ConsoleLogin` → `ResponseElements` (contains; the only key), `additionalEventData.MFAUsed` → `AdditionalEventData`. Elastic: `responseElements.ConsoleLogin` → `event.outcome` (the integration lower-cases it), `additionalEventData.MFAUsed` → `aws.cloudtrail.additional_eventdata` (`Map.toString()` text) with the regex: an owner-approved exception to "plain contains only", like the network ACL rule. The Elastic loader now writes `additionalEventData` as that text and lower-cases `event.outcome`. Sweep: only its 3 own hits.
 - `aws_iam_mfa_device_deactivated` (2026-10-21): `iam.amazonaws.com` `DeactivateMFADevice` only, failed calls included. `DeleteVirtualMFADevice` left to triage: an assigned device must be deactivated first, so deactivation is in every removal (one alert each), and a lone delete is also used to clean up unassigned devices. Medium, persistence and credential access, T1556.006 (owner decisions). Splunk, Sentinel and Elastic convert. Sweep: only its own hit (root removing its MFA).
+- `aws_ec2_or_rds_snapshot_shared_outside_account` (2026-10-21): EC2 `ModifySnapshotAttribute`/`ModifyImageAttribute` with a non-empty `createVolumePermission.add.items` or `launchPermission.add.items`, or RDS `ModifyDBSnapshotAttribute`/`ModifyDBClusterSnapshotAttribute` with a non-empty `valuesToAdd`; failed calls included. RDS added at the owner's OK. Medium, T1537. Each list is matched with a regex that works on the list's own text (Zircolite writes lists of objects as `[{...` and lists of plain strings Python-style, `['1936…']`, hence `["']?`), the raw JSON (Splunk: mapped to `_raw`, as its backend can't run a regex on `{}` fields), Sentinel's `RequestParameters` and Elastic's `aws.cloudtrail.request_parameters` text (owner-approved regex exception). Sweep: only its 11 own hits.
 
 **Step 1 findings (2026-10-19):** counts are matching events found by a rough scan, not rule hits.
 
