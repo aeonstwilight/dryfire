@@ -383,3 +383,9 @@ datasets:
     path: aws/splunk-attack-data-raw/T1110.003_aws_multiple_login_fail_per_user/cloudtrail.json
     jsonl: aws/splunk-attack-data/T1110.003_aws_multiple_login_fail_per_user.jsonl
     sha256: c0a030b82103f8065913a3dd0285d0534ef421b807e06febbe73537f4f11b2e7
+  # aws_iam_mfa_device_deactivated (positive: T1621_aws_mfa_disabled above; real negative here:
+  # new virtual MFA devices created)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1556.006/aws_new_mfa_method_registered_for_user/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1556.006_aws_new_mfa_method_registered_for_user/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1556.006_aws_new_mfa_method_registered_for_user.jsonl
+    sha256: 3947a363443b869c10b890febe58c27a75bd1208b729a35b02e05eb328d97617

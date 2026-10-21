@@ -1,0 +1,17 @@
+rule: rules/aws/persistence/aws_iam_mfa_device_deactivated.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1621): root deactivates its own MFA device, then deletes it;
+  # only the deactivation counts
+  - file: tests/data/external/aws/splunk-attack-data/T1621_aws_mfa_disabled.jsonl
+    min_hits: 1
+  # Synthetic: an IAM user deactivating another user's device, and the same call denied
+  - file: tests/data/samples/aws_iam_mfa_device_deactivated_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Splunk attack_data T1556.006): root creates two new virtual MFA devices
+  - file: tests/data/external/aws/splunk-attack-data/T1556.006_aws_new_mfa_method_registered_for_user.jsonl
+  # Synthetic: lone DeleteVirtualMFADevice of an unassigned device, EnableMFADevice,
+  # ResyncMFADevice, ListMFADevices, CreateVirtualMFADevice
+  - file: tests/data/samples/aws_iam_mfa_device_deactivated_benign.jsonl
