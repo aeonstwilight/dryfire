@@ -25,7 +25,7 @@ endif
 ZIRCOLITE_ZIP := Zircolite-$(ZIRCOLITE_VERSION)-$(ZIRCOLITE_PLATFORM).zip
 ZIRCOLITE_URL := https://github.com/wagga40/Zircolite/releases/download/v$(ZIRCOLITE_VERSION)/$(ZIRCOLITE_ZIP)
 
-.PHONY: all lint convert test coverage datasets sweep sweep-datasets validate engines-up engines-down validate-elastic elastic-up elastic-down zircolite clean
+.PHONY: all lint convert test coverage datasets sweep sweep-datasets robustness validate engines-up engines-down validate-elastic elastic-up elastic-down zircolite clean
 
 all: lint convert test coverage
 
@@ -61,6 +61,13 @@ sweep: sweep-datasets $(ZIRCOLITE)
 # Download the sweep corpus (~110 MB) into tests/data/external/sweep/.
 sweep-datasets:
 	$(PYTHON) scripts/fetch_datasets.py --manifest tests/sweep_corpus.yml
+
+# M7: robustness check. Each process-creation rule's matched positive events are
+# changed the ways listed in tests/variants.yml (upper case, quoting, carets,
+# switch spellings, moved or renamed binary) and run again. Report-only:
+# build/robustness/summary.md and misses.md.
+robustness: datasets $(ZIRCOLITE)
+	$(PYTHON) tests/run_robustness.py --rules-dir $(RULES) --zircolite $(ZIRCOLITE)
 
 # M3: run the converted SPL and KQL on Splunk and Kusto and compare with Zircolite.
 # Needs Docker and the engines running (make engines-up). Report in build/validate/.

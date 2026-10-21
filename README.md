@@ -35,8 +35,9 @@ On every push and pull request:
 3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
 4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
 5. **Noise sweep:** every rule runs over EVTX-ATTACK-SAMPLES and OTRF APT29; any change from the reviewed per-rule counts in `tests/sweep_baseline.yml` fails the build.
-6. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
-7. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
+6. **Robustness check (report-only):** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again, to show which changes each rule still catches.
+7. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
+8. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
 
 Converted queries, test and sweep reports and the coverage layer are uploaded as build artifacts.
 
@@ -110,6 +111,7 @@ pip install -r requirements.txt
 python scripts/fetch_datasets.py   # pull test datasets
 make lint convert test coverage
 make sweep                         # noise sweep (~110 MB download)
+make robustness                    # attacker-style changes to positive events (report-only)
 make engines-up validate engines-down   # needs Docker; ~11 GB of images
 ```
 

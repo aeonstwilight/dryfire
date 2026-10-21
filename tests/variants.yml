@@ -1,0 +1,83 @@
+# Robustness check (M7 part B): attacker-style changes to each rule's real
+# positive events. `make robustness` (tests/run_robustness.py) takes the events
+# a rule matches in its own positive samples, applies each change below where
+# it is valid, runs Zircolite again on the changed copies and reports how many
+# the rule still catches. Report-only: build/robustness/.
+#
+# Which rules: every rule with `logsource: category: process_creation` (the
+# changes are to command lines and binary paths). Security-log and CloudTrail
+# rules have no attacker-shaped text fields to change.
+#
+# Each variant:
+#   id:          short name used in the report
+#   description: what the change is, and why it's a fair test
+#   change:      the function in tests/run_robustness.py that makes it
+#   only_image:  (optional) apply only to events whose Image ends with one of these
+#
+# A change that wouldn't alter an event (no quotes to add, no flag to swap) or
+# isn't valid for it (only_image) skips that event; the report counts only the
+# events each change applied to. Owner decisions, 2026-10-21.
+
+variants:
+  - id: upper_case
+    description: >-
+      The whole command line in upper case. Windows treats program names, paths
+      and most switches case-insensitively, so this tests that the rule does
+      too (it also upper-cases arguments such as Base64, which a real attacker
+      wouldn't; only the matching matters here).
+    change: upper_case
+
+  - id: program_quoted
+    description: >-
+      The program at the start of the command line wrapped in double quotes
+      ("vssadmin.exe" delete shadows ...), as Windows and many launchers write it.
+    change: quote_program
+
+  - id: extra_spaces
+    description: >-
+      Every space between arguments (outside quotes) doubled. Programs that
+      split arguments the usual way (CommandLineToArgvW) see the same arguments.
+    change: double_spaces
+
+  - id: cmd_carets
+    description: >-
+      cmd.exe's own command line with a ^ before every letter after /c or /k,
+      outside quotes (v^s^s^a^d^m^i^n). cmd removes the carets before running
+      the command, so only cmd.exe's command line changes, not the child's.
+    change: cmd_carets
+    only_image: ['\cmd.exe']
+
+  - id: switch_dash_slash
+    description: >-
+      Switches written with the other prefix (-decode <-> /decode). Only for
+      programs documented to accept both.
+    change: swap_switch_prefix
+    only_image: ['\certutil.exe']
+
+  - id: ps_enc_short
+    description: >-
+      PowerShell's -EncodedCommand switch written as -e (any unambiguous
+      prefix works; also -ec).
+    change: ps_encoded_short
+    only_image: ['\powershell.exe', '\pwsh.exe']
+
+  - id: ps_enc_long
+    description: >-
+      PowerShell's -EncodedCommand switch written in full, in mixed case
+      (-EnCoDeDcOmMaNd).
+    change: ps_encoded_long
+    only_image: ['\powershell.exe', '\pwsh.exe']
+
+  - id: binary_moved
+    description: >-
+      The same binary copied to C:\Users\Public\ under its own name (Image and
+      the program in the command line). Rules that match the file name should
+      still fire; rules that need the system folder won't.
+    change: move_binary
+
+  - id: binary_renamed
+    description: >-
+      The binary copied to C:\Users\Public\ and renamed (svcupdate.exe), with
+      OriginalFileName unchanged. Rules that match Image miss this unless they
+      also use OriginalFileName (see the renamed-binary rule).
+    change: rename_binary

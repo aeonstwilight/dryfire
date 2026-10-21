@@ -74,11 +74,18 @@ jobs:
         if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
         run: make sweep
 
+      # M7: do the process-creation rules still fire on attacker-style
+      # changes to their positive events? Report-only (build/robustness/).
+      - name: Robustness check
+        id: robustness
+        if: ${{ !cancelled() && steps.lint.conclusion != 'skipped' }}
+        run: make robustness
+
       # Show the conversion and test tables on the workflow run page.
       - name: Job summary
         if: ${{ !cancelled() }}
         run: |
-          for f in build/conversion_summary.md build/tests/results.md build/sweep/summary.md; do
+          for f in build/conversion_summary.md build/tests/results.md build/sweep/summary.md build/robustness/summary.md; do
             if [ -f "$f" ]; then
               echo "### $f" >> "$GITHUB_STEP_SUMMARY"
               cat "$f" >> "$GITHUB_STEP_SUMMARY"
