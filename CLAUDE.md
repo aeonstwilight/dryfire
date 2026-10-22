@@ -325,3 +325,14 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 - Report-only: it never changes pins in the repo. A red run means a newer version changes results; pins are moved by hand after review.
 - `build/drift/versions.md` lists pinned, tested and newest released versions. It also flags a package that pip held back because of another package's version limit.
 - First local run (2026-10-19): Zircolite 4.6.0 (pinned 4.5.0) passes test and sweep unchanged; pySigma 2.0.1 is out but held at 1.5.1 by the backends' version limits; everything else is current.
+
+## Milestone 8 (planned)
+
+More detections on the current pipeline (owner decision, 2026-10-22), from the M7 step 1 candidates that have public test data. Each rule follows the usual process: the owner confirms the logic first; rule, test case and triage note; must pass sweep, robustness (if process creation) and validate.
+
+1. AWS IAM login profile created or updated (console password set for a user): Splunk attack_data `T1078_aws_createloginprofile` (3) and `T1078_aws_updateloginprofile` (2), Invictus/Stratus Red Team (2).
+2. AWS S3 bucket versioning suspended: Splunk attack_data `T1490_aws_bucket_version` (2).
+3. AWS SSM `SendCommand` (remote command execution on instances): Invictus/Stratus Red Team (2, one failed).
+4. Windows Run-key persistence (Sysmon 13): positives in OTRF `empire_persistence_registry_modification_run_keys_*` and Panache; the sweep has benign writers (`MsMpEng.exe` `…\Run\WindowsDefender`, Teams), so it needs an allow-list or a value-content condition.
+
+Also done before M8 (2026-10-22, PR #8): `win_renamed_shell_or_lolbin` now covers vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil and esentutl (see the M7 Part B notes).
