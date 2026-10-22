@@ -10,6 +10,9 @@
 # `make robustness` fails if any value changes or a process-creation rule has no entry. If a
 # change is intended (a rule was tuned, samples or variants changed, a rule was added),
 # review build/robustness/ and update this file to match.
+#
+# 2026-10-22: win_renamed_shell_or_lolbin gained seven tools and seven synthetic positives
+# (14 -> 21 events, all still caught).
 
 win_certutil_download:
   upper_case: "5/5"
@@ -82,15 +85,15 @@ win_certutil_encode_decode:
   binary_moved: "6/6"
   binary_renamed: "0/6"
 win_renamed_shell_or_lolbin:
-  upper_case: "14/14"
-  program_quoted: "13/13"
-  extra_spaces: "14/14"
+  upper_case: "21/21"
+  program_quoted: "20/20"
+  extra_spaces: "21/21"
   cmd_carets: "-"
   switch_dash_slash: "-"
   ps_enc_short: "-"
   ps_enc_long: "-"
-  binary_moved: "14/14"
-  binary_renamed: "14/14"
+  binary_moved: "21/21"
+  binary_renamed: "21/21"
 win_rundll32_relative_path_dll:
   upper_case: "26/26"
   program_quoted: "23/23"

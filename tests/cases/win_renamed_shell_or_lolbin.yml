@@ -6,11 +6,13 @@ positive:
   # Real: cmd.exe renamed to i.exe, run from a zip in Temp
   - file: tests/data/external/evtx-attack-samples/sysmon_zipexec.evtx
     min_hits: 1
-  # Synthetic: one renamed copy of each other listed binary
+  # Synthetic: one renamed copy of each other listed binary (the recovery and credential-dumping
+  # tools vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil and esentutl added 2026-10-22)
   - file: tests/data/samples/win_renamed_shell_or_lolbin_synthetic_positive.json
-    min_hits: 12
+    min_hits: 19
 negative:
   # Real normal OriginalFileName mismatches from APT29 (Google, Azure agent, Teams, TSTheme,
   # wlrmdr, wmiadap, AppHostRegistrationVerifier, PsExec64, sdelete64), plain cmd/powershell,
-  # plus synthetic normal pwsh.exe and bitsadmin.exe
+  # plus synthetic normal pwsh.exe and bitsadmin.exe, the seven recovery and credential-dumping
+  # tools under their own names, and reg.exe moved to C:\Users\Public but not renamed
   - file: tests/data/samples/win_renamed_shell_or_lolbin_benign.json
