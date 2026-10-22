@@ -30,7 +30,7 @@ Not covered:
 
 - **In-memory extraction:** Mimikatz `lsadump::sam`/`lsadump::secrets`, or reading the hives through the registry API from a custom tool.
 - **Raw-disk readers** (Invoke-NinjaCopy, raw NTFS parsers) and `diskshadow` scripts (`diskshadow /s file.txt` hides the commands in the file).
-- **Renamed copies** of reg, ntdsutil or esentutl (no `OriginalFileName`, as Sentinel's `SecurityEvent` doesn't have it). The robustness check confirms it (`binary_renamed`: 3/21; only the shadow-copy selection, which has no binary condition, still fires). The renamed-binary rule doesn't list these three tools either, so a renamed copy is a gap on every target.
+- **Renamed copies** of reg, ntdsutil or esentutl (no `OriginalFileName`, as Sentinel's `SecurityEvent` doesn't have it). The robustness check confirms it (`binary_renamed`: 3/21; only the shadow-copy selection, which has no binary condition, still fires). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed reg, ntdsutil and esentutl by `OriginalFileName` on Splunk, Defender and Elastic (added 2026-10-22); Sentinel has no such column.
 - **Creating the shadow copy** (`vssadmin create shadow`, `wmic shadowcopy call create`) on its own: common and benign; only the copy out of it is matched.
 - **Remote hive access** over the Remote Registry service (for example `secretsdump` against a remote host): no process on the target. Look for `winreg` named-pipe access (5145) instead.
 

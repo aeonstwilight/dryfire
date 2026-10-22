@@ -28,7 +28,7 @@ Matching on the binary means a `cmd /c "vssadmin delete shadows ..."` wrapper is
 
 Not covered:
 
-- **Renamed copies of these tools.** `OriginalFileName` isn't used, because Sentinel's `SecurityEvent` doesn't have it. The robustness check confirms it (`binary_renamed`: 0/10). The renamed-binary rule doesn't list vssadmin, wmic, wbadmin or bcdedit either (PowerShell is covered), so a renamed copy of these is a gap on every target.
+- **Renamed copies of these tools.** `OriginalFileName` isn't used, because Sentinel's `SecurityEvent` doesn't have it. The robustness check confirms it (`binary_renamed`: 0/10). The renamed-binary rule (`win_renamed_shell_or_lolbin`) catches renamed vssadmin, wmic, wbadmin, bcdedit and PowerShell by `OriginalFileName` on Splunk, Defender and Elastic (added 2026-10-22); Sentinel has no such column.
 - **Encoded or obfuscated PowerShell** (`-enc`, string concatenation such as `'Win32_Shadow'+'Copy'`): see the encoded-PowerShell rule.
 - **Deletion through the VSS API or WMI from other processes** (for example ransomware calling `IVssBackupComponents` directly, or WMI from a .NET binary), and `diskshadow` scripts (`diskshadow /s file.txt` hides the commands in the file).
 - **Other boolean spellings** for `recoveryenabled` (`off`, `false`) and quoted values.

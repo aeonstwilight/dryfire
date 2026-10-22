@@ -29,8 +29,15 @@ Process creation where `OriginalFileName` is one of the binaries below and `Imag
 | `MSBuild.exe` | `msbuild.exe` | yes |
 | `net.exe` / `net1.exe` | same | yes |
 | `bitsadmin.exe` | `bitsadmin.exe` | **no** (synthetic tests only) |
+| `VSSADMIN.EXE` | `vssadmin.exe` | yes (normal name only) |
+| `WBADMIN.EXE` | `wbadmin.exe` | **no** (synthetic tests only) |
+| `bcdedit.exe` | `bcdedit.exe` | **no** (synthetic tests only) |
+| `wmic.exe` | `wmic.exe` | yes (normal name only) |
+| `reg.exe` | `reg.exe` | yes (normal name only) |
+| `ntdsutil.exe` | `ntdsutil.exe` | yes (normal name only) |
+| `esentutl.exe` | `esentutl.exe` | yes (normal name only) |
 
-These are exactly the binaries that the encoded-PowerShell, certutil, Office-child, WMI-child and rundll32 rules match by file name. This rule covers the renamed case for all of them.
+These are exactly the binaries that the encoded-PowerShell, certutil, Office-child, WMI-child, rundll32, inhibit-recovery and hive-dumping rules match by file name. This rule covers the renamed case for all of them. The last seven were added on 2026-10-22, after the robustness check (`binary_renamed`) showed renamed copies of them evading the inhibit-recovery and hive-dumping rules. Their values were checked against the public corpus where it records them (vssadmin, wmic, reg, ntdsutil, esentutl); wbadmin and bcdedit only appear there without `OriginalFileName` (older Sysmon), so their entries are the binaries' PE names, tested with synthetic events.
 
 The list is deliberately targeted. In the test corpus, about 35 of 43 `OriginalFileName` mismatches are normal: Google Update, the Azure agent, Teams, Sysinternals 64-bit builds (`PsExec64`, `sdelete64`) and several Windows binaries with different internal names. A generic "any mismatch" rule would be mostly noise.
 
