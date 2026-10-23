@@ -1,0 +1,54 @@
+title: Run Key Value Pointing to a Script Host, LOLBin or User-Writable Path
+id: 77418687-8816-4a7f-924f-970be0beaf0f
+status: experimental
+description: |
+    Detects a Run or RunOnce key value (Run, RunOnce, RunOnceEx, RunServices,
+    Policies\Explorer\Run; HKLM, HKCU or WOW6432Node) set to a command that runs
+    a script host or LOLBin (PowerShell, cmd, wscript, cscript, mshta,
+    rundll32, regsvr32) or a program in a user-writable folder (AppData\Roaming,
+    Temp, Users\Public, ProgramData, Windows\Tasks, PerfLogs). Legitimate
+    autostart entries usually point to an installed program; most per-user
+    installers (Teams, OneDrive, Slack) live in AppData\Local, which is left
+    out on purpose.
+author: aeonstwilight
+date: 2026-10-23
+references:
+    - https://attack.mitre.org/techniques/T1547/001/
+    - https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1547.001
+logsource:
+    category: registry_set
+    product: windows
+detection:
+    selection_key:
+        TargetObject|contains:
+            - '\CurrentVersion\Run'
+            - '\Policies\Explorer\Run'
+    selection_value:
+        Details|contains:
+            # Script hosts and LOLBins
+            - 'powershell'
+            - 'pwsh'
+            - 'cmd.exe'
+            - 'wscript'
+            - 'cscript'
+            - 'mshta'
+            - 'rundll32'
+            - 'regsvr32'
+            # User-writable folders
+            - '\AppData\Roaming\'
+            - '\Temp\'
+            - '\Users\Public\'
+            - '\ProgramData\'
+            - '\Windows\Tasks\'
+            - '\PerfLogs\'
+    condition: selection_key and selection_value
+falsepositives:
+    - Software that starts a helper through rundll32, PowerShell or a script at logon
+    - Per-user applications installed in AppData\Roaming or ProgramData (some updaters and chat clients)
+    - Installers that use RunOnce to finish setup from a Temp folder after a reboot
+level: medium

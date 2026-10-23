@@ -187,3 +187,7 @@ aws_ssm_send_command_run_script:
   aws-invictus: 2
   aws-splunk-attack-data: 0
   aws-otrf: 0
+win_run_key_script_or_user_path_value:
+  evtx-attack-samples: 6
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 1
