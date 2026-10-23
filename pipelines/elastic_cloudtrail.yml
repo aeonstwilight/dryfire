@@ -64,6 +64,9 @@ transformations:
       # aws_s3_bucket_versioning_suspended: contains Suspended, which also matches
       # the text's VersioningConfiguration={Status=Suspended, ...}
       requestParameters.VersioningConfiguration.Status: aws.cloudtrail.request_parameters
+      # aws_ssm_send_command_run_script: contains the document name, which also
+      # matches the text's documentName=AWS-RunShellScript
+      requestParameters.documentName: aws.cloudtrail.request_parameters
       # aws_iam_user_console_login_without_mfa: the integration sets event.outcome
       # from responseElements.ConsoleLogin (lower-cased) and keeps
       # additionalEventData as Map.toString() text ({LoginTo=..., MFAUsed=No});

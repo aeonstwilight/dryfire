@@ -1,0 +1,37 @@
+title: AWS SSM SendCommand Running a Shell or Script Document
+id: dc5b6916-d571-4087-b60d-0cd251f14513
+status: experimental
+description: |
+    Detects Systems Manager SendCommand with one of the AWS documents that run
+    arbitrary commands on instances: AWS-RunShellScript, AWS-RunPowerShellScript
+    or AWS-RunRemoteScript (downloads a script and runs it). With
+    ssm:SendCommand an attacker can run commands as root or SYSTEM on every
+    managed instance without network access or credentials for the hosts.
+    Routine fleet tasks use other documents (patching, inventory, agent
+    updates), which are not matched. CloudTrail hides the commands themselves.
+    Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-23
+references:
+    - https://attack.mitre.org/techniques/T1651/
+    - https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_SendCommand.html
+    - https://docs.aws.amazon.com/systems-manager/latest/userguide/documents-command-ssm-plugin-reference.html
+tags:
+    - attack.execution
+    - attack.t1651
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: ssm.amazonaws.com
+        eventName: SendCommand
+        requestParameters.documentName|contains:
+            - AWS-RunShellScript
+            - AWS-RunPowerShellScript
+            - AWS-RunRemoteScript
+    condition: selection
+falsepositives:
+    - Administrators or automation running ad hoc commands on instances through Run Command
+    - Deployment pipelines that use AWS-RunShellScript or AWS-RunRemoteScript to install software
+level: medium

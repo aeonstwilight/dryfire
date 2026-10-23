@@ -421,3 +421,9 @@ datasets:
     path: aws/splunk-attack-data-raw/T1490_aws_bucket_version/cloudtrail.json
     jsonl: aws/splunk-attack-data/T1490_aws_bucket_version.jsonl
     sha256: 1abe5a2bb8f10e54253ada63d4a6ecee62faf4969bb6df93181e5f1fa19ff8b6
+  # aws_ssm_send_command_run_script (also uses Invictus iLj9fb7yyUG9X4Bf above, and
+  # x9kHmzMa7cx6l9wM as a negative)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.jsonl
+    sha256: 4272d7d4c3c745da389ab51064c805fcc2131fe7b806ddfc90a500c89fcfa3cb

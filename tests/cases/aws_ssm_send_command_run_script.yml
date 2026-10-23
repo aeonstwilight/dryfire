@@ -1,0 +1,20 @@
+rule: rules/aws/execution/aws_ssm_send_command_run_script.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Invictus IR, Stratus Red Team): bert-jan runs AWS-RunShellScript on an
+  # instance; the first attempt fails (InvalidInstanceId), the second succeeds
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_iLj9fb7yyUG9X4Bf.jsonl
+    min_hits: 1
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.jsonl
+    min_hits: 1
+  # Synthetic: AWS-RunPowerShellScript by tag from an assumed role, AWS-RunRemoteScript,
+  # the document named by ARN, and a denied call (failed calls count)
+  - file: tests/data/samples/aws_ssm_send_command_run_script_synthetic_positive.jsonl
+    min_hits: 4
+negative:
+  # Real (Invictus IR, Stratus Red Team): GetCommandInvocation and association status updates
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1200Z_x9kHmzMa7cx6l9wM.jsonl
+  # Synthetic: SendCommand with AWS-RunPatchBaseline, AWS-UpdateSSMAgent and
+  # AWS-GatherSoftwareInventory; ListCommands; StartSession (Session Manager, not covered)
+  - file: tests/data/samples/aws_ssm_send_command_run_script_benign.jsonl

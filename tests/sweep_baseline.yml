@@ -183,3 +183,7 @@ aws_s3_bucket_versioning_suspended:
   aws-invictus: 0
   aws-splunk-attack-data: 2
   aws-otrf: 0
+aws_ssm_send_command_run_script:
+  aws-invictus: 2
+  aws-splunk-attack-data: 0
+  aws-otrf: 0
