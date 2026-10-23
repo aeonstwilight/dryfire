@@ -415,3 +415,9 @@ datasets:
     path: aws/splunk-attack-data-raw/T1078_aws_updateloginprofile/aws_cloudtrail_events.json
     jsonl: aws/splunk-attack-data/T1078_aws_updateloginprofile.jsonl
     sha256: 8103aa638715ea463e633dc616076d7c6ff1838d796d712647cbd9a7f630278b
+  # aws_s3_bucket_versioning_suspended (also uses Invictus nBsuPO1qSTEVerMD and
+  # YbVFCP9AYzJDhHV9 above, as negatives)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1490/aws_bucket_version/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1490_aws_bucket_version/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1490_aws_bucket_version.jsonl
+    sha256: 1abe5a2bb8f10e54253ada63d4a6ecee62faf4969bb6df93181e5f1fa19ff8b6

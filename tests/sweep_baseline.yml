@@ -179,3 +179,7 @@ aws_iam_login_profile_created_or_updated:
   aws-invictus: 2
   aws-splunk-attack-data: 5
   aws-otrf: 0
+aws_s3_bucket_versioning_suspended:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0

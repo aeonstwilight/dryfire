@@ -102,6 +102,7 @@ transformations:
       requestParameters.createVolumePermission.add.items: RequestParameters  # aws_ec2_or_rds_snapshot_shared_outside_account (re)
       requestParameters.launchPermission.add.items: RequestParameters        # aws_ec2_or_rds_snapshot_shared_outside_account (re)
       requestParameters.valuesToAdd: RequestParameters                       # aws_ec2_or_rds_snapshot_shared_outside_account (re)
+      requestParameters.VersioningConfiguration.Status: RequestParameters    # aws_s3_bucket_versioning_suspended (contains)
       # Fields inside responseElements / additionalEventData (JSON text in their
       # columns), on the same terms as the request fields above.
       responseElements.ConsoleLogin: ResponseElements      # aws_iam_user_console_login_without_mfa (contains; the only key)
