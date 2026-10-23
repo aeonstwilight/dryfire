@@ -93,6 +93,7 @@ No false positives. Every hit outside a rule's own test samples is either an att
 | 2026-10-21 | aws_iam_user_console_login_without_mfa | 0 | Only its own samples: the 2 Atomic Red Team console logins after `CreateLoginProfile` (Splunk T1078) and the Stratus Red Team user's login (Invictus). bert-jan's login with MFA, the failed IAM user logins (MFAUsed No), root logins and the 122 federated `AssumedRole` logins correctly don't match. |
 | 2026-10-21 | aws_iam_mfa_device_deactivated | 0 | Only its own sample: root deactivating its own MFA device in Splunk's T1621 `aws_mfa_disabled` (the `DeleteVirtualMFADevice` right after correctly doesn't count). The `CreateVirtualMFADevice` calls in the T1556.006 dataset correctly don't match. |
 | 2026-10-21 | aws_ec2_or_rds_snapshot_shared_outside_account | 0 | Only its own samples: Splunk's T1537 snapshot shares (6, including a call rejected for an invalid account ID and a share with `all`) and AMI shares (2, one public), and the Stratus Red Team AMI, EBS snapshot and RDS snapshot shares in Invictus (3). Their revokes (`remove`, `valuesToRemove`) and the empty `add` correctly don't match. |
+| 2026-10-23 | aws_iam_login_profile_created_or_updated | 0 | Only its own samples: Atomic Red Team's `CreateLoginProfile` (3) and `UpdateLoginProfile` (2) for user AtomicRedTeam in Splunk's T1078 datasets, and the two Stratus Red Team users given a console password in Invictus. The account password-policy changes in T1201 correctly don't match. |
 
 ## Limits of this review
 

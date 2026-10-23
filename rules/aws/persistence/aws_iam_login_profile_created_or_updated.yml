@@ -1,0 +1,34 @@
+title: AWS IAM Login Profile Created or Updated
+id: 9e065cb4-6741-4d3f-93ba-111bd2cdffe8
+status: experimental
+description: |
+    Detects a console password being set for an IAM user: CreateLoginProfile
+    (gives a user, often one that only had access keys, console access) or
+    UpdateLoginProfile (changes another user's password). Both are normally
+    run by an administrator on someone else's account; users change their own
+    password with ChangePassword, which is not matched. An attacker with IAM
+    rights uses them to get a console login on an existing user, as a quieter
+    alternative to creating a new user. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-23
+references:
+    - https://attack.mitre.org/techniques/T1098/001/
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateLoginProfile.html
+    - https://docs.aws.amazon.com/IAM/latest/APIReference/API_UpdateLoginProfile.html
+tags:
+    - attack.persistence
+    - attack.t1098.001
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: iam.amazonaws.com
+        eventName:
+            - CreateLoginProfile
+            - UpdateLoginProfile
+    condition: selection
+falsepositives:
+    - Helpdesk or administrators resetting a user's console password
+    - Onboarding that gives new IAM users console access
+level: medium

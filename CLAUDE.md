@@ -335,4 +335,8 @@ More detections on the current pipeline (owner decision, 2026-10-22), from the M
 3. AWS SSM `SendCommand` (remote command execution on instances): Invictus/Stratus Red Team (2, one failed).
 4. Windows Run-key persistence (Sysmon 13): positives in OTRF `empire_persistence_registry_modification_run_keys_*` and Panache; the sweep has benign writers (`MsMpEng.exe` `…\Run\WindowsDefender`, Teams), so it needs an allow-list or a value-content condition.
 
+**Rule notes:**
+
+- `aws_iam_login_profile_created_or_updated` (2026-10-23): `iam.amazonaws.com` `CreateLoginProfile` or `UpdateLoginProfile`, any caller, failed calls included; no caller/target comparison (it can't be expressed for Sentinel or Elastic, and these calls are almost always made on another user's account; triage compares them). `ChangePassword` (own password) not matched. Medium, persistence, T1098.001 (owner decisions). Splunk, Sentinel and Elastic convert. Sweep: only its 7 own hits.
+
 Also done before M8 (2026-10-22, PR #8): `win_renamed_shell_or_lolbin` now covers vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil and esentutl (see the M7 Part B notes).

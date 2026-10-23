@@ -83,6 +83,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | — | ✅ |
 | [AWS IAM MFA Device Deactivated](docs/rules/aws_iam_mfa_device_deactivated.md) | Persistence, Credential Access | T1556.006 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS IAM Login Profile Created or Updated](docs/rules/aws_iam_login_profile_created_or_updated.md) | Persistence | T1098.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | — | ✅ |
 | [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Network ACL Inbound Rule Opened to the Internet](docs/rules/aws_network_acl_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |

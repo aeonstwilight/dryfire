@@ -1,0 +1,24 @@
+rule: rules/aws/persistence/aws_iam_login_profile_created_or_updated.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1078): IAM user bhavin_cli creates a login profile for AtomicRedTeam
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_createloginprofile.jsonl
+    min_hits: 3
+  # Real (Splunk attack_data T1078): bhavin_cli changes AtomicRedTeam's console password
+  - file: tests/data/external/aws/splunk-attack-data/T1078_aws_updateloginprofile.jsonl
+    min_hits: 2
+  # Real (Invictus IR, Stratus Red Team): bert-jan gives two Stratus users a console password
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_04rtp9DpvIpSZzMr.jsonl
+    min_hits: 1
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_ZtUNbBkwAu98FPZb.jsonl
+    min_hits: 1
+  # Synthetic: a denied CreateLoginProfile (failed calls count), UpdateLoginProfile with a reset flag
+  - file: tests/data/samples/aws_iam_login_profile_created_or_updated_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Splunk attack_data T1201): account password policy changes, not a user's login profile
+  - file: tests/data/external/aws/splunk-attack-data/T1201_aws_password_policy.jsonl
+  # Synthetic: ChangePassword (a user's own password), GetLoginProfile, DeleteLoginProfile,
+  # CreateAccessKey (the access-key rule's job)
+  - file: tests/data/samples/aws_iam_login_profile_created_or_updated_benign.jsonl
