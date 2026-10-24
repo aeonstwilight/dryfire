@@ -128,7 +128,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
 - **M7 (done):** Eight rules for coverage gaps (Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check, and a robustness check of every process-creation rule against attacker-style changes to its samples, with a reviewed baseline that CI checks
-- **M8 (planned):** Four more rules: AWS login profile created/updated, S3 versioning suspended, SSM SendCommand; Windows Run-key persistence
+- **M8 (done):** Four more rules: AWS login profile created/updated, S3 versioning suspended, SSM SendCommand; Windows Run-key persistence (with Defender validation on a new `DeviceRegistryEvents` table)
 
 ## Data sources
 

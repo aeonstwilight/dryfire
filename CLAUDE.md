@@ -326,9 +326,9 @@ Milestone 7 is done when 6–8 new rules covering current gaps pass the full pip
 - `build/drift/versions.md` lists pinned, tested and newest released versions. It also flags a package that pip held back because of another package's version limit.
 - First local run (2026-10-19): Zircolite 4.6.0 (pinned 4.5.0) passes test and sweep unchanged; pySigma 2.0.1 is out but held at 1.5.1 by the backends' version limits; everything else is current.
 
-## Milestone 8 (planned)
+## Milestone 8 (done)
 
-More detections on the current pipeline (owner decision, 2026-10-22), from the M7 step 1 candidates that have public test data. Each rule follows the usual process: the owner confirms the logic first; rule, test case and triage note; must pass sweep, robustness (if process creation) and validate.
+More detections on the current pipeline (owner decision, 2026-10-22), from the M7 step 1 candidates that have public test data. Each rule follows the usual process: the owner confirms the logic first; rule, test case and triage note; must pass sweep, robustness (if process creation) and validate. Done 2026-10-23: all four rules added, 47 rules in all.
 
 1. AWS IAM login profile created or updated (console password set for a user): Splunk attack_data `T1078_aws_createloginprofile` (3) and `T1078_aws_updateloginprofile` (2), Invictus/Stratus Red Team (2).
 2. AWS S3 bucket versioning suspended: Splunk attack_data `T1490_aws_bucket_version` (2).
