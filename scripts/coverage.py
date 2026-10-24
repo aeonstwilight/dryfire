@@ -57,6 +57,15 @@ def read_rule(path):
     return rule.get("title", path.stem), rule.get("status"), techniques, tactics
 
 
+# rules/<platform>/... folder -> ATT&CK Navigator platform name.
+NAVIGATOR_PLATFORMS = {"windows": "Windows", "aws": "IaaS"}
+
+
+def platform_of(path, rules_dir):
+    folder = path.relative_to(rules_dir).parts[0]
+    return NAVIGATOR_PLATFORMS.get(folder, folder.capitalize())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--rules-dir", default="rules", type=Path)
@@ -71,6 +80,7 @@ def main():
     # pins it down, which shows the technique under every tactic it has.
     coverage = {}
     rule_count = 0
+    platforms = set()
     for path in sorted(args.rules_dir.rglob("*.yml")):
         title, status, techniques, tactics = read_rule(path)
         if status in SKIP_STATUSES:
@@ -79,6 +89,7 @@ def main():
             print(f"WARN  {path}: no ATT&CK technique tags, not in coverage layer")
             continue
         rule_count += 1
+        platforms.add(platform_of(path, args.rules_dir))
         for technique in techniques:
             if technique not in attack_tactics:
                 print(f"WARN  {path}: {technique} is not in ATT&CK v{mitre_attack.mitre_attack_version}")
@@ -108,7 +119,9 @@ def main():
         "description": f"Techniques covered by {rule_count} Sigma rule(s). Score = number of rules.",
         "domain": "enterprise-attack",
         "versions": {"layer": LAYER_FORMAT_VERSION, "navigator": NAVIGATOR_VERSION},
-        "filters": {"platforms": ["Windows"]},
+        # Navigator hides techniques outside these platforms, so list every platform the
+        # rules cover (an AWS-only technique such as T1537 vanishes under "Windows" alone).
+        "filters": {"platforms": sorted(platforms)},
         "sorting": 3,  # highest score first
         "layout": {"layout": "side", "showID": True, "showName": True},
         "hideDisabled": False,

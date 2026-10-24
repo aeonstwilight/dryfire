@@ -1,5 +1,11 @@
 # dryfire
 
+[![CI](https://github.com/aeonstwilight/dryfire/actions/workflows/ci.yml/badge.svg)](https://github.com/aeonstwilight/dryfire/actions/workflows/ci.yml)
+![rules](https://img.shields.io/badge/rules-47-blue)
+![targets](https://img.shields.io/badge/targets-Splunk%20%7C%20Sentinel%20%7C%20Defender%20%7C%20Elastic-informational)
+[![ATT&CK coverage](https://img.shields.io/badge/ATT%26CK-coverage%20map-red)](https://aeonstwilight.github.io/dryfire/)
+![license](https://img.shields.io/badge/rules-DRL%201.1-lightgrey) ![license](https://img.shields.io/badge/code-MIT-lightgrey)
+
 Detection-as-code for SOC teams. Every detection is written once as a [Sigma](https://sigmahq.io/) rule, tested against real attack data in CI, and converted to Splunk SPL, Microsoft Sentinel / Defender KQL and Elastic ES|QL. An ATT&CK Navigator layer is generated from the rule tags so coverage is always visible.
 
 ## Why
@@ -35,7 +41,7 @@ On every push and pull request:
 3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
 4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
 5. **Noise sweep:** every rule runs over EVTX-ATTACK-SAMPLES and OTRF APT29; any change from the reviewed per-rule counts in `tests/sweep_baseline.yml` fails the build.
-6. **Robustness check:** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again. Any change from the reviewed results in `tests/robustness_baseline.yml` fails the build. Every change is caught except renamed binaries, a gap each triage note states.
+6. **Robustness check:** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again. Any change from the reviewed results in `tests/robustness_baseline.yml` fails the build. Every change is caught except renamed binaries, a gap each triage note states. Registry (Sysmon 13) and CloudTrail rules get their own changes (value data written with environment variables or 8.3 short names, the WOW6432Node and RunOnce keys; the same API call from another region, an assumed role, a denied attempt, an SDK or a VPC endpoint), reported but not yet part of the baseline until reviewed.
 7. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
 8. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
 
@@ -46,6 +52,64 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 > **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent`, `DeviceProcessEvents`, `DeviceRegistryEvents` and `AWSCloudTrail` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row, Sysmon 13 → a `DeviceRegistryEvents` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
 >
 > For Elastic, events are loaded with the field names and data streams Elastic's integrations use (ECS names such as `process.executable`, `winlog.event_data.*`, `aws.cloudtrail.*`), documented in `tests/validate_elastic.py`. Real integration data also types some fields differently (wildcard, text sub-fields); the queries compare whole values with `to_lower()` either way. AWS rules that match inside `requestParameters` mostly can't convert: the integration keeps it as `Map.toString()` text, so they're declared unsupported for Elastic in `pipelines/unsupported_targets.yml`.
+
+## Life of a rule: DCSync
+
+One rule end to end, from the Sigma file to the query each SIEM runs.
+
+**1. The rule** (`rules/windows/credential_access/win_dcsync_replication_by_non_machine_account.yml`, trimmed). Security 4662 with one of the two replication rights that return secrets, by an account that isn't a machine account:
+
+```yaml
+detection:
+    selection:
+        EventID: 4662
+        Properties|contains:
+            - '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'  # DS-Replication-Get-Changes-All
+            - '89e95b76-444d-4c62-991a-0facbeda640c'  # DS-Replication-Get-Changes-In-Filtered-Set
+    filter_machine_account:
+        SubjectUserName|endswith: '$'
+    condition: selection and not filter_machine_account
+```
+
+Plain Get-Changes (`1131f6aa`) is left out on purpose: it returns no secrets, so a DCSync gives exactly one hit.
+
+**2. The test case** (`tests/cases/win_dcsync_replication_by_non_machine_account.yml`). It must fire on Mimikatz DCSync (EVTX-ATTACK-SAMPLES), Empire and Covenant DCSync (OTRF), and two synthetic edge cases (Get-Changes-In-Filtered-Set, an upper-case GUID). It must stay at zero on a domain controller replicating with `DC1$` and on synthetic benign reads.
+
+```
+PASS  positive: CA_DCSync_4662.evtx: 1 hit(s), expected >= 1
+PASS  positive: empire_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip: 1 hit(s), expected >= 1
+PASS  positive: covenant_dcsync_dcerpc_drsuapi_DsGetNCChanges.zip: 1 hit(s), expected >= 1
+PASS  positive: win_dcsync_replication_by_non_machine_account_synthetic_positive.json: 2 hit(s), expected >= 2
+```
+
+**3. The noise sweep.** Across all of EVTX-ATTACK-SAMPLES and OTRF APT29 it fires only on its own sample. The DC machine accounts replicating in the corpus are what the `$` filter is for.
+
+**4. The conversions**, generated by `make convert`. Nobody hand-writes these:
+
+Splunk (Windows add-on field names):
+
+```
+source="WinEventLog:Security" EventCode=4662 Properties IN ("*1131f6ad-9c07-11d1-f79f-00c04fc2dcd2*", "*89e95b76-444d-4c62-991a-0facbeda640c*") NOT SubjectUserName="*$"
+```
+
+Microsoft Sentinel (`SecurityEvent`):
+
+```
+SecurityEvent
+| where (EventID == 4662 and (Properties contains "1131f6ad-9c07-11d1-f79f-00c04fc2dcd2" or Properties contains "89e95b76-444d-4c62-991a-0facbeda640c")) and (not(SubjectUserName endswith "$"))
+```
+
+Elastic ES|QL (ECS names, case-insensitive through `to_lower`, the System integration's data stream):
+
+```
+from logs-system.security-* metadata _id, _index, _version | where to_lower(winlog.channel)=="security" and to_lower(event.code)=="4662" and (to_lower(winlog.event_data.Properties) like "*1131f6ad-9c07-11d1-f79f-00c04fc2dcd2*" or to_lower(winlog.event_data.Properties) like "*89e95b76-444d-4c62-991a-0facbeda640c*") and not ends_with(to_lower(winlog.event_data.SubjectUserName), "$")
+```
+
+Defender XDR is declared unsupported in `pipelines/unsupported_targets.yml`, with the reason: the Kusto backend files 4662 under its registry category and picks `DeviceRegistryEvents`, which would be a wrong query, not a missing one.
+
+**5. The real engines.** `make validate` loads the same positive and negative events into a Splunk container and the Kusto emulator, and `make validate-elastic` loads them into Elasticsearch. Each converted query has to return exactly the hits Zircolite found. A query that runs but finds a different number fails the build.
+
+**6. The analyst's side.** `docs/rules/win_dcsync_replication_by_non_machine_account.md` covers what to check when it fires: the account, whether it's an Entra Connect `MSOL_` account or another approved sync tool, whether the source host matches that tool's server, and what to do if it's real. It also lists the known gap: DCSync from a stolen computer account ends in `$`, so this rule misses it.
 
 ## Rule coverage
 
@@ -139,7 +203,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 
 ## How this was built
 
-The detection logic, rule design, test strategy and guardrails are mine. Code was written with Claude Code as a coding partner.
+I built dryfire with Claude Code, and I want to be upfront about the split. Claude wrote the code: the pipeline scripts, the backends and the loaders, and the Sigma YAML from logic I specified. What's mine is the detection side. I decided what each rule detects and what it deliberately doesn't, reviewed every noise-sweep hit and labeled it, chose which robustness misses to accept, and set the guardrails in [CLAUDE.md](CLAUDE.md): original rules only, public data only, ATT&CK only, and a real-engine check for every converted query. Every rule's logic decision is recorded there with its date.
 
 ## License and attribution
 

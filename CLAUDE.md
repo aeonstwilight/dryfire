@@ -343,3 +343,46 @@ More detections on the current pipeline (owner decision, 2026-10-22), from the M
 - `win_run_key_script_or_user_path_value` (2026-10-23): Sysmon 13, `TargetObject` contains `\CurrentVersion\Run` or `\Policies\Explorer\Run`, and `Details` contains a script host/LOLBin (powershell, pwsh, cmd.exe, wscript, cscript, mshta, rundll32, regsvr32) or a user-writable folder (`\AppData\Roaming\`, `\Temp\`, `\Users\Public\`, `\ProgramData\`, `\Windows\Tasks\`, `\PerfLogs\`). A value condition instead of an allow-list; `AppData\Local` left out (per-user installers). Medium, persistence and privilege escalation, T1547.001 (owner decisions). Splunk, Defender and Elastic convert; Sentinel declared (no value-data column). Defender: `make validate` now loads a `DeviceRegistryEvents` table (TargetObject split into `RegistryKey` and `RegistryValueName`, hives written out as the backend does: HKLM -> HKEY_LOCAL_MACHINE, HKU -> HKEY_USERS). Elastic: `Details` -> `registry.data.strings` (a list) and `TargetObject` -> `registry.path`, as the Windows integration's Sysmon pipeline writes them (it drops the raw fields). Positives: OTRF Empire Run keys (2), Panache, and 5 EVTX samples; Atomic's `C:\Path\` placeholders don't match. Sweep: its 6 own EVTX hits plus APT29 day 2 `Run\WebCache` (attack).
 
 Also done before M8 (2026-10-22, PR #8): `win_renamed_shell_or_lolbin` now covers vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil and esentutl (see the M7 Part B notes).
+
+## Milestone 9 (in progress): wider robustness checks
+
+Extends the M7 robustness check beyond process creation (proposed 2026-10-24; the owner reviews the results before any of it joins the baseline).
+
+- `tests/variants.yml` variants now carry `applies_to` (`process_creation` default, `registry` for logsource category `registry_set`/`registry_event`, `cloudtrail` for service `cloudtrail`) and `status: proposed` (report-only: shown in `build/robustness/` with "(proposed)", skipped by the baseline check; a rule only proposed changes apply to needs no baseline entry yet).
+- Registry changes (to `Details`/`TargetObject` of the rule's matched events): upper case, quoted program, `%ComSpec%` for cmd.exe, user folders as environment variables (`%APPDATA%`, `%TEMP%`, `%ProgramData%`, `%PUBLIC%`; Sysmon logs REG_EXPAND_SZ data unexpanded), ProgramData as `PROGRA~3`, the WOW6432Node key, RunOnce.
+- CloudTrail changes: Zircolite returns CloudTrail matches flattened, so the rule's whole positive files are changed and its hits compared before/after: another region, an assumed role instead of an IAM user/root, a denied call (not ConsoleLogin), a boto3 user agent, a VPC endpoint call.
+- First run (2026-10-24): baseline unchanged. `win_run_key_script_or_user_path_value` misses `reg_env_folders` (0/4) and `reg_short_path` (0/1); `reg_comspec` didn't apply (no cmd.exe values in the samples). CloudTrail: everything caught except `ct_assumed_role` on the three rules scoped to IAM users or root (by design), and `aws_iam_access_key_created_for_other_user` gains 2 hits under `ct_assumed_role` (a role creating a key for a user counts as "for another user", since the role has no userName).
+- Not done: `cmd_carets` on a rule's own cmd.exe matches. No rule's matched events are cmd.exe processes; the case where it matters (cmd's built-in `copy` from a shadow copy, which has no child process) needs a synthetic cmd.exe positive for `win_sam_security_hive_or_ntds_dumped`, a test-data change for the owner to approve.
+- Next (owner): accept or tune each miss (for the Run-key rule, adding the environment-variable and short-name spellings would be a logic change), then drop `status: proposed` and add the reviewed values to `tests/robustness_baseline.yml`.
+
+## Presentation (2026-10-24)
+
+- README: badges, and a "Life of a rule" walkthrough (DCSync from Sigma to the four targets, with the real converted queries copied from `build/`; update them if the rule or backends change).
+- `.github/workflows/pages.yml` publishes the coverage layer to GitHub Pages with a landing page (`docs/pages/index.html`) that opens it in the public ATT&CK Navigator. Needs Settings > Pages > Source: GitHub Actions.
+- `scripts/coverage.py`: the layer's platform filter now lists every platform the rules cover (`Windows`, `IaaS`). It was `Windows` only, which hid AWS-only techniques (T1537, T1651) in the Navigator.
+
+## Milestone 10 (proposed, not started): Microsoft 365 and Entra ID
+
+A third platform, on the same pipeline. Nothing here is built yet: the owner decides the data sources, targets and each rule's logic first.
+
+**Step 1 findings (2026-10-24): public test data.** Splunk attack_data, already an allowed source for AWS (pinned commit `aafa53ea…`), has 90+ Microsoft 365 and Entra ID datasets recorded in Attack Range. Two shapes:
+- `o365:management:activity`: Office 365 Management Activity API records (`Operation`, `Workload`, `UserId`, `ClientIP`, `Parameters`, `ExtendedProperties`). For example, `T1564.008/o365` has 1 `New-InboxRule`, `T1114.003/o365_email_forwarding_rule_created` has 6 (`New-InboxRule`, `Set-InboxRule`, `UpdateInboxRules`), and `T1528/o365_user_consent_mail_permissions` has 1 `Consent to application.`.
+- `azure:monitor:aad`: Entra ID sign-in and audit logs as exported to Event Hub (`operationName`, `category`, `resultType`, `callerIpAddress`, `properties`). For example, `T1556.006/azure_ad_new_mfa_method_registered_for_user` has 2 `User registered security info`, `T1098.003/azure_ad_assign_global_administrator` has 16 `Add member to role`, and `T1110.003/password_spraying_azuread` has 31 sign-ins.
+
+**Targets available.** pySigma-backend-kusto's `azure_monitor` pipeline knows `SigninLogs`, `AuditLogs` and `OfficeActivity` (Sentinel), and the XDR pipeline knows `CloudAppEvents` and `EmailEvents` (Defender). Splunk would need custom pipelines for the two sourcetypes above, as for CloudTrail. Elastic would map to the `o365` and `azure` integrations' fields. The Kusto emulator validation would need `SigninLogs`, `AuditLogs` and `OfficeActivity` tables built from Microsoft's column lists, as for `AWSCloudTrail`.
+
+**Candidate rules** (proposed logic, each needs the owner's sign-off):
+1. Inbox rule that hides, deletes or forwards mail: `New-InboxRule`/`Set-InboxRule`/`UpdateInboxRules` with `DeleteMessage`, `MoveToFolder` to RSS, Archive or Conversation History, `ForwardTo`/`ForwardAsAttachmentTo`/`RedirectTo`, or `MarkAsRead`. T1564.008, T1114.003.
+2. Mailbox-level forwarding set (`Set-Mailbox` with `ForwardingSmtpAddress`/`ForwardingAddress`). T1114.003. Data: `o365_mailbox_forwarding_enabled`.
+3. User consent to an app asking for mail or file scopes (`Consent to application.` with `Mail.Read`, `Mail.ReadWrite`, `Mail.Send`, `Files.Read.All` or `offline_access`). T1528. Data: `o365_user_consent_mail_permissions`, `o365_user_consent_file_permissions`.
+4. New MFA method registered for a user (`User registered security info`, or `Update user` changing `StrongAuthenticationMethod`). T1098.005, T1556.006.
+5. Privileged Entra role assigned (`Add member to role` for Global Administrator, Privileged Role Administrator, Privileged Authentication Administrator, Application Administrator). T1098.003.
+6. Password spray from one IP (correlation: distinct users with `resultType` 50126 per `callerIpAddress`). T1110.003. Sentinel declared, as for the Windows spray rule.
+7. MFA fatigue (correlation: denied or unanswered MFA, `resultType` 500121, per user). T1621. Data: `azure_ad_multiple_denied_mfa_requests`.
+8. Session use from two IPs (AiTM token replay; correlation on the session or correlation ID with distinct IPs). T1185 / T1550.004. Data: `azure_ad_concurrent_sessions_from_different_ips`. Hardest to express in Sigma; may end up a hunt query instead.
+
+**Owner decisions needed before building:**
+- Allow attack_data's O365 and Entra ID folders as test data (same repo and licence as the AWS datasets).
+- Which targets: Sentinel (`SigninLogs`/`AuditLogs`/`OfficeActivity`), Defender (`CloudAppEvents`), Splunk, Elastic.
+- Which candidates, in what order. Suggested: 1, 3, 4, 5 first (single-event rules with public positives), then 2, then the correlations 6 and 7. 8 last, if at all.
+

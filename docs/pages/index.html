@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dryfire ATT&amp;CK coverage</title>
+<style>
+  :root { --bg:#fff; --fg:#1d232b; --muted:#5b6672; --accent:#b42318; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14181d; --fg:#e4e8ec; --muted:#9aa5b1; --accent:#f97066; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:48px 16px; }
+  a.button { display:inline-block; padding:10px 18px; border-radius:6px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
+  p.muted { color:var(--muted); }
+  code { font-family:ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main>
+  <h1>dryfire: ATT&amp;CK coverage</h1>
+  <p>The coverage layer CI builds from the rule tags on every push to <code>main</code>. Each
+  technique is shaded by how many rules cover it; every rule behind a cell is tested on
+  real attack data and its converted queries are run on real engines.</p>
+  <p><a class="button" id="open" href="https://mitre-attack.github.io/attack-navigator/">Open in ATT&amp;CK Navigator</a></p>
+  <p class="muted">Or download <a href="layer.json">layer.json</a> and open it in the Navigator
+  yourself. Source and rules: <a href="https://github.com/aeonstwilight/dryfire">github.com/aeonstwilight/dryfire</a>.</p>
+</main>
+<script>
+  // Point the Navigator at this page's own layer.json, wherever the site is hosted.
+  var layer = new URL("layer.json", window.location.href).href;
+  document.getElementById("open").href =
+    "https://mitre-attack.github.io/attack-navigator/#layerURL=" + encodeURIComponent(layer);
+</script>
+</body>
+</html>
