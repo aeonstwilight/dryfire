@@ -138,4 +138,8 @@ The detection logic, rule design, test strategy and guardrails are mine. Code wa
 
 ## License and attribution
 
-Rules in this repo are original unless noted. Any rule adapted from [SigmaHQ](https://github.com/SigmaHQ/sigma) is credited in its `references` and `author` fields, per the [Detection Rule License](https://github.com/SigmaHQ/Detection-Rule-License).
+- **Rules** (everything under `rules/`): [Detection Rule License (DRL) 1.1](LICENSE.Detection.Rules.md), the license SigmaHQ uses. Use, change and share them freely; keep the `author` field and a link back to this repo when you do.
+- **Code** (scripts, pipelines, tests, CI): [MIT](LICENSE).
+- **Datasets**: downloaded at test time by `scripts/fetch_datasets.py`, not redistributed here. Each stays under its own license (see Data sources). The samples checked into `tests/data/samples/` are synthetic.
+
+Rules in this repo are original unless noted. Any rule adapted from [SigmaHQ](https://github.com/SigmaHQ/sigma) is credited in its `references` and `author` fields, per the DRL.
