@@ -81,3 +81,96 @@ variants:
       OriginalFileName unchanged. Rules that match Image miss this unless they
       also use OriginalFileName (see the renamed-binary rule).
     change: rename_binary
+
+  # --- Registry (Sysmon 13) and CloudTrail changes, proposed 2026-10-24 --------------
+  # applies_to picks the rules: registry = logsource category registry_set/registry_event,
+  # cloudtrail = service cloudtrail (default: process_creation). status: proposed means
+  # report-only: `make robustness` shows them but doesn't check them against the baseline
+  # until the owner reviews the results and the status line is removed.
+
+  - id: reg_details_upper
+    description: The Run value's data in upper case. Windows paths are case-insensitive.
+    change: reg_details_upper
+    applies_to: registry
+    status: proposed
+
+  - id: reg_program_quoted
+    description: >-
+      The program at the start of the value data in double quotes, as many installers
+      write Run values.
+    change: reg_program_quoted
+    applies_to: registry
+    status: proposed
+
+  - id: reg_comspec
+    description: >-
+      cmd.exe written as %ComSpec%. Run values can be REG_EXPAND_SZ, and Sysmon logs the
+      data unexpanded, so the log never says cmd.exe.
+    change: reg_comspec
+    applies_to: registry
+    status: proposed
+
+  - id: reg_env_folders
+    description: >-
+      User-writable folders written as environment variables (%APPDATA%\, %TEMP%\,
+      %ProgramData%\, %PUBLIC%\), logged unexpanded like reg_comspec.
+    change: reg_env_folders
+    applies_to: registry
+    status: proposed
+
+  - id: reg_short_path
+    description: ProgramData written as its 8.3 short name (C:\PROGRA~3\).
+    change: reg_short_path
+    applies_to: registry
+    status: proposed
+
+  - id: reg_wow64_key
+    description: >-
+      The same HKLM Run key written by a 32-bit process, which lands under
+      SOFTWARE\WOW6432Node\.
+    change: reg_wow64_key
+    applies_to: registry
+    status: proposed
+
+  - id: reg_runonce
+    description: Run written as RunOnce, which also starts the program at the next logon.
+    change: reg_runonce
+    applies_to: registry
+    status: proposed
+
+  - id: ct_other_region
+    description: The same call made in another region (ap-southeast-3).
+    change: ct_other_region
+    applies_to: cloudtrail
+    status: proposed
+
+  - id: ct_assumed_role
+    description: >-
+      The same call made from an assumed role instead of an IAM user or root (attackers
+      often pivot through roles). Rules scoped to IAM users or root miss this on purpose.
+    change: ct_assumed_role
+    applies_to: cloudtrail
+    status: proposed
+
+  - id: ct_failed_call
+    description: >-
+      The same call denied (errorCode AccessDenied, no responseElements). Most rules
+      count failed attempts too. Not applied to ConsoleLogin, whose failures are recorded
+      differently.
+    change: ct_failed_call
+    applies_to: cloudtrail
+    status: proposed
+
+  - id: ct_sdk_user_agent
+    description: The same call made from boto3 instead of the console or CLI.
+    change: ct_sdk_user_agent
+    applies_to: cloudtrail
+    status: proposed
+
+  - id: ct_via_vpc_endpoint
+    description: >-
+      The same call made from inside a VPC through an endpoint (private source IP,
+      vpcEndpointId set).
+    change: ct_via_vpc_endpoint
+    applies_to: cloudtrail
+    status: proposed
