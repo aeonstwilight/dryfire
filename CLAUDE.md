@@ -355,3 +355,9 @@ Extends the M7 robustness check beyond process creation (proposed 2026-10-24; th
 - Not done: `cmd_carets` on a rule's own cmd.exe matches. No rule's matched events are cmd.exe processes; the case where it matters (cmd's built-in `copy` from a shadow copy, which has no child process) needs a synthetic cmd.exe positive for `win_sam_security_hive_or_ntds_dumped`, a test-data change for the owner to approve.
 - Next (owner): accept or tune each miss (for the Run-key rule, adding the environment-variable and short-name spellings would be a logic change), then drop `status: proposed` and add the reviewed values to `tests/robustness_baseline.yml`.
 
+## Presentation (2026-10-24)
+
+- README: badges, and a "Life of a rule" walkthrough (DCSync from Sigma to the four targets, with the real converted queries copied from `build/`; update them if the rule or backends change).
+- `.github/workflows/pages.yml` publishes the coverage layer to GitHub Pages with a landing page (`docs/pages/index.html`) that opens it in the public ATT&CK Navigator. Needs Settings > Pages > Source: GitHub Actions.
+- `scripts/coverage.py`: the layer's platform filter now lists every platform the rules cover (`Windows`, `IaaS`). It was `Windows` only, which hid AWS-only techniques (T1537, T1651) in the Navigator.
+
