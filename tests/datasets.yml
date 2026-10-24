@@ -405,3 +405,47 @@ datasets:
     path: aws/splunk-attack-data-raw/T1537_aws_ami_shared_public/aws_cloudtrail_events.json
     jsonl: aws/splunk-attack-data/T1537_aws_ami_shared_public.jsonl
     sha256: f2402c34740a6c324cf61a7523bc8f19abb5a60e3a3426f8b17df620593866cf
+  # aws_iam_login_profile_created_or_updated (also uses T1078_aws_createloginprofile and
+  # Invictus ZtUNbBkwAu98FPZb above)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1230Z_04rtp9DpvIpSZzMr.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1230Z_04rtp9DpvIpSZzMr.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1230Z_04rtp9DpvIpSZzMr.jsonl
+    sha256: b0efaf3c69b7a922c9ea92fee5378a4664206a6720f3e71c06a87ddf5819322f
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1078/aws_updateloginprofile/aws_cloudtrail_events.json
+    path: aws/splunk-attack-data-raw/T1078_aws_updateloginprofile/aws_cloudtrail_events.json
+    jsonl: aws/splunk-attack-data/T1078_aws_updateloginprofile.jsonl
+    sha256: 8103aa638715ea463e633dc616076d7c6ff1838d796d712647cbd9a7f630278b
+  # aws_s3_bucket_versioning_suspended (also uses Invictus nBsuPO1qSTEVerMD and
+  # YbVFCP9AYzJDhHV9 above, as negatives)
+  - url: https://media.githubusercontent.com/media/splunk/attack_data/aafa53ea228fbab8d9ac3e33c9275fab2136909d/datasets/attack_techniques/T1490/aws_bucket_version/cloudtrail.json
+    path: aws/splunk-attack-data-raw/T1490_aws_bucket_version/cloudtrail.json
+    jsonl: aws/splunk-attack-data/T1490_aws_bucket_version.jsonl
+    sha256: 1abe5a2bb8f10e54253ada63d4a6ecee62faf4969bb6df93181e5f1fa19ff8b6
+  # aws_ssm_send_command_run_script (also uses Invictus iLj9fb7yyUG9X4Bf above, and
+  # x9kHmzMa7cx6l9wM as a negative)
+  - url: https://raw.githubusercontent.com/invictus-ir/Sigma-AWS/f0d55993fb575f747cee13069adeaa999c940b14/CloudTrail/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.json
+    path: aws/invictus-raw/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.json
+    jsonl: aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1210Z_6CICdbJQM3beT7n3.jsonl
+    sha256: 4272d7d4c3c745da389ab51064c805fcc2131fe7b806ddfc90a500c89fcfa3cb
+  # win_run_key_script_or_user_path_value (also uses PanacheSysmon_vs_AtomicRedTeam01 above)
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/persistence/host/empire_persistence_registry_modification_run_keys_standard_user.zip
+    path: otrf/empire_persistence_registry_modification_run_keys_standard_user.zip
+    sha256: 2965f791bcaf5e6ccfc4059985e81fd7e67ec87f17855b6c383edd1b03a19c36
+  - url: https://raw.githubusercontent.com/OTRF/Security-Datasets/d9d40ef123d2c87d5d3df28c96bcab4f0faccc87/datasets/atomic/windows/persistence/host/empire_persistence_registry_modification_run_keys_elevated_user.zip
+    path: otrf/empire_persistence_registry_modification_run_keys_elevated_user.zip
+    sha256: 2809354d679025859d723be3ceb1e2c9f9e5dde2ebec5bbea7c398e165a9b67d
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Persistence/evasion_persis_hidden_run_keyvalue_sysmon_13.evtx
+    path: evtx-attack-samples/evasion_persis_hidden_run_keyvalue_sysmon_13.evtx
+    sha256: b8df8232d917fed223e2bf9abebb249489f84c6204c40b72dab6a74157d6f8bd
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/Malware/sideloading_injection_persistence_run_key.evtx
+    path: evtx-attack-samples/sideloading_injection_persistence_run_key.evtx
+    sha256: 7a58c4055659045dbdba8e8bc83252711455f0c4d54e2b963147ef9349822699
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/lm_remote_registry_sysmon_1_13_3.evtx
+    path: evtx-attack-samples/lm_remote_registry_sysmon_1_13_3.evtx
+    sha256: bde8db7a364e9fd3da953498690e5e6c81c7c915032ff98743074b91cb140824
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/Lateral%20Movement/wmi_remote_registry_sysmon.evtx
+    path: evtx-attack-samples/wmi_remote_registry_sysmon.evtx
+    sha256: 2c8cb1ecaea860d599ae85397157eb8f3c0631a4bff949b576bcc007a78430de
+  - url: https://raw.githubusercontent.com/sbousseaden/EVTX-ATTACK-SAMPLES/4ceed2f4706daf601c212a8f91c113dd85349a2c/AutomatedTestingTools/Malware/DE_timestomp_and_dll_sideloading_and_RunPersist.evtx
+    path: evtx-attack-samples/DE_timestomp_and_dll_sideloading_and_RunPersist.evtx
+    sha256: ce94f2bd83c0adf2381afee0f3714b41aef4ae0997350b3aa039d7947865164c

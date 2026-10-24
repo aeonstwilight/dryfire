@@ -1,0 +1,32 @@
+title: AWS S3 Bucket Versioning Suspended
+id: 4afa152b-653f-42e5-aedf-e6878312d7e2
+status: experimental
+description: |
+    Detects S3 bucket versioning being suspended (PutBucketVersioning with
+    VersioningConfiguration Status Suspended). With versioning on, an
+    overwritten or deleted object can be restored from an earlier version;
+    once it is suspended, later overwrites and deletes can't be rolled back.
+    Ransomware and destructive actors suspend it before encrypting or
+    deleting a bucket's contents. Failed calls are included on purpose.
+author: aeonstwilight
+date: 2026-10-23
+references:
+    - https://attack.mitre.org/techniques/T1490/
+    - https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketVersioning.html
+    - https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html
+tags:
+    - attack.impact
+    - attack.t1490
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: s3.amazonaws.com
+        eventName: PutBucketVersioning
+        requestParameters.VersioningConfiguration.Status|contains: Suspended
+    condition: selection
+falsepositives:
+    - Administrators suspending versioning on purpose to cut storage costs, for example on a bucket of temporary or easily rebuilt data
+    - Infrastructure-as-code changes that switch versioning off
+level: medium

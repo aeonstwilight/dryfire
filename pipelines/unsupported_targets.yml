@@ -92,3 +92,10 @@ win_dcsync_replication_by_non_machine_account:
     category and picks DeviceRegistryEvents, which has no Properties or
     SubjectUserName, so the conversion fails instead of reporting "no table"
     like the other Security-log rules. Owner decision, 2026-10-20.
+win_run_key_script_or_user_path_value:
+  sentinel: >-
+    Sysmon 13 (registry value set) has no SecurityEvent equivalent: the rule
+    matches the value data (Details), and SecurityEvent has no column for it.
+    Sysmon rules other than process creation stay unsupported on Sentinel
+    (owner decision, 2026-10-17); this one fails instead of reporting "no
+    table", so it is declared. Owner decision, 2026-10-23.

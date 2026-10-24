@@ -43,7 +43,7 @@ Converted queries, test and sweep reports and the coverage layer are uploaded as
 
 Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint, convert, test, coverage and the sweep against the newest releases of pySigma, the backends, the pipelines and Zircolite instead of the pinned versions. It changes nothing in the repo; a red run means a newer release changes the results, and pins are moved by hand after review.
 
-> **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent` and `DeviceProcessEvents` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
+> **What validation proves:** the SPL and KQL run and match the Sigma logic on the loaded test events. Kusto has no built-in Sentinel or Defender tables, so `SecurityEvent`, `DeviceProcessEvents`, `DeviceRegistryEvents` and `AWSCloudTrail` are created from Microsoft's column lists and the samples are mapped into them (for example Sysmon 1 → a 4688-style `SecurityEvent` row, Sysmon 13 → a `DeviceRegistryEvents` row). It doesn't prove real Sentinel or Defender data looks exactly like these rows. The mapping is documented at the top of `tests/run_validate.py`.
 >
 > For Elastic, events are loaded with the field names and data streams Elastic's integrations use (ECS names such as `process.executable`, `winlog.event_data.*`, `aws.cloudtrail.*`), documented in `tests/validate_elastic.py`. Real integration data also types some fields differently (wildcard, text sub-fields); the queries compare whole values with `to_lower()` either way. AWS rules that match inside `requestParameters` mostly can't convert: the integration keeps it as `Map.toString()` text, so they're declared unsupported for Elastic in `pipelines/unsupported_targets.yml`.
 
@@ -74,6 +74,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [Member Added to a Privileged Built-in Group Other Than Administrators](docs/rules/win_privileged_builtin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
 | [Member Added to a Domain Admin Group](docs/rules/win_domain_admin_group_member_added.md) | Persistence, Privilege Escalation | T1098.007 | ✅ | Sentinel only | ✅ | ✅ |
 | [WMI Event Subscription Bound to a Command Line or Script Consumer](docs/rules/win_wmi_event_subscription_code_consumer.md) | Persistence, Privilege Escalation | T1546.003 | ✅ | — | ✅ | ✅ |
+| [Run Key Value Pointing to a Script Host, LOLBin or User-Writable Path](docs/rules/win_run_key_script_or_user_path_value.md) | Persistence, Privilege Escalation | T1547.001 | ✅ | Defender only | ✅ | ✅ |
 | [Rundll32 Loading a DLL by Bare Name Not on the Allow-List](docs/rules/win_rundll32_relative_path_dll.md) | Stealth | T1218.011 | ✅ | ✅ | ✅ | ✅ |
 | [Shadow Copies, Backup Catalog or Boot Recovery Deleted or Disabled](docs/rules/win_inhibit_system_recovery.md) | Impact | T1490 | ✅ | ✅ | ✅ | ✅ |
 | [AWS CloudTrail Logging Stopped or Trail Deleted](docs/rules/aws_cloudtrail_logging_stopped_or_deleted.md) | Defense Impairment | T1685.002 | ✅ | Sentinel only | ✅ | ✅ |
@@ -83,6 +84,7 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [AWS Root Account Access Key Used](docs/rules/aws_root_access_key_used.md) | Persistence, Privilege Escalation | T1078.004 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Access Key Created for Another User](docs/rules/aws_iam_access_key_created_for_other_user.md) | Persistence | T1098.001 | ✅ | — | — | ✅ |
 | [AWS IAM MFA Device Deactivated](docs/rules/aws_iam_mfa_device_deactivated.md) | Persistence, Credential Access | T1556.006 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS IAM Login Profile Created or Updated](docs/rules/aws_iam_login_profile_created_or_updated.md) | Persistence | T1098.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS IAM Administrator-Level Policy Granted](docs/rules/aws_iam_admin_policy_granted.md) | Privilege Escalation, Persistence | T1098.003 | ✅ | Sentinel only | — | ✅ |
 | [AWS Security Group Ingress Opened to the Internet](docs/rules/aws_security_group_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Network ACL Inbound Rule Opened to the Internet](docs/rules/aws_network_acl_ingress_open_to_internet.md) | Defense Impairment | T1686.001 | ✅ | Sentinel only | ✅ | ✅ |
@@ -93,6 +95,8 @@ Once a week a separate **drift check** (`.github/workflows/drift.yml`) runs lint
 | [AWS GuardDuty Detector Deleted, Disabled or Detached](docs/rules/aws_guardduty_disabled.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS GuardDuty Findings Suppressed or Trusted IP List Changed](docs/rules/aws_guardduty_findings_suppressed.md) | Defense Impairment | T1685 | ✅ | Sentinel only | — | ✅ |
 | [AWS KMS Key Disabled, Scheduled for Deletion or Key Material Deleted](docs/rules/aws_kms_key_disabled_or_deletion_scheduled.md) | Impact | T1485 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS S3 Bucket Versioning Suspended](docs/rules/aws_s3_bucket_versioning_suspended.md) | Impact | T1490 | ✅ | Sentinel only | ✅ | ✅ |
+| [AWS SSM SendCommand Running a Shell or Script Document](docs/rules/aws_ssm_send_command_run_script.md) | Execution | T1651 | ✅ | Sentinel only | ✅ | ✅ |
 | [AWS Secrets Manager Many Distinct Secrets Read by One Identity](docs/rules/aws_secretsmanager_many_secrets_read.md) | Credential Access | T1555.006 | ✅ | — | — | ✅ |
 
 ## Adding a rule
@@ -124,6 +128,7 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M5 (done):** Elastic target: ES|QL with ECS field names, validated on an Elasticsearch container
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
 - **M7 (done):** Eight rules for coverage gaps (Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check, and a robustness check of every process-creation rule against attacker-style changes to its samples, with a reviewed baseline that CI checks
+- **M8 (done):** Four more rules: AWS login profile created/updated, S3 versioning suspended, SSM SendCommand; Windows Run-key persistence (with Defender validation on a new `DeviceRegistryEvents` table)
 
 ## Data sources
 

@@ -175,3 +175,19 @@ aws_ec2_or_rds_snapshot_shared_outside_account:
   aws-invictus: 3
   aws-splunk-attack-data: 8
   aws-otrf: 0
+aws_iam_login_profile_created_or_updated:
+  aws-invictus: 2
+  aws-splunk-attack-data: 5
+  aws-otrf: 0
+aws_s3_bucket_versioning_suspended:
+  aws-invictus: 0
+  aws-splunk-attack-data: 2
+  aws-otrf: 0
+aws_ssm_send_command_run_script:
+  aws-invictus: 2
+  aws-splunk-attack-data: 0
+  aws-otrf: 0
+win_run_key_script_or_user_path_value:
+  evtx-attack-samples: 6
+  otrf-apt29-day1: 0
+  otrf-apt29-day2: 1

@@ -1,0 +1,35 @@
+rule: rules/windows/persistence/win_run_key_script_or_user_path_value.yml
+positive:
+  # Real (OTRF): Empire registry persistence, HKCU and HKLM Run\Updater -> powershell.exe -c
+  # reading its payload back from the registry
+  - file: tests/data/external/otrf/empire_persistence_registry_modification_run_keys_standard_user.zip
+    min_hits: 1
+  - file: tests/data/external/otrf/empire_persistence_registry_modification_run_keys_elevated_user.zip
+    min_hits: 1
+  # Real: Atomic Red Team RunOnce\NextRun -> powershell IEX download cradle. Atomic's
+  # Run\"Atomic Red Team" and RunOnceEx values point to C:\Path\ placeholders and don't match.
+  - file: tests/data/external/evtx-attack-samples/PanacheSysmon_vs_AtomicRedTeam01.evtx
+    min_hits: 1
+  # Real: hidden (empty-name) Run value -> c:\windows\tasks\taskhost.exe
+  - file: tests/data/external/evtx-attack-samples/evasion_persis_hidden_run_keyvalue_sysmon_13.evtx
+    min_hits: 1
+  # Real: malware Run value -> C:\Users\Public\tools\apt\tendyron.exe
+  - file: tests/data/external/evtx-attack-samples/sideloading_injection_persistence_run_key.evtx
+    min_hits: 1
+  # Real: Run value written over remote registry -> Rundll32.exe smssvc.dll,Start
+  - file: tests/data/external/evtx-attack-samples/lm_remote_registry_sysmon_1_13_3.evtx
+    min_hits: 1
+  # Real: Run value written through WMI's registry provider -> rundll32.exe a.dll, DllMain
+  - file: tests/data/external/evtx-attack-samples/wmi_remote_registry_sysmon.evtx
+    min_hits: 1
+  # Real: sideloaded malware Run value -> AppData\Roaming\svchost.exe
+  - file: tests/data/external/evtx-attack-samples/DE_timestomp_and_dll_sideloading_and_RunPersist.evtx
+    min_hits: 1
+  # Synthetic: ProgramData program, mshta (HKCU Run), regsvr32 (Policies\Explorer\Run),
+  # wscript from PerfLogs (WOW6432Node RunOnce), a program in AppData\Local\Temp
+  - file: tests/data/samples/win_run_key_script_or_user_path_value_synthetic_positive.json
+    min_hits: 5
+negative:
+  # Synthetic: Defender's own WindowsDefender value (written by MsMpEng.exe), Teams and
+  # OneDrive in AppData\Local, SecurityHealth in system32, PowerShell in RunMRU (not a Run key)
+  - file: tests/data/samples/win_run_key_script_or_user_path_value_benign.json

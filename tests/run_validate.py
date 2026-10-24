@@ -39,6 +39,13 @@ How events are loaded:
     (Image -> FolderPath, CommandLine -> ProcessCommandLine, ParentImage ->
     InitiatingProcessFolderPath, OriginalFileName ->
     ProcessVersionInfoOriginalFileName, and the file names split from the paths).
+  - Defender (DeviceRegistryEvents table): each Sysmon 13 (registry value set)
+    event becomes one row with ActionType RegistryValueSet. TargetObject is
+    split the way Defender records it: the key (RegistryKey) and the value
+    name (RegistryValueName, the part after the last backslash), with the
+    hive written out in full (HKLM -> HKEY_LOCAL_MACHINE, HKU -> HKEY_USERS),
+    as the backend's microsoft_xdr pipeline also does to rule values.
+    Details -> RegistryValueData, Image -> InitiatingProcessFolderPath.
 
   - AWS CloudTrail: Splunk gets the original nested records with sourcetype
     aws:cloudtrail (fields extracted with their dotted names, list items with
@@ -116,6 +123,7 @@ TARGETS = {
 SCHEMAS = {
     "SecurityEvent": {c: v["data_type"].lower() for c, v in AZURE_MONITOR_TABLES["SecurityEvent"].items()},
     "DeviceProcessEvents": {c: v["data_type"].lower() for c, v in MICROSOFT_XDR_TABLES["DeviceProcessEvents"].items()},
+    "DeviceRegistryEvents": {c: v["data_type"].lower() for c, v in MICROSOFT_XDR_TABLES["DeviceRegistryEvents"].items()},
     "AWSCloudTrail": {c: v["data_type"].lower() for c, v in AZURE_MONITOR_TABLES["AWSCloudTrail"].items()},
 }
 
@@ -292,6 +300,30 @@ def to_device_process_event(event):
     }
 
 
+# Sysmon's short hive names -> the full names Defender writes in RegistryKey.
+REGISTRY_HIVES = {"HKLM": "HKEY_LOCAL_MACHINE", "HKU": "HKEY_USERS", "HKCU": "HKEY_CURRENT_USER",
+                  "HKCR": "HKEY_CLASSES_ROOT"}
+
+
+def to_device_registry_event(event):
+    """Return a DeviceRegistryEvents row for a Sysmon 13 event, otherwise None."""
+    if channel(event) != SYSMON or str(event.get("EventID")) != "13":
+        return None
+    path = event.get("TargetObject") or ""
+    hive, _, rest = path.partition("\\")
+    path = REGISTRY_HIVES.get(hive.upper(), hive) + ("\\" + rest if rest else "")
+    key, _, value_name = path.rpartition("\\")  # the value name is after the last backslash
+    return {
+        "ActionType": "RegistryValueSet",
+        "DeviceName": event.get("Computer"),
+        "RegistryKey": key,
+        "RegistryValueName": value_name,
+        "RegistryValueData": event.get("Details"),
+        "InitiatingProcessFileName": basename(event.get("Image")),
+        "InitiatingProcessFolderPath": event.get("Image"),
+    }
+
+
 def typed_row(row, table):
     """Drop empty values and convert each value to its column's type."""
     out = {}
@@ -322,6 +354,7 @@ def typed_row(row, table):
 TABLE_MAPPERS = {
     "SecurityEvent": to_security_event,
     "DeviceProcessEvents": to_device_process_event,
+    "DeviceRegistryEvents": to_device_registry_event,
     "AWSCloudTrail": to_aws_cloudtrail,
 }
 

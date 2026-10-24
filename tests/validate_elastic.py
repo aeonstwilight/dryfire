@@ -63,6 +63,11 @@ SYSMON_ECS = {
     "10": {"SourceImage": "process.executable"},
     "17": {"PipeName": "file.name", "Image": "process.executable"},
     "18": {"PipeName": "file.name", "Image": "process.executable"},
+    # Registry value set: the integration splits TargetObject into registry.*
+    # (path is the one our rules use) and puts Details in registry.data.strings,
+    # a list (string values unchanged; it rewrites DWORD/QWORD values as numbers,
+    # which no rule matches).
+    "13": {"TargetObject": "registry.path", "Details": "registry.data.strings", "Image": "process.executable"},
 }
 
 # CloudTrail field -> Elastic field, from the conversion pipeline, so loaded
@@ -146,7 +151,8 @@ def to_document(event):
         target = ecs.get(field, f"winlog.event_data.{field}")
         if target == "source.ip" and not is_ip(value):
             continue  # "-" for local logons: an ip field can't hold it
-        doc[target] = str(value)
+        # registry.data.strings is a list in the integration's documents.
+        doc[target] = [str(value)] if target == "registry.data.strings" else str(value)
     doc["@timestamp"] = iso_time(event.get("SystemTime") or event.get("UtcTime"))
     return stream, doc
 

@@ -1,0 +1,18 @@
+rule: rules/aws/impact/aws_s3_bucket_versioning_suspended.yml
+# AWS CloudTrail: no Zircolite pipeline; samples are JSON Lines (see fetch_datasets.py).
+pipelines: []
+positive:
+  # Real (Splunk attack_data T1490): an SSO admin suspends versioning on bucket
+  # git-wild-hunt-results. The file holds the same event twice (same eventID), so 2 hits.
+  - file: tests/data/external/aws/splunk-attack-data/T1490_aws_bucket_version.jsonl
+    min_hits: 2
+  # Synthetic: a denied attempt (failed calls count), and Suspended together with MfaDelete
+  - file: tests/data/samples/aws_s3_bucket_versioning_suspended_synthetic_positive.jsonl
+    min_hits: 2
+negative:
+  # Real (Invictus IR, Stratus Red Team): GetBucketVersioning reads
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1215Z_nBsuPO1qSTEVerMD.jsonl
+  - file: tests/data/external/aws/invictus/218007301253_CloudTrail_us-east-1_20230710T1235Z_YbVFCP9AYzJDhHV9.jsonl
+  # Synthetic: versioning Enabled, MfaDelete Disabled with versioning Enabled (left out of
+  # the rule), GetBucketVersioning, PutBucketLifecycle
+  - file: tests/data/samples/aws_s3_bucket_versioning_suspended_benign.jsonl
