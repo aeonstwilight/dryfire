@@ -25,6 +25,5 @@ positive:
   - file: tests/data/external/otrf/psh_control_panel_execution.zip
     min_hits: 2
 negative:
-  # Real svchost-launched SHCreateLocalServerRunDll and AppX ShellRefresh (EVTX), plus synthetic
-  # printing, Control_RunDLL desk.cpl, keymgr and url.dll opening an https link
+  # Synthetic: svchost-launched SHCreateLocalServerRunDll and AppX ShellRefresh, printing, Control_RunDLL desk.cpl, keymgr and url.dll opening an https link
   - file: tests/data/samples/win_rundll32_suspicious_usage_benign.json

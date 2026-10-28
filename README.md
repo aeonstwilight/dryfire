@@ -217,6 +217,6 @@ I built dryfire with Claude Code, and I want to be upfront about the split. Clau
 - **Rules** (everything under `rules/`): [Detection Rule License (DRL) 1.1](LICENSE.Detection.Rules.md), the license SigmaHQ uses. Use, change and share them freely; keep the `author` field and a link back to this repo when you do.
 - **Code** (scripts, pipelines, tests, CI): [MIT](LICENSE).
 - **Datasets**: downloaded at test time by `scripts/fetch_datasets.py`, not redistributed here. Each stays under its own license (see Data sources).
-- **Checked-in samples** (`tests/data/samples/`): synthetic, except for a few trimmed real events in some benign samples, taken from OTRF Security Datasets (MIT) and EVTX-ATTACK-SAMPLES (GPL-3.0). Each of those events names its source in its `SampleSource` field, and they stay under their dataset's licence. See [tests/data/samples/NOTICE.md](tests/data/samples/NOTICE.md).
+- **Checked-in samples** (`tests/data/samples/`): synthetic, except for 27 trimmed real events in some benign samples, taken from OTRF Security Datasets (MIT). Each names its source in its `SampleSource` field and stays under that licence. See [tests/data/samples/NOTICE.md](tests/data/samples/NOTICE.md).
 
 Rules in this repo are original unless noted. Any rule adapted from [SigmaHQ](https://github.com/SigmaHQ/sigma) is credited in its `references` and `author` fields, per the DRL.

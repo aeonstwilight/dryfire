@@ -9,6 +9,6 @@ positive:
     min_hits: 3
 negative:
   # Real normal LSASS access (svchost, services, wininit, csrss, wmiprvse, Azure antimalware and
-  # telemetry agents from APT29; python27 from EVTX), plus synthetic procdump 0x1fffff from the
+  # telemetry agents from APT29), plus synthetic: python.exe in C:\Python311, procdump 0x1fffff from the
   # Desktop (the LSASS memory-read rule's job) and a Program Files agent at 0x1000
   - file: tests/data/samples/win_lsass_access_from_user_path_benign.json

@@ -10,6 +10,6 @@ positive:
   - file: tests/data/external/evtx-attack-samples/sysmon_privesc_psexec_dwell.evtx
     min_hits: 3
 negative:
-  # Real system pipes (\srvsvc, \wkssvc, \browser, \eventlog, \ntsvcs, \lsass) from EVTX, plus
-  # synthetic near-misses (\stdin, \ExampleApp-stdin-handler, \PSEXESVC2)
+  # Synthetic system pipes (\srvsvc, \wkssvc, \browser, \eventlog, \ntsvcs, \lsass) and
+  # near-misses (\stdin, \ExampleApp-stdin-handler, \PSEXESVC2)
   - file: tests/data/samples/win_psexec_named_pipes_benign.json
