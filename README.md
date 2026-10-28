@@ -165,11 +165,13 @@ Defender XDR is declared unsupported in `pipelines/unsupported_targets.yml`, wit
 
 ## Adding a rule
 
-1. Write the rule in `rules/<platform>/<tactic>/` using the naming convention `<platform>_<short_description>.yml`.
-2. Include ATT&CK tags (`attack.<tactic>`, `attack.tXXXX`), `level`, `falsepositives`, and `references`.
-3. Add a test case in `tests/cases/` pointing to a positive sample (should fire) and a negative sample (should not).
-4. Write a triage note in `docs/rules/` using the template.
-5. Run `make test` locally, then open a pull request.
+1. Write the rule as `rules/<platform>/<tactic>/<prefix>_<short_description>.yml` (prefix `win` or `aws`; the tactic folder must be one of the rule's tactic tags).
+2. Include a UUID `id`, ATT&CK tags (`attack.<tactic>`, `attack.tXXXX`), `level`, `falsepositives` and `references` (with the technique's attack.mitre.org page). `make lint` checks all of these.
+3. Add a test case in `tests/cases/` with positive samples (should fire) and negative samples (should not). New public datasets go in `tests/datasets.yml`, pinned to a commit with their SHA-256.
+4. Write a triage note in `docs/rules/` from `docs/rules/_template.md`.
+5. Run `make sweep` and add the rule's reviewed per-source counts to `tests/sweep_baseline.yml`. For a process-creation rule, also run `make robustness` and add its results to `tests/robustness_baseline.yml`.
+6. If a target genuinely can't express the rule, declare it in `pipelines/unsupported_targets.yml` with the reason. Otherwise an unmapped field fails the build.
+7. Run `make lint convert test coverage` locally, then open a pull request.
 
 ## Running locally
 
@@ -181,7 +183,10 @@ make lint convert test coverage
 make sweep                         # noise sweep (~110 MB download)
 make robustness                    # attacker-style changes to positive events
 make engines-up validate engines-down   # needs Docker; ~11 GB of images
+make elastic-up validate-elastic elastic-down
 ```
+
+`make engines-up` and `make elastic-up` start the official Splunk Enterprise, Kusto emulator and Elasticsearch images, and accept their licence terms for you: the [Splunk General Terms](https://www.splunk.com/en_us/legal/splunk-general-terms.html), Microsoft's licence terms for the Kusto emulator (`ACCEPT_EULA=Y`), and the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license). Only run them if you accept those terms. The containers run locally with a random password per run.
 
 ## Roadmap
 
@@ -193,11 +198,13 @@ make engines-up validate engines-down   # needs Docker; ~11 GB of images
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
 - **M7 (done):** Eight rules for coverage gaps (Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check, and a robustness check of every process-creation rule against attacker-style changes to its samples, with a reviewed baseline that CI checks
 - **M8 (done):** Four more rules: AWS login profile created/updated, S3 versioning suspended, SSM SendCommand; Windows Run-key persistence (with Defender validation on a new `DeviceRegistryEvents` table)
+- **M9 (in progress):** Robustness checks for registry and CloudTrail rules, reported now and added to the baseline once reviewed
+- **M10 (proposed):** Microsoft 365 and Entra ID as a third platform
 
 ## Data sources
 
-- [EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES): Windows event logs mapped to ATT&CK
-- [OTRF Security Datasets](https://github.com/OTRF/Security-Datasets): recorded attack and benign telemetry
+- [EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES) (GPL-3.0): Windows event logs mapped to ATT&CK
+- [OTRF Security Datasets](https://github.com/OTRF/Security-Datasets) (MIT, Copyright (c) 2021 Open Threat Research Forge): recorded attack and benign telemetry
 - [Invictus IR Sigma-AWS](https://github.com/invictus-ir/Sigma-AWS) (MIT, Copyright (c) 2023 Invictus Incident Response): the `CloudTrail/` dataset, Stratus Red Team AWS techniques recorded in a test account. Only the data is used, not the repo's Sigma rules.
 - [Splunk Attack Data](https://github.com/splunk/attack_data) (Apache 2.0): per-technique AWS CloudTrail datasets
 
@@ -209,6 +216,7 @@ I built dryfire with Claude Code, and I want to be upfront about the split. Clau
 
 - **Rules** (everything under `rules/`): [Detection Rule License (DRL) 1.1](LICENSE.Detection.Rules.md), the license SigmaHQ uses. Use, change and share them freely; keep the `author` field and a link back to this repo when you do.
 - **Code** (scripts, pipelines, tests, CI): [MIT](LICENSE).
-- **Datasets**: downloaded at test time by `scripts/fetch_datasets.py`, not redistributed here. Each stays under its own license (see Data sources). The samples checked into `tests/data/samples/` are synthetic.
+- **Datasets**: downloaded at test time by `scripts/fetch_datasets.py`, not redistributed here. Each stays under its own license (see Data sources).
+- **Checked-in samples** (`tests/data/samples/`): synthetic, except for a few trimmed real events in some benign samples, taken from OTRF Security Datasets (MIT) and EVTX-ATTACK-SAMPLES (GPL-3.0). Each of those events names its source in its `SampleSource` field, and they stay under their dataset's licence. See [tests/data/samples/NOTICE.md](tests/data/samples/NOTICE.md).
 
 Rules in this repo are original unless noted. Any rule adapted from [SigmaHQ](https://github.com/SigmaHQ/sigma) is credited in its `references` and `author` fields, per the DRL.
