@@ -2,6 +2,9 @@
 # The page links straight into the public ATT&CK Navigator with the layer loaded.
 # One-time setup: Settings > Pages > Source: GitHub Actions (Pages on a private repo needs a
 # paid plan; on a public repo it's free).
+#
+# Actions are pinned to commit SHAs (version in the comment), as in ci.yml.
+# Only the deploy job can write to Pages and request an OIDC token.
 name: Coverage page
 
 on:
@@ -11,8 +14,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -22,10 +23,10 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: pip
       - name: Install
         run: pip install -r requirements.txt
@@ -36,16 +37,19 @@ jobs:
           mkdir -p site
           cp docs/pages/index.html site/index.html
           cp build/coverage/layer.json site/layer.json
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: site
 
   deploy:
     needs: build
     runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

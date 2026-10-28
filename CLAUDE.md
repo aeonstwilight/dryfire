@@ -361,6 +361,18 @@ Extends the M7 robustness check beyond process creation (proposed 2026-10-24; th
 - `.github/workflows/pages.yml` publishes the coverage layer to GitHub Pages with a landing page (`docs/pages/index.html`) that opens it in the public ATT&CK Navigator. Needs Settings > Pages > Source: GitHub Actions.
 - `scripts/coverage.py`: the layer's platform filter now lists every platform the rules cover (`Windows`, `IaaS`). It was `Windows` only, which hid AWS-only techniques (T1537, T1651) in the Navigator.
 
+## Pre-release review (2026-10-28)
+
+Before the repo goes public (owner's plan: Tuesday 2026-11-03).
+
+- Full local run on `main` (CI couldn't run: the private repo's Actions minutes ran out): lint, convert, test, coverage, sweep, robustness, validate (488 checks) and validate-elastic (209 checks) all pass.
+- History (105 commits, all branches): no secrets, keys, personal data or binaries; authors are `aeonstwilight` (noreply address) and Claude. The only password-like string is a throwaway local Splunk container password in `research/regex-diff`'s README (unmerged).
+- Originality: each rule's detection values compared with SigmaHQ (2026-10-21). Overlap is in unavoidable facts (event IDs, binary and API names); structure and logic differ. No rule is adapted, so no DRL credit is needed.
+- Checked-in samples were not all synthetic: 11 benign files held 27 trimmed OTRF events (MIT) and 12 EVTX-ATTACK-SAMPLES events (GPL-3.0), each labelled in `SampleSource`. The owner chose to replace the 12 GPL events with synthetic ones keeping the same benign patterns (2026-10-28); the OTRF events stay, listed with OTRF's licence in `tests/data/samples/NOTICE.md`. README corrected.
+- `research/regex-diff`: its repro steps' local Splunk password replaced with a placeholder (owner decision).
+- Fixed: README (samples and dataset licences, engine licence terms accepted by `engines-up`/`elastic-up`, "Adding a rule" matches what CI checks, roadmap M9/M10); `pages.yml` actions pinned to SHAs with Pages/OIDC permissions on the deploy job only.
+- Local note: Splunk can take over 5 minutes to become healthy on a slow host, longer than `engines.sh` waits; it was fine in CI (about 3.5 minutes).
+
 ## Milestone 10 (proposed, not started): Microsoft 365 and Entra ID
 
 A third platform, on the same pipeline. Nothing here is built yet: the owner decides the data sources, targets and each rule's logic first.

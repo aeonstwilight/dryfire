@@ -13,6 +13,6 @@ positive:
   - file: tests/data/external/evtx-attack-samples/LM_sysmon_psexec_smb_meterpreter.evtx
     min_hits: 2
 negative:
-  # Plain PowerShell from the public sets, plus synthetic -ExecutionPolicy,
+  # Plain PowerShell (one event from OTRF, two synthetic), plus synthetic -ExecutionPolicy,
   # -ep, -Exclude and -Encoding command lines that must not match the flag list
   - file: tests/data/samples/win_powershell_encoded_command_benign.json
