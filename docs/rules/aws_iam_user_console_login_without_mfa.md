@@ -25,7 +25,7 @@ The pattern matches the bare value (Splunk, Zircolite), the JSON text in Sentine
 Not covered:
 
 - **Root logins:** the root-login rule fires on every root console login.
-- **Federated / IAM Identity Center sessions** (`AssumedRole`): MFA happens at the identity provider, and CloudTrail records `MFAUsed: No` for them.
+- **Federated / IAM Identity Center sessions** (`AssumedRole`): MFA happens at the identity provider, and CloudTrail records `MFAUsed: No` for them. The robustness check confirms they don't match (`ct_assumed_role`: 0/4).
 - **Failed logins,** including attempts without MFA: see the brute-force and failed-login patterns.
 - **API access with access keys,** which never involves MFA unless a policy requires `aws:MultiFactorAuthPresent`.
 - **Defender XDR:** no CloudTrail table ("unsupported", like the other AWS rules).

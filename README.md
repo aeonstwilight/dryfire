@@ -41,7 +41,7 @@ On every push and pull request:
 3. **Test:** rules are evaluated against their positive and negative samples with Zircolite.
 4. **Coverage:** an ATT&CK Navigator layer is built from rule tags.
 5. **Noise sweep:** every rule runs over EVTX-ATTACK-SAMPLES and OTRF APT29; any change from the reviewed per-rule counts in `tests/sweep_baseline.yml` fails the build.
-6. **Robustness check:** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again. Any change from the reviewed results in `tests/robustness_baseline.yml` fails the build. Every change is caught except renamed binaries, a gap each triage note states. Registry (Sysmon 13) and CloudTrail rules get their own changes (value data written with environment variables or 8.3 short names, the WOW6432Node and RunOnce keys; the same API call from another region, an assumed role, a denied attempt, an SDK or a VPC endpoint), reported but not yet part of the baseline until reviewed.
+6. **Robustness check:** each process-creation rule's matched positive events are changed the way an attacker would (upper case, quoted program, extra spaces, cmd carets, other switch spellings, binary moved or renamed; see `tests/variants.yml`) and run again. Any change from the reviewed results in `tests/robustness_baseline.yml` fails the build. Every change is caught except renamed binaries, a gap each triage note states. Registry (Sysmon 13) and CloudTrail rules get their own changes, in the same baseline: value data written with environment variables or 8.3 short names, the WOW6432Node and RunOnce keys; the same API call from another region, an assumed role, a denied attempt, an SDK or a VPC endpoint.
 7. **Validate (separate job):** the converted queries run on real query engines, a Splunk Enterprise container and Microsoft's Kusto emulator. Each rule's test samples are loaded into both, and every query must find exactly the events Zircolite finds.
 8. **Validate Elastic (separate job):** the same check for the ES|QL queries on an Elasticsearch container, with the test events in the field layout of Elastic's Windows, System and AWS integrations.
 
@@ -169,7 +169,7 @@ Defender XDR is declared unsupported in `pipelines/unsupported_targets.yml`, wit
 2. Include a UUID `id`, ATT&CK tags (`attack.<tactic>`, `attack.tXXXX`), `level`, `falsepositives` and `references` (with the technique's attack.mitre.org page). `make lint` checks all of these.
 3. Add a test case in `tests/cases/` with positive samples (should fire) and negative samples (should not). New public datasets go in `tests/datasets.yml`, pinned to a commit with their SHA-256.
 4. Write a triage note in `docs/rules/` from `docs/rules/_template.md`.
-5. Run `make sweep` and add the rule's reviewed per-source counts to `tests/sweep_baseline.yml`. For a process-creation rule, also run `make robustness` and add its results to `tests/robustness_baseline.yml`.
+5. Run `make sweep` and add the rule's reviewed per-source counts to `tests/sweep_baseline.yml`. For a process-creation, registry or CloudTrail rule, also run `make robustness` and add its results to `tests/robustness_baseline.yml`.
 6. If a target genuinely can't express the rule, declare it in `pipelines/unsupported_targets.yml` with the reason. Otherwise an unmapped field fails the build.
 7. Run `make lint convert test coverage` locally, then open a pull request.
 
@@ -198,8 +198,8 @@ make elastic-up validate-elastic elastic-down
 - **M6 (done):** Four more rules: network ACL and cross-account S3 bucket policy (AWS), password spray and brute force (Windows correlation rules)
 - **M7 (done):** Eight rules for coverage gaps (Windows impact, credential access and WMI persistence; AWS KMS, MFA and snapshot sharing), a weekly dependency drift check, and a robustness check of every process-creation rule against attacker-style changes to its samples, with a reviewed baseline that CI checks
 - **M8 (done):** Four more rules: AWS login profile created/updated, S3 versioning suspended, SSM SendCommand; Windows Run-key persistence (with Defender validation on a new `DeviceRegistryEvents` table)
-- **M9 (in progress):** Robustness checks for registry and CloudTrail rules, reported now and added to the baseline once reviewed
-- **M10 (proposed):** Microsoft 365 and Entra ID as a third platform
+- **M9 (done):** Robustness checks for registry and CloudTrail rules, reviewed and added to the baseline; the Run-key rule tuned for environment-variable and short-name paths
+- **M10 (planned):** Microsoft 365 and Entra ID as a third platform, converted to Microsoft Sentinel
 
 ## Data sources
 

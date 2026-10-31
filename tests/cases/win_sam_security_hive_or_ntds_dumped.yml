@@ -22,9 +22,10 @@ positive:
     min_hits: 1
   # Synthetic: HKEY_LOCAL_MACHINE spelling, reg export, quoted "HKLM\SYSTEM", esentutl of
   # ntds.dit and of SYSTEM (dash style, at the end), PowerShell Copy-Item from a shadow
-  # copy, ntdsutil with the long command names
+  # copy, ntdsutil with the long command names, and cmd.exe "copy" of ntds.dit from a
+  # shadow copy (unquoted, so the robustness check can try cmd carets on it)
   - file: tests/data/samples/win_sam_security_hive_or_ntds_dumped_synthetic_positive.json
-    min_hits: 7
+    min_hits: 8
 negative:
   # Real: payload run from a shadow copy path (no credential file involved)
   - file: tests/data/external/evtx-attack-samples/sysmon_exec_from_vss_persistence.evtx

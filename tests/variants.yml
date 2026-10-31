@@ -82,17 +82,16 @@ variants:
       also use OriginalFileName (see the renamed-binary rule).
     change: rename_binary
 
-  # --- Registry (Sysmon 13) and CloudTrail changes, proposed 2026-10-24 --------------
+  # --- Registry (Sysmon 13) and CloudTrail changes, added 2026-10-24, reviewed 2026-10-31 ---
   # applies_to picks the rules: registry = logsource category registry_set/registry_event,
-  # cloudtrail = service cloudtrail (default: process_creation). status: proposed means
-  # report-only: `make robustness` shows them but doesn't check them against the baseline
-  # until the owner reviews the results and the status line is removed.
+  # cloudtrail = service cloudtrail (default: process_creation). A new change can carry
+  # `status: proposed`: `make robustness` then shows it but doesn't check it against the
+  # baseline until the owner reviews the results and the status line is removed.
 
   - id: reg_details_upper
     description: The Run value's data in upper case. Windows paths are case-insensitive.
     change: reg_details_upper
     applies_to: registry
-    status: proposed
 
   - id: reg_program_quoted
     description: >-
@@ -100,7 +99,6 @@ variants:
       write Run values.
     change: reg_program_quoted
     applies_to: registry
-    status: proposed
 
   - id: reg_comspec
     description: >-
@@ -108,7 +106,6 @@ variants:
       data unexpanded, so the log never says cmd.exe.
     change: reg_comspec
     applies_to: registry
-    status: proposed
 
   - id: reg_env_folders
     description: >-
@@ -116,13 +113,11 @@ variants:
       %ProgramData%\, %PUBLIC%\), logged unexpanded like reg_comspec.
     change: reg_env_folders
     applies_to: registry
-    status: proposed
 
   - id: reg_short_path
     description: ProgramData written as its 8.3 short name (C:\PROGRA~3\).
     change: reg_short_path
     applies_to: registry
-    status: proposed
 
   - id: reg_wow64_key
     description: >-
@@ -130,19 +125,16 @@ variants:
       SOFTWARE\WOW6432Node\.
     change: reg_wow64_key
     applies_to: registry
-    status: proposed
 
   - id: reg_runonce
     description: Run written as RunOnce, which also starts the program at the next logon.
     change: reg_runonce
     applies_to: registry
-    status: proposed
 
   - id: ct_other_region
     description: The same call made in another region (ap-southeast-3).
     change: ct_other_region
     applies_to: cloudtrail
-    status: proposed
 
   - id: ct_assumed_role
     description: >-
@@ -150,7 +142,6 @@ variants:
       often pivot through roles). Rules scoped to IAM users or root miss this on purpose.
     change: ct_assumed_role
     applies_to: cloudtrail
-    status: proposed
 
   - id: ct_failed_call
     description: >-
@@ -159,13 +150,11 @@ variants:
       differently.
     change: ct_failed_call
     applies_to: cloudtrail
-    status: proposed
 
   - id: ct_sdk_user_agent
     description: The same call made from boto3 instead of the console or CLI.
     change: ct_sdk_user_agent
     applies_to: cloudtrail
-    status: proposed
 
   - id: ct_via_vpc_endpoint
     description: >-
@@ -173,4 +162,3 @@ variants:
       vpcEndpointId set).
     change: ct_via_vpc_endpoint
     applies_to: cloudtrail
-    status: proposed

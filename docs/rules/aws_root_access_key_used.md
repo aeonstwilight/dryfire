@@ -26,6 +26,7 @@ Not covered:
 
 - **Temporary credentials obtained with a root key** (`GetSessionToken` returns an `ASIA` key). The `GetSessionToken` call itself is made with the `AKIA` key and does match; follow the session from there.
 - **Root key creation** (`CreateAccessKey` by root): matched only if that call is itself made with a root key. From the console, check the root login rule's follow-up activity.
+- **Calls made with a role's credentials**, by design: the robustness check's assumed-role version of the samples doesn't match (`ct_assumed_role`: 0/3).
 
 ## Triage steps
 

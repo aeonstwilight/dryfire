@@ -16,13 +16,15 @@ A Run or RunOnce value was set to a command that starts a script host or LOLBin,
 
 Sysmon event 13 where `TargetObject` contains `\CurrentVersion\Run` (Run, RunOnce, RunOnceEx, RunServices, in HKLM, HKCU/HKU and WOW6432Node) or `\Policies\Explorer\Run`, and `Details` (the value data) contains one of:
 
-- **Script hosts and LOLBins:** `powershell`, `pwsh`, `cmd.exe`, `wscript`, `cscript`, `mshta`, `rundll32`, `regsvr32`
+- **Script hosts and LOLBins:** `powershell`, `pwsh`, `cmd.exe` (or `%ComSpec%`), `wscript`, `cscript`, `mshta`, `rundll32`, `regsvr32`
 - **User-writable folders:** `\AppData\Roaming\`, `\Temp\`, `\Users\Public\`, `\ProgramData\`, `\Windows\Tasks\`, `\PerfLogs\`
+- **The same folders unexpanded:** `%APPDATA%\`, `%TEMP%\`, `%ProgramData%\`, `%PUBLIC%\`, and ProgramData's 8.3 name `\PROGRA~3\`. A REG_EXPAND_SZ value is logged as written, so `%APPDATA%\x.exe` never shows `\AppData\Roaming\` (found by the robustness check, added 2026-10-31, with `%ComSpec%` for cmd.exe).
 
 Not covered:
 
 - **`AppData\Local`** (outside `Temp`), left out on purpose: most per-user installers (Teams, OneDrive, Slack, Discord) put their autostart program there. A payload dropped in `AppData\Local` and started directly is missed.
 - **Payloads in other folders**, such as a renamed binary under Program Files, or Atomic Red Team's `C:\Path\` placeholder values in the Panache sample.
+- **Other environment variables**, such as `%LOCALAPPDATA%` or `%USERPROFILE%` followed by a folder that isn't listed (`%USERPROFILE%\AppData\Roaming\` is still caught by its path).
 - **Other autostart locations:** Winlogon `Userinit`/`Shell`, `Active Setup`, services, scheduled tasks (the scheduled-task and service rules), and the Startup folder.
 - **Writes that don't produce Sysmon 13**, for example offline hive edits, or a Sysmon config that doesn't log Run keys.
 - **Sentinel:** declared unsupported. `SecurityEvent` has no column for the value data.
