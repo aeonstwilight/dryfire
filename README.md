@@ -8,6 +8,15 @@
 
 Detection-as-code for SOC teams. Every detection is written once as a [Sigma](https://sigmahq.io/) rule, tested against real attack data in CI, and converted to Splunk SPL, Microsoft Sentinel / Defender KQL and Elastic ES|QL. An ATT&CK Navigator layer is generated from the rule tags so coverage is always visible.
 
+## At a glance
+
+- **47 original rules:** 26 Windows (Sysmon, Security and System logs) and 21 AWS CloudTrail, covering 38 ATT&CK techniques across 12 tactics.
+- **132 generated queries:** Splunk 47, Elastic ES|QL 40, Microsoft Sentinel 34, Defender XDR 11. Where a target can't express a rule, the reason is declared in [`pipelines/unsupported_targets.yml`](pipelines/unsupported_targets.yml); anything else that doesn't convert fails the build.
+- **Tested on real attack data:** every rule must fire on public attack recordings (EVTX-ATTACK-SAMPLES, OTRF, Splunk Attack Data, Invictus IR) and stay silent on benign samples.
+- **Checked on real query engines:** 697 checks run the generated queries on Splunk, Microsoft's Kusto emulator and Elasticsearch containers, and each must return exactly the hits the Sigma test found.
+- **Reviewed for noise and evasion:** a noise sweep over full public datasets and an attacker-style robustness check (case, quoting, carets, renamed binaries, environment variables, assumed roles and more), both held to hand-reviewed baselines.
+- **A triage note for every rule:** what fired, what to check next, known false positives and the gaps it deliberately leaves.
+
 ## Why
 
 Detections usually live inside a SIEM, untested and undocumented. This repo treats them like code:
