@@ -16,7 +16,7 @@ A detection-as-code portfolio repo for a SOC analyst / detection engineer. Sigma
 
 - **All rules are original.** Do not copy rules from SigmaHQ or anywhere else. If the owner explicitly chooses to adapt a SigmaHQ rule, credit it in `author` and `references` (Detection Rule License requires attribution).
 - **No employer material.** Never reproduce detections, queries, field names, hostnames, or anything else from the owner's former employers. If something looks like it came from a work environment, stop and ask.
-- **No secrets or real environment data** in the repo. Test data comes only from public datasets (EVTX-ATTACK-SAMPLES, OTRF Security Datasets, and for AWS: the `CloudTrail/` data folder of Invictus IR Sigma-AWS and the AWS datasets in Splunk attack_data, owner decision 2026-10-18) or is synthetic. From Invictus IR Sigma-AWS use only the data, never its Sigma rules.
+- **No secrets or real environment data** in the repo. Test data comes only from public datasets (EVTX-ATTACK-SAMPLES, OTRF Security Datasets, and for AWS: the `CloudTrail/` data folder of Invictus IR Sigma-AWS and the AWS datasets in Splunk attack_data, owner decision 2026-10-18; for Microsoft 365 and Entra ID: the O365 and Entra ID datasets in Splunk attack_data, owner decision 2026-10-31) or is synthetic. From Invictus IR Sigma-AWS use only the data, never its Sigma rules.
 - **Public tools only.** Build the pipeline only from public tools (pySigma, sigma-cli, Zircolite, GitHub Actions, Make). Don't model the CI, repo structure or tooling on any employer's internal detection-as-code pipeline.
 - **ATT&CK is the only framework mapping.** Do not add NIST 800-53, FedRAMP or any other compliance-control mapping: no control tags in rules, no control fields in test cases or triage notes, no control columns in reports or coverage output.
 - **No document generation.** Don't add features that generate compliance, audit or customer-facing documents from the rules. The per-rule triage notes are hand-written Markdown, and `build/` holds only build reports (conversion summary, test results, Navigator layer).
@@ -56,7 +56,7 @@ The Makefile should expose these targets:
 - `make coverage`: write `build/coverage/layer.json`
 - `make all`: all of the above, in order
 - `make sweep`: noise sweep over `tests/sweep_corpus.yml`; report in `build/sweep/`, checked against `tests/sweep_baseline.yml` once it exists
-- `make robustness` (M7): attacker-style changes to each process-creation rule's matched positive events (`tests/variants.yml`); report in `build/robustness/`, checked against `tests/robustness_baseline.yml`
+- `make robustness` (M7, M9): attacker-style changes to each process-creation, registry and CloudTrail rule's matched positive events (`tests/variants.yml`); report in `build/robustness/`, checked against `tests/robustness_baseline.yml`
 - `make validate` (M3): run the converted SPL and KQL on the Splunk and Kusto containers; report in `build/validate/`
 - `make validate-elastic` (M5): run the converted ES|QL on the Elasticsearch container (`make elastic-up`); report in `build/validate/results_elastic.md`
 
@@ -344,16 +344,17 @@ More detections on the current pipeline (owner decision, 2026-10-22), from the M
 
 Also done before M8 (2026-10-22, PR #8): `win_renamed_shell_or_lolbin` now covers vssadmin, wbadmin, bcdedit, wmic, reg, ntdsutil and esentutl (see the M7 Part B notes).
 
-## Milestone 9 (in progress): wider robustness checks
+## Milestone 9 (done): wider robustness checks
 
-Extends the M7 robustness check beyond process creation (proposed 2026-10-24; the owner reviews the results before any of it joins the baseline).
+Extends the M7 robustness check beyond process creation (proposed 2026-10-24, reviewed and closed 2026-10-31).
 
 - `tests/variants.yml` variants now carry `applies_to` (`process_creation` default, `registry` for logsource category `registry_set`/`registry_event`, `cloudtrail` for service `cloudtrail`) and `status: proposed` (report-only: shown in `build/robustness/` with "(proposed)", skipped by the baseline check; a rule only proposed changes apply to needs no baseline entry yet).
 - Registry changes (to `Details`/`TargetObject` of the rule's matched events): upper case, quoted program, `%ComSpec%` for cmd.exe, user folders as environment variables (`%APPDATA%`, `%TEMP%`, `%ProgramData%`, `%PUBLIC%`; Sysmon logs REG_EXPAND_SZ data unexpanded), ProgramData as `PROGRA~3`, the WOW6432Node key, RunOnce.
 - CloudTrail changes: Zircolite returns CloudTrail matches flattened, so the rule's whole positive files are changed and its hits compared before/after: another region, an assumed role instead of an IAM user/root, a denied call (not ConsoleLogin), a boto3 user agent, a VPC endpoint call.
 - First run (2026-10-24): baseline unchanged. `win_run_key_script_or_user_path_value` misses `reg_env_folders` (0/4) and `reg_short_path` (0/1); `reg_comspec` didn't apply (no cmd.exe values in the samples). CloudTrail: everything caught except `ct_assumed_role` on the three rules scoped to IAM users or root (by design), and `aws_iam_access_key_created_for_other_user` gains 2 hits under `ct_assumed_role` (a role creating a key for a user counts as "for another user", since the role has no userName).
 - Not done: `cmd_carets` on a rule's own cmd.exe matches. No rule's matched events are cmd.exe processes; the case where it matters (cmd's built-in `copy` from a shadow copy, which has no child process) needs a synthetic cmd.exe positive for `win_sam_security_hive_or_ntds_dumped`, a test-data change for the owner to approve.
-- Next (owner): accept or tune each miss (for the Run-key rule, adding the environment-variable and short-name spellings would be a logic change), then drop `status: proposed` and add the reviewed values to `tests/robustness_baseline.yml`.
+- Owner review (2026-10-31): Run-key rule tuned: `Details` also matches `%APPDATA%\`, `%TEMP%\`, `%ProgramData%\`, `%PUBLIC%\` and `\PROGRA~3\`, and `%ComSpec%` next to `cmd.exe` (sweep unchanged, no new hits). Three synthetic positives added (a `%APPDATA%` value, a `C:\PROGRA~3` value and a `%ComSpec% /c` value) so validate proves the new values: Splunk, Defender and Elastic return the same 8 hits as Zircolite. `reg_comspec` still doesn't apply (no sample value holds a literal `cmd.exe` to rewrite); the `%ComSpec%` positive covers it. CloudTrail results accepted as designed (the `ct_assumed_role` misses on the three IAM-user/root rules, and the access-key rule's 2 extra hits), and stated in those triage notes. `status: proposed` removed from all 12 registry and CloudTrail changes; their results are in `tests/robustness_baseline.yml`.
+- `cmd_carets` on a rule's own cmd.exe match: a synthetic positive for `win_sam_security_hive_or_ntds_dumped` (`cmd.exe /c copy` of ntds.dit from a shadow copy, unquoted) was added with the owner's OK. Result: missed (0/1), because the carets split `HarddiskVolumeShadowCopy` and `ntds.dit` on cmd's own command line, and `copy` starts no child process. Accepted by the owner (2026-10-31; a caret-tolerant regex for every keyword wasn't worth it) and stated in the triage note.
 
 ## Presentation (2026-10-24)
 
@@ -363,7 +364,7 @@ Extends the M7 robustness check beyond process creation (proposed 2026-10-24; th
 
 ## Pre-release review (2026-10-28)
 
-Before the repo goes public (owner's plan: Tuesday 2026-11-03).
+Before the repo goes public (owner's plan: Wednesday 2026-11-04).
 
 - Full local run on `main` (CI couldn't run: the private repo's Actions minutes ran out): lint, convert, test, coverage, sweep, robustness, validate (488 checks) and validate-elastic (209 checks) all pass.
 - History (105 commits, all branches): no secrets, keys, personal data or binaries; authors are `aeonstwilight` (noreply address) and Claude. The only password-like string is a throwaway local Splunk container password in `research/regex-diff`'s README (unmerged).
@@ -373,7 +374,13 @@ Before the repo goes public (owner's plan: Tuesday 2026-11-03).
 - Fixed: README (samples and dataset licences, engine licence terms accepted by `engines-up`/`elastic-up`, "Adding a rule" matches what CI checks, roadmap M9/M10); `pages.yml` actions pinned to SHAs with Pages/OIDC permissions on the deploy job only.
 - Local note: Splunk can take over 5 minutes to become healthy on a slow host, longer than `engines.sh` waits; it was fine in CI (about 3.5 minutes).
 
-## Milestone 10 (proposed, not started): Microsoft 365 and Entra ID
+## Milestone 10 (planned, not started): Microsoft 365 and Entra ID
+
+**Owner decisions (2026-10-31):**
+
+- Test data: Splunk attack_data's O365 and Entra ID datasets (same repo, pinned commit and Apache 2.0 licence as the AWS datasets), plus synthetic events.
+- Target: Microsoft Sentinel only (`SigninLogs`, `AuditLogs`, `OfficeActivity`), validated on the Kusto emulator. Splunk, Elastic and Defender are declared unsupported for each M365/Entra rule in `pipelines/unsupported_targets.yml`.
+- Rules: candidates 1, 3, 4, 5, then 2 (single-event, Sentinel), then 6 and 7 as correlation rules tested with Zircolite only, every target declared (pySigma-backend-kusto doesn't convert correlations). Candidate 8 dropped. Each rule's logic still needs the owner's sign-off before it's built.
 
 A third platform, on the same pipeline. Nothing here is built yet: the owner decides the data sources, targets and each rule's logic first.
 
@@ -393,8 +400,8 @@ A third platform, on the same pipeline. Nothing here is built yet: the owner dec
 7. MFA fatigue (correlation: denied or unanswered MFA, `resultType` 500121, per user). T1621. Data: `azure_ad_multiple_denied_mfa_requests`.
 8. Session use from two IPs (AiTM token replay; correlation on the session or correlation ID with distinct IPs). T1185 / T1550.004. Data: `azure_ad_concurrent_sessions_from_different_ips`. Hardest to express in Sigma; may end up a hunt query instead.
 
-**Owner decisions needed before building:**
-- Allow attack_data's O365 and Entra ID folders as test data (same repo and licence as the AWS datasets).
-- Which targets: Sentinel (`SigninLogs`/`AuditLogs`/`OfficeActivity`), Defender (`CloudAppEvents`), Splunk, Elastic.
-- Which candidates, in what order. Suggested: 1, 3, 4, 5 first (single-event rules with public positives), then 2, then the correlations 6 and 7. 8 last, if at all.
+**Build order** (owner decisions above):
+1. Check current versions and docs: pySigma-backend-kusto's `azure_monitor` pipeline (log sources, table and field names for `SigninLogs`, `AuditLogs`, `OfficeActivity`), Microsoft's column lists for those tables, and how Zircolite reads the two attack_data shapes (nested `properties`, `Parameters` lists).
+2. Pipeline: fetch and pin the datasets, Sentinel conversion (custom pipeline in `pipelines/` where the backend's mapping falls short), Splunk/Elastic/Defender declared per rule, Kusto emulator tables for validate, and an M365/Entra sweep corpus.
+3. Rules one at a time in the order above, same process as before (owner confirms logic; rule, test case and triage note; must pass sweep, robustness where changes apply, and validate).
 

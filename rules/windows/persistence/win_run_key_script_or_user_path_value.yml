@@ -4,14 +4,16 @@ status: experimental
 description: |
     Detects a Run or RunOnce key value (Run, RunOnce, RunOnceEx, RunServices,
     Policies\Explorer\Run; HKLM, HKCU or WOW6432Node) set to a command that runs
-    a script host or LOLBin (PowerShell, cmd, wscript, cscript, mshta,
+    a script host or LOLBin (PowerShell, cmd or %ComSpec%, wscript, cscript, mshta,
     rundll32, regsvr32) or a program in a user-writable folder (AppData\Roaming,
-    Temp, Users\Public, ProgramData, Windows\Tasks, PerfLogs). Legitimate
+    Temp, Users\Public, ProgramData, Windows\Tasks, PerfLogs, also written as
+    %APPDATA%, %TEMP%, %ProgramData%, %PUBLIC% or PROGRA~3). Legitimate
     autostart entries usually point to an installed program; most per-user
     installers (Teams, OneDrive, Slack) live in AppData\Local, which is left
     out on purpose.
 author: aeonstwilight
 date: 2026-10-23
+modified: 2026-10-31
 references:
     - https://attack.mitre.org/techniques/T1547/001/
     - https://learn.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys
@@ -34,6 +36,7 @@ detection:
             - 'powershell'
             - 'pwsh'
             - 'cmd.exe'
+            - '%ComSpec%'   # cmd.exe in an unexpanded REG_EXPAND_SZ value
             - 'wscript'
             - 'cscript'
             - 'mshta'
@@ -46,6 +49,13 @@ detection:
             - '\ProgramData\'
             - '\Windows\Tasks\'
             - '\PerfLogs\'
+            # The same folders as environment variables or 8.3 short names:
+            # REG_EXPAND_SZ values are logged unexpanded.
+            - '%APPDATA%\'
+            - '%TEMP%\'
+            - '%ProgramData%\'
+            - '%PUBLIC%\'
+            - '\PROGRA~3\'
     condition: selection_key and selection_value
 falsepositives:
     - Software that starts a helper through rundll32, PowerShell or a script at logon

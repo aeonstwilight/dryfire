@@ -7,6 +7,16 @@
 # note (Sentinel's SecurityEvent has no OriginalFileName column; the renamed-binary rule
 # covers the shells, script hosts and common LOLBins on the other targets).
 #
+# Registry and CloudTrail changes reviewed by the owner on 2026-10-31. Registry: every change
+# is caught (the Run-key rule was tuned for %APPDATA%-style and PROGRA~3 paths); reg_comspec
+# doesn't apply, as no sample value runs cmd.exe. CloudTrail cells compare the rule's hits
+# after the change with its hits before: ct_assumed_role misses on the three rules scoped to
+# IAM users or root, by design, and adds 2 hits to the access-key rule (a role creating a key
+# for a user counts as "for another user"); both accepted.
+#
+# cmd_carets on win_sam_security_hive_or_ntds_dumped (a synthetic cmd.exe "copy" of ntds.dit from
+# a shadow copy) is missed, 0/1, and accepted by the owner on 2026-10-31 (see its triage note).
+#
 # `make robustness` fails if any value changes or a process-creation rule has no entry. If a
 # change is intended (a rule was tuned, samples or variants changed, a rule was added),
 # review build/robustness/ and update this file to match.
@@ -25,15 +35,15 @@ win_certutil_download:
   binary_moved: "5/5"
   binary_renamed: "0/5"
 win_sam_security_hive_or_ntds_dumped:
-  upper_case: "21/21"
-  program_quoted: "17/17"
-  extra_spaces: "21/21"
-  cmd_carets: "-"
+  upper_case: "22/22"
+  program_quoted: "18/18"
+  extra_spaces: "22/22"
+  cmd_carets: "0/1"
   switch_dash_slash: "-"
   ps_enc_short: "-"
   ps_enc_long: "-"
-  binary_moved: "21/21"
-  binary_renamed: "3/21"
+  binary_moved: "22/22"
+  binary_renamed: "4/22"
 win_office_spawning_shell_or_script_host:
   upper_case: "7/7"
   program_quoted: "7/7"
@@ -114,3 +124,137 @@ win_rundll32_suspicious_usage:
   ps_enc_long: "-"
   binary_moved: "12/12"
   binary_renamed: "0/12"
+aws_cloudtrail_logging_config_changed:
+  ct_other_region: "5/5"
+  ct_assumed_role: "5/5"
+  ct_failed_call: "5/5"
+  ct_sdk_user_agent: "5/5"
+  ct_via_vpc_endpoint: "5/5"
+aws_cloudtrail_logging_stopped_or_deleted:
+  ct_other_region: "9/9"
+  ct_assumed_role: "9/9"
+  ct_failed_call: "9/9"
+  ct_sdk_user_agent: "9/9"
+  ct_via_vpc_endpoint: "9/9"
+aws_ec2_or_rds_snapshot_shared_outside_account:
+  ct_other_region: "14/14"
+  ct_assumed_role: "14/14"
+  ct_failed_call: "14/14"
+  ct_sdk_user_agent: "14/14"
+  ct_via_vpc_endpoint: "14/14"
+aws_guardduty_disabled:
+  ct_other_region: "15/15"
+  ct_assumed_role: "15/15"
+  ct_failed_call: "15/15"
+  ct_sdk_user_agent: "15/15"
+  ct_via_vpc_endpoint: "15/15"
+aws_guardduty_findings_suppressed:
+  ct_other_region: "7/7"
+  ct_assumed_role: "7/7"
+  ct_failed_call: "7/7"
+  ct_sdk_user_agent: "7/7"
+  ct_via_vpc_endpoint: "7/7"
+aws_iam_access_key_created_for_other_user:
+  ct_other_region: "66/66"
+  ct_assumed_role: "68/66"
+  ct_failed_call: "66/66"
+  ct_sdk_user_agent: "66/66"
+  ct_via_vpc_endpoint: "66/66"
+aws_iam_admin_policy_granted:
+  ct_other_region: "13/13"
+  ct_assumed_role: "13/13"
+  ct_failed_call: "13/13"
+  ct_sdk_user_agent: "13/13"
+  ct_via_vpc_endpoint: "13/13"
+aws_iam_login_profile_created_or_updated:
+  ct_other_region: "9/9"
+  ct_assumed_role: "9/9"
+  ct_failed_call: "9/9"
+  ct_sdk_user_agent: "9/9"
+  ct_via_vpc_endpoint: "9/9"
+aws_iam_mfa_device_deactivated:
+  ct_other_region: "3/3"
+  ct_assumed_role: "3/3"
+  ct_failed_call: "3/3"
+  ct_sdk_user_agent: "3/3"
+  ct_via_vpc_endpoint: "3/3"
+aws_iam_user_console_login_without_mfa:
+  ct_other_region: "4/4"
+  ct_assumed_role: "0/4"
+  ct_failed_call: "4/4"
+  ct_sdk_user_agent: "4/4"
+  ct_via_vpc_endpoint: "4/4"
+aws_kms_key_disabled_or_deletion_scheduled:
+  ct_other_region: "4/4"
+  ct_assumed_role: "4/4"
+  ct_failed_call: "4/4"
+  ct_sdk_user_agent: "4/4"
+  ct_via_vpc_endpoint: "4/4"
+aws_network_acl_ingress_open_to_internet:
+  ct_other_region: "9/9"
+  ct_assumed_role: "9/9"
+  ct_failed_call: "9/9"
+  ct_sdk_user_agent: "9/9"
+  ct_via_vpc_endpoint: "9/9"
+aws_root_access_key_used:
+  ct_other_region: "3/3"
+  ct_assumed_role: "0/3"
+  ct_failed_call: "3/3"
+  ct_sdk_user_agent: "3/3"
+  ct_via_vpc_endpoint: "3/3"
+aws_root_console_login:
+  ct_other_region: "26/26"
+  ct_assumed_role: "0/26"
+  ct_failed_call: "-"
+  ct_sdk_user_agent: "-"
+  ct_via_vpc_endpoint: "26/26"
+aws_s3_bucket_made_public:
+  ct_other_region: "16/16"
+  ct_assumed_role: "16/16"
+  ct_failed_call: "16/16"
+  ct_sdk_user_agent: "16/16"
+  ct_via_vpc_endpoint: "16/16"
+aws_s3_bucket_policy_cross_account_access:
+  ct_other_region: "4/4"
+  ct_assumed_role: "4/4"
+  ct_failed_call: "4/4"
+  ct_sdk_user_agent: "4/4"
+  ct_via_vpc_endpoint: "4/4"
+aws_s3_bucket_versioning_suspended:
+  ct_other_region: "4/4"
+  ct_assumed_role: "4/4"
+  ct_failed_call: "4/4"
+  ct_sdk_user_agent: "4/4"
+  ct_via_vpc_endpoint: "4/4"
+aws_s3_public_access_block_disabled:
+  ct_other_region: "6/6"
+  ct_assumed_role: "6/6"
+  ct_failed_call: "6/6"
+  ct_sdk_user_agent: "6/6"
+  ct_via_vpc_endpoint: "6/6"
+aws_secretsmanager_many_secrets_read:
+  ct_other_region: "3/3"
+  ct_assumed_role: "3/3"
+  ct_failed_call: "3/3"
+  ct_sdk_user_agent: "3/3"
+  ct_via_vpc_endpoint: "3/3"
+aws_security_group_ingress_open_to_internet:
+  ct_other_region: "7/7"
+  ct_assumed_role: "7/7"
+  ct_failed_call: "7/7"
+  ct_sdk_user_agent: "7/7"
+  ct_via_vpc_endpoint: "7/7"
+aws_ssm_send_command_run_script:
+  ct_other_region: "6/6"
+  ct_assumed_role: "6/6"
+  ct_failed_call: "6/6"
+  ct_sdk_user_agent: "6/6"
+  ct_via_vpc_endpoint: "6/6"
+win_run_key_script_or_user_path_value:
+  reg_details_upper: "16/16"
+  reg_program_quoted: "13/13"
+  reg_comspec: "-"
+  reg_env_folders: "4/4"
+  reg_short_path: "1/1"
+  reg_wow64_key: "6/6"
+  reg_runonce: "13/13"

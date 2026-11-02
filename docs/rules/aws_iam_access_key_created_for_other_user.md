@@ -17,7 +17,7 @@ Someone created a long-term access key for an IAM user other than themselves. Wi
 `CreateAccessKey` events from `iam.amazonaws.com` where `requestParameters.userName` is set and isn't the caller's own `userIdentity.userName`:
 
 - an IAM user creating a key for a different user
-- a role (assumed role, federated session) creating a key for an IAM user. Roles have no `userName` of their own, so these always match.
+- a role (assumed role, federated session) creating a key for an IAM user. Roles have no `userName` of their own, so these always match. The robustness check shows it: rewriting the samples' callers as assumed roles adds 2 hits (`ct_assumed_role`: 68/66), the calls where an IAM user had created a key for itself.
 
 Failed calls are included (`AccessDenied`, `NoSuchEntityException`): attempts against protected or made-up users (such as `root` in the test data) look like probing.
 

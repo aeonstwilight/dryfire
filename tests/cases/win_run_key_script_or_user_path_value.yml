@@ -26,9 +26,10 @@ positive:
   - file: tests/data/external/evtx-attack-samples/DE_timestomp_and_dll_sideloading_and_RunPersist.evtx
     min_hits: 1
   # Synthetic: ProgramData program, mshta (HKCU Run), regsvr32 (Policies\Explorer\Run),
-  # wscript from PerfLogs (WOW6432Node RunOnce), a program in AppData\Local\Temp
+  # wscript from PerfLogs (WOW6432Node RunOnce), a program in AppData\Local\Temp, a program
+  # under %APPDATA% (unexpanded), one under C:\PROGRA~3 (8.3 name), and %ComSpec% /c
   - file: tests/data/samples/win_run_key_script_or_user_path_value_synthetic_positive.json
-    min_hits: 5
+    min_hits: 8
 negative:
   # Synthetic: Defender's own WindowsDefender value (written by MsMpEng.exe), Teams and
   # OneDrive in AppData\Local, SecurityHealth in system32, PowerShell in RunMRU (not a Run key)

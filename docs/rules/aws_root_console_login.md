@@ -23,7 +23,7 @@ Not covered:
 
 - **Root use without the console:** root access keys used with the API or CLI never create a `ConsoleLogin`. See [AWS Root Account Access Key Used](aws_root_access_key_used.md).
 - **Organization member accounts with root access centralised** (no root credentials to sign in with): nothing to detect there.
-- **Sign-ins by IAM users or federated roles**, even highly privileged ones.
+- **Sign-ins by IAM users or federated roles**, even highly privileged ones. The robustness check confirms it: the same logins rewritten as an assumed role don't match (`ct_assumed_role`: 0/26), as intended.
 
 ## Triage steps
 
