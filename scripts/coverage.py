@@ -113,7 +113,24 @@ def main():
             entry["tactic"] = tactic
         techniques.append(entry)
 
-    max_score = max((t["score"] for t in techniques), default=1)
+    # Open the parent of every covered sub-technique (e.g. T1003 for T1003.006), so the
+    # map shows DCSync by name instead of a "(1/8)" count. A parent that isn't covered
+    # itself gets an entry with no score: that expands it without colouring it.
+    by_key = {(t["techniqueID"], t.get("tactic")): t for t in techniques}
+    for (technique, tactic) in list(coverage):
+        if "." not in technique:
+            continue
+        parent = technique.split(".")[0]
+        entry = by_key.get((parent, tactic))
+        if entry is None:
+            entry = {"techniqueID": parent, "enabled": True}
+            if tactic:
+                entry["tactic"] = tactic
+            techniques.append(entry)
+            by_key[(parent, tactic)] = entry
+        entry["showSubtechniques"] = True
+
+    max_score = max((t.get("score", 0) for t in techniques), default=1)
     layer = {
         "name": "dryfire coverage",
         "description": f"Techniques covered by {rule_count} Sigma rule(s). Score = number of rules.",
@@ -123,14 +140,26 @@ def main():
         # rules cover (an AWS-only technique such as T1537 vanishes under "Windows" alone).
         "filters": {"platforms": sorted(platforms)},
         "sorting": 3,  # highest score first
-        "layout": {"layout": "side", "showID": True, "showName": True},
+        "layout": {
+            "layout": "side",
+            "showID": True,
+            "showName": True,
+            # Covered sub-techniques open by default; a collapsed parent shows the
+            # highest score of its covered sub-techniques.
+            "expandedSubtechniques": "annotated",
+            "showAggregateScores": True,
+            "aggregateFunction": "max",
+            "countUnscored": False,
+        },
         "hideDisabled": False,
         "techniques": techniques,
+        # One rule already gets a clear blue; more rules get darker. Techniques with
+        # no rule have no score, so Navigator leaves them uncoloured.
         "gradient": {
-            "colors": ["#ffffff", "#66b1ff"],
-            "minValue": 0,
+            "colors": ["#7ab8ff", "#0b4f9e"],
+            "minValue": 1,
             # Navigator needs maxValue > minValue.
-            "maxValue": max(max_score, 1),
+            "maxValue": max(max_score, 2),
         },
         "legendItems": [],
         "showTacticRowBackground": False,
